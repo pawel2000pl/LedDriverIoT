@@ -1,0 +1,177 @@
+{
+    "wifi": {
+        "sta_priority": [
+            {
+                "ssid": "router0",
+                "password": "password0"
+            },
+            {
+                "ssid": "router1",
+                "password": "password1"
+            }
+        ],
+        "access_point": {
+            "ssid": "LedDriver",
+            "password": "passwordL"
+        },
+        "strict": false,
+        "strictList": [
+            "4E-57-62-19-28-53"
+        ]
+    },
+    "bluetooth": {
+        "active": true,
+        "name": "LedDriver",
+        "strict": false,
+        "strictList": [
+            "4E-57-62-19-28-53"
+        ]
+    },
+    "channels": {
+        "webMode": "hsv",
+        "bluetoothMode": "hsv",
+        "knobMode": "hsv"
+    },
+    "filters": {
+        "inputFilters": {
+            "hue": [
+                1,
+                0,
+                0,
+                0,
+                0,
+                0
+            ],
+            "saturation": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "value": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "lightness": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "red": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "green": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "blue": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "white": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ]
+        },
+        "globalInputFilters": [
+            1,
+            0.6,
+            0.01,
+            0,
+            0,
+            0
+        ],
+        "outputFilters": {
+            "red": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "green": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "blue": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ],
+            "white": [
+                1,
+                0.6,
+                0.01,
+                0,
+                0,
+                0
+            ]
+        },
+        "globalOutputFilters": [
+            1,
+            0.6,
+            0.01,
+            0,
+            0,
+            0
+        ]
+    },
+    "hardware": {
+        "potentionemterConfiguration": {
+            "hue": 2,
+            "saturation": 1,
+            "value": 0,
+            "lightness": 0,
+            "red": 0,
+            "green": 1,
+            "blue": 2,
+            "white": 3
+        },
+        "transistorConfiguration": {
+            "red": 0,
+            "green": 1,
+            "blue": 2,
+            "white": 3
+        },
+        "bias": {
+            "up": 0,
+            "down": 0.001
+        },
+        "knobActivateDelta": 0.01,
+        "enbleWhiteKnob": true
+    }
+}

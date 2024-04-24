@@ -1,0 +1,127 @@
+html, body {
+    max-width: 100%;    
+    font-family: Arial;
+    @media (prefers-color-scheme: dark) { 
+        color: white; 
+        background: black;
+    }
+}
+
+summary, label, input[type=checkbox] {
+    cursor: pointer;
+}
+
+h3 {
+    margin-top: 10px;
+}
+
+select, button, input {
+    @media (prefers-color-scheme: dark) { 
+        color: white; 
+        background: #202324;      
+        border-color: #747d82;
+        border-radius: 5px;
+        border-width: 1px;
+        padding: 2px 5px;
+    }
+}
+
+select:hover , button:hover {
+    @media (prefers-color-scheme: dark) { 
+        color: white; 
+        background: #333839;
+    }
+}
+
+filterselector {
+    display: flex;
+    flex-direction: row;  
+    flex-wrap: wrap;
+}
+
+.prevent-select {
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
+}
+
+.knob-div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.knob-div .knob {
+    touch-action: none;
+    width: min-content;
+}
+
+.config-div {
+    display: flex;
+    flex-direction: column;
+}
+
+.details-div {  
+    padding: 12px;
+}
+
+.info-div {
+    color: gray;    
+    @media (prefers-color-scheme: dark) { 
+        color: darkgray;
+    }
+}
+
+.menu-details {
+    border: 1px solid lightgray;
+    margin: 4px;
+}
+
+.menu-summary {  
+    border: 1px solid gray;
+    padding: 12px;
+    font-size: larger;
+    font-weight: bolder;
+}
+
+.chart-info div {
+    display: inline-flex !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: left;
+    
+    vertical-align: top;
+    display: inline;
+    margin: 8px 12px 1px 1px;
+}
+
+.chart-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-info span {
+    margin-top: 5px;
+}
+
+.chart-info canvas {
+    border-style: dashed dashed solid solid;
+    border-color: lightgray lightgray black black;
+    border-width: 1px 1px 2px 2px;  
+    padding: 0.5px;
+    @media (prefers-color-scheme: dark) { 
+        border-color: gray gray white white;
+    }
+}
+
+.name-header {
+    text-align: center;
+}
+
+.configure-button {
+    text-align: center;
+    cursor: pointer;
+    margin: 0px 0px 8px 0px;
+}
