@@ -95,8 +95,15 @@
                 
                 <div id="bluetooth-mac-selector" class="details-div">
                     <h3>Activate Bluetooth</h3>
-                    <input id="bluetooth-active" type="checkbox">
-                    <label for="bluetooth-active">Enable bluetooth</label>
+                    <p>
+                        <input id="bluetooth-active" type="checkbox">
+                        <label for="bluetooth-active">Enable bluetooth</label>
+                    </p>
+                    <p>
+                        Bluetooth device name: 
+                        <input id="bluetooth-name">
+                    </p>
+                    
                     <h3>Whitelist of MAC addresses</h3>
                     <macselector></macselector>
                     <details class="info-div">
@@ -110,6 +117,10 @@
             <details class="menu-details">
                 <summary class="menu-summary prevent-select">Hardware</summary>
                 
+                <div class="details-div">
+                    <table id="input-table" class="hardware-table"></table>
+                    <table id="output-table" class="hardware-table"></table>
+                </div>
             </details>
 
             <details class="menu-details">

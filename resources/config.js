@@ -111,3 +111,48 @@ Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
         return div;
     });
 });
+
+
+function createRadioTable(tableId, headers, columns, radioPrefix) {
+    const table = document.getElementById(tableId);
+    const trh = document.createElement('tr');
+    const td0 = document.createElement('td');
+    trh.appendChild(td0);
+    for (let j=0;j<headers.length;j++) {
+        const td = document.createElement('td');
+        td.textContent = headers[j];
+        trh.appendChild(td);
+    }
+    table.appendChild(trh);
+    for (let i=0;i<columns.length;i++) {
+        const tr = document.createElement('tr');
+        const tdf = document.createElement('td');
+        tdf.textContent = columns[i];
+        tr.appendChild(tdf);
+
+        for (let j=0;j<headers.length;j++) {
+            const td = document.createElement('td');
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = radioPrefix + '-' + columns[i].toLowerCase();
+            radio.value = j;
+            td.appendChild(radio);
+            tr.appendChild(td);
+        }
+        table.appendChild(tr);
+    }
+}
+
+createRadioTable(
+    'input-table', 
+    ['P1', 'P2', 'P3', 'P4', 'CL', 'CH'],
+    ['Hue', 'Saturation', 'Value', 'Lightness', 'Red', 'Green', 'Blue', 'White'],
+    'input'
+);
+
+createRadioTable(
+    'output-table', 
+    ['Red', 'Green', 'Blue', 'White', 'None'],
+    ['Output 0', 'Output 1', 'Output 2', 'Output 3'],
+    'output'
+);
