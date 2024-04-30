@@ -1,0 +1,29 @@
+<p>
+    The WiFi connection feature of your LED RGB controller operates on a prioritized list basis.
+</p>
+<p>
+    1. Adding Networks: Users can add entries to the list containing the name of the network and its password.
+</p>
+<p>
+    2. Connection Priority: When the device searches for available networks, it tries to connect to the first network on
+    the list. If a connection is not established, it moves to the next network on the list, following the priority
+    order.
+</p>
+<p>
+    3. Fallback Option: If none of the networks on the list are found, the device creates its own network (access point)
+    with the specified name and password below the list. However, if the name field is left blank, it won't create an
+    access point and will instead resume network search after a certain period.
+</p>
+<p>
+    4. Repetition of Algorithm: The device repeats this algorithm each time it fails to establish a connection with a
+    network. If it enters access point mode, it does so only after a restart or manual selection of a network from the
+    list (via the "connect" button).
+</p>
+<p>
+    This approach ensures seamless connectivity by attempting to connect to preferred networks first, with a fallback
+    option to create its own network if necessary.
+</p>
+<p>
+    Users can manage network priorities and configurations efficiently through the provided interface, ensuring reliable
+    and user-friendly WiFi connectivity for the LED RGB controller.
+</p>

@@ -103,10 +103,15 @@ filterselector {
 }
 
 .chart-info span {
-    margin-top: 5px;
+    margin-left: 5px;
 }
 
-.chart-info canvas {
+#filters-div simple-chart {
+    margin-top: 10px;
+    margin-right: 5px;
+}
+
+simple-chart canvas {
     border-style: dashed dashed solid solid;
     border-color: lightgray lightgray black black;
     border-width: 1px 1px 2px 2px;  

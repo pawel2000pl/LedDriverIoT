@@ -35,14 +35,7 @@
                         
                         <details class="info-div">
                             <summary class="prevent-select">Description</summary>
-                            <p>
-                                RGB (Red, Green, Blue): This color space represents colors as combinations of red, green, and blue light. Each color channel can have values ranging from 0 to 1, where 0 means no intensity and 1 means full intensity. It's commonly used in digital displays and image processing.
-                            </p>
-                            <p>
-                                HSV (Hue, Saturation, Value): HSV represents colors based on their hue, saturation, and value. Hue refers to the type of color (e.g., red, blue), saturation represents the intensity or purity of the color, and value represents the brightness of the color. It's often used in graphic design and image editing for its intuitive representation of color.
-                            <p>
-                                HSL (Hue, Saturation, Lightness): Similar to HSV, HSL also represents colors based on hue, saturation, and lightness. However, in HSL, lightness replaces value, and it represents the perceived brightness of the color. Lightness ranges from 0% (black) to 100% (white), while hue and saturation remain the same as in HSV. HSL is popular for its simplicity and ease of use in web design and CSS styling.
-                            </p>
+                            <include-raw src="/colors_desc.html"></include-raw>
                         </detals>
                     </div>
                 </div>
@@ -54,37 +47,24 @@
 
                 <div id="wifi-mac-selector" class="details-div">
                     <h3>Wi-Fi priority list</h3>
-                    <wifiselector></wifiselector>
+                    <wifiselector id="sta-priority-list"></wifiselector>
+                    <h3>Access point</h3>
+                    <p>
+                        <div><span>SSID:</span><input id="ap-ssid"></div>
+                        <div><span>Password:</span><input id="ap-password" type="password"></div>
+                    </p>
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
-                        <p>
-                            The WiFi connection feature of your LED RGB controller operates on a prioritized list basis.
-                        </p>
-                        <p>
-                            1. Adding Networks: Users can add entries to the list containing the name of the network and its password.
-                        </p>
-                        <p>
-                            2. Connection Priority: When the device searches for available networks, it tries to connect to the first network on the list. If a connection is not established, it moves to the next network on the list, following the priority order.
-                        </p>
-                        <p>
-                            3. Fallback Option: If none of the networks on the list are found, the device creates its own network (access point) with the specified name and password below the list. However, if the name field is left blank, it won't create an access point and will instead resume network search after a certain period.
-                        </p>
-                        <p>
-                            4. Repetition of Algorithm: The device repeats this algorithm each time it fails to establish a connection with a network. If it enters access point mode, it does so only after a restart or manual selection of a network from the list (via the "connect" button).
-                        </p>
-                        <p>
-                            This approach ensures seamless connectivity by attempting to connect to preferred networks first, with a fallback option to create its own network if necessary.
-                        </p>
-                        <p>
-                            Users can manage network priorities and configurations efficiently through the provided interface, ensuring reliable and user-friendly WiFi connectivity for the LED RGB controller.
-                        </p>
+                        <include-raw src="wifi_desc.html"></include-raw>
                     </details>
                     <h3>Whitelist of MAC addresses</h3>
-                    <macselector></macselector>
+                    <input id="wifi-whitelist" type="checkbox">
+                    <label for="wifi-whitelist">Enable whitelist</label>
+                    <macselector id="wifi-macs"></macselector>
 
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
-                        <whitelistdesc></whitelistdesc> 
+                        <include-raw src="/whitelist_desc.html"></include-raw>
                     </details>
                 </div>
 
@@ -105,10 +85,10 @@
                     </p>
                     
                     <h3>Whitelist of MAC addresses</h3>
-                    <macselector></macselector>
+                    <macselector id="bluetooth-macs"></macselector>
                     <details class="info-div">
-                        <summary class="prevent-select">Description</summary>                        
-                        <whitelistdesc></whitelistdesc> 
+                        <summary class="prevent-select">Description</summary>    
+                        <include-raw src="/whitelist_desc.html"></include-raw>
                     </details>
                 </div>
 
@@ -118,8 +98,27 @@
                 <summary class="menu-summary prevent-select">Hardware</summary>
                 
                 <div class="details-div">
+                    <h3>Inputs and outputs</h3>
                     <table id="input-table" class="hardware-table"></table>
                     <table id="output-table" class="hardware-table"></table>
+
+                    <h3>Knobs settings</h3>
+                    <p>
+                        <div>
+                            <span>Low bias: </span>
+                            <input id="low-bias-input" type="number" min="0" max="1" step="0.001" value="0">
+                        </div>
+                        <div>
+                            <span>High bias: </span>
+                            <input id="high-bias-input" type="number" min="0" max="1" step="0.001" value="0">
+                        </div>
+                    </p>
+                    <p>
+                        <span>Switch from wifi / bluetooth to knobs after changing them for:</span>
+                        <input id="knob-activate-input" type="number" min="0.001" max="0.999" step="0.001" value="0">
+                    </p>
+                    <input id="activate-white-knob" type="checkbox">
+                    <label for="activate-white-knob">Enable white channel</label>
                 </div>
             </details>
 
@@ -129,93 +128,80 @@
                 <div class="details-div">
                     
                     <div>
-                         
-                        <h3>Input hue filter&#32;(for HSV and HSL)</h3>
-                        <filterselector id="input-hue"></filterselector>   
-                        <h3>Input saturation filter&#32;(for HSV and HSL)</h3>
-                        <filterselector id="input-saturation"></filterselector>
-                        <h3>Input value filter&#32;(for HSV)</h3>
-                        <filterselector id="input-value"></filterselector>
-                        <h3>Input lightness filter&#32;(for HSL)</h3>
-                        <filterselector id="input-lightness"></filterselector>
-                        <h3>Input red filter&#32;(for RGB)</h3>
-                        <filterselector id="input-red"></filterselector>
-                        <h3>Input green filter&#32;(for RGB)</h3>
-                        <filterselector id="input-green"></filterselector>
-                        <h3>Input blue filter&#32;(for RGB)</h3>
-                        <filterselector id="input-blue"></filterselector>
-                        <h3>Input white filter&#32;(additional channel)</h3>
-                        <filterselector id="input-white"></filterselector>
-                        <h3>Input common filter&#32;(for/after all above)</h3>
-                        <filterselector id="input-common-filter"></filterselector>
-                        <h3>Output common filter&#32;(for/after all below)</h3>
-                        <filterselector id="output-common-filter"></filterselector>
-                        <h3>Output red filter</h3>
-                        <filterselector id="output-red"></filterselector>
-                        <h3>Output green filter</h3>
-                        <filterselector id="output-green"></filterselector>
-                        <h3>Output blue filter</h3>
-                        <filterselector id="output-blue"></filterselector>
-                        <h3>Output white filter&#32;(additional channel)</h3>
-                        <filterselector id="output-white"></filterselector>
+                        <div id="filters-div">
+                            <h3>Input hue filter&#32;(for HSV and HSL)</h3>
+                            <filterselector id="input-hue"></filterselector>   
+                            <h3>Input saturation filter&#32;(for HSV and HSL)</h3>
+                            <filterselector id="input-saturation"></filterselector>
+                            <h3>Input value filter&#32;(for HSV)</h3>
+                            <filterselector id="input-value"></filterselector>
+                            <h3>Input lightness filter&#32;(for HSL)</h3>
+                            <filterselector id="input-lightness"></filterselector>
+                            <h3>Input red filter&#32;(for RGB)</h3>
+                            <filterselector id="input-red"></filterselector>
+                            <h3>Input green filter&#32;(for RGB)</h3>
+                            <filterselector id="input-green"></filterselector>
+                            <h3>Input blue filter&#32;(for RGB)</h3>
+                            <filterselector id="input-blue"></filterselector>
+                            <h3>Input white filter&#32;(additional channel)</h3>
+                            <filterselector id="input-white"></filterselector>
+                            <h3>Input common filter&#32;(for/after all above)</h3>
+                            <filterselector id="input-common-filter"></filterselector>
+                            <h3>Output common filter&#32;(for/after all below)</h3>
+                            <filterselector id="output-common-filter"></filterselector>
+                            <h3>Output red filter</h3>
+                            <filterselector id="output-red"></filterselector>
+                            <h3>Output green filter</h3>
+                            <filterselector id="output-green"></filterselector>
+                            <h3>Output blue filter</h3>
+                            <filterselector id="output-blue"></filterselector>
+                            <h3>Output white filter&#32;(additional channel)</h3>
+                            <filterselector id="output-white"></filterselector>
+                        </div>
 
                         <details class="info-div">
-                            <summary class="prevent-select">Description</summary>
-                            <p>
-                                <p>
-                                    The LED RGB controller you are working on incorporates a feature called "filters," allowing you to adjust the input and output curves for optimal performance. This feature is particularly useful due to two main factors:
-                                </p>
-                                <p>
-                                    1. Human Perception of Brightness: Human vision perceives brightness on a logarithmic scale rather than a linear one. As a result, a linear increase in input (like turning a knob) may not translate into a perceived linear increase in brightness. Filters help adjust the input curve to match human perception, ensuring smoother and more intuitive control over brightness levels.
-                                </p>
-                                <p>
-                                    2. LED Characteristics: Different LED diodes can have varying brightness characteristics. Some LEDs may require more power to achieve the same perceived brightness as others. Filters enable you to tailor the output curve to match the characteristics of the specific LEDs you are using, ensuring consistent and accurate brightness control across different diodes.
-                                </p>
-                                <p>
-                                    By combining several predefined functions, these filters allow you to customize the input curve from potentiometers and the output curve to the LED control transistors. This customization helps achieve the desired brightness levels effectively, accounting for both human perception and LED characteristics.
-                                </p>
-                                <p>
-                                    Below this explanation, you will find illustrations of the various functions available for creating combinations to tailor the curves according to your specific requirements.
-                                </p>
-                            </p>
+                            <summary class="prevent-select">Description</summary>                               
+                            <include-raw src="/filters_desc.html"></include-raw>
+                            
                             <div class="chart-info">
                                 <div>
-                                    <div id="info-function-chart-0" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-0" class="info-function-chart"></simple-chart>
                                     <span>Linear function&#32;(LIN)</span>                                    
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-1" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-1" class="info-function-chart"></simple-chart>
                                     <span>Parabolic function&#32;(SQR)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-2" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-2" class="info-function-chart"></simple-chart>
                                     <span>Square root function&#32;(SQRT)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-3" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-3" class="info-function-chart"></simple-chart>
                                     <span>Modified exponential function&#32;(EXP)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-4" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-4" class="info-function-chart"></simple-chart>
                                     <span>Modified arcus-sinus function&#32;(ASIN)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-5" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-5" class="info-function-chart"></simple-chart>
                                     <span>Modified cosinus function&#32;(COS)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-6" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-6" class="info-function-chart"></simple-chart>
                                     <span>Point-symmetrical parabolic function&#32;(XSQR)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-7" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-7" class="info-function-chart"></simple-chart>
                                     <span>Point-symmetrical square root function&#32;(XSQRT)</span> 
                                 </div>
                                 <div>
-                                    <div id="info-function-chart-8" class="info-function-chart"></div>
+                                    <simple-chart id="info-function-chart-8" class="info-function-chart"></simple-chart>
                                     <span>Point-symmetrical modified exponential function&#32;(XEXP)</span> 
                                 </div>
                             </div>
+
                         </details>
                     </div>
                     
@@ -229,8 +215,8 @@
         <script src="/knob.js"></script>
         <script src="/conversions.js"></script>
         <script src="/knobPanels.js"></script>
-        
         <script src="/chart.js"></script>
+        
         <script src="/config_fetcher.js"></script>
         <script src="/filter_selector.js"></script>
         <script src="/config.js"></script>

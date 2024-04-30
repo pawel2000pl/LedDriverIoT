@@ -40,10 +40,18 @@ const channelsInModes = {
 
 var config = null;
 
-function refreshConfig() {
-    return fetch('/config.json').then(async (response)=>{
-        config = await response.json();
-    }).catch(()=>alert('Error occured. Please refresh page or restart device.'));
+async function refreshConfig() {
+    try {
+        try {
+            const response = await fetch('/config.json');
+            config = await response.json();
+        } catch {
+            const response = await fetch('/default_config.json');
+            config = await response.json();
+        }
+    } catch {
+        return alert('Error occured. Please refresh page or restart device.');
+    }
 }
 
 const configPromise = refreshConfig();

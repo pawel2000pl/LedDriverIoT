@@ -107,6 +107,14 @@
             0,
             0
         ],
+        "globalOutputFilters": [
+            1,
+            0.6,
+            0.01,
+            0,
+            0,
+            0
+        ],
         "outputFilters": {
             "red": [
                 1,
@@ -140,15 +148,7 @@
                 0,
                 0
             ]
-        },
-        "globalOutputFilters": [
-            1,
-            0.6,
-            0.01,
-            0,
-            0,
-            0
-        ]
+        }
     },
     "hardware": {
         "potentionemterConfiguration": {
@@ -162,10 +162,10 @@
             "white": 3
         },
         "transistorConfiguration": {
-            "red": 0,
-            "green": 1,
-            "blue": 2,
-            "white": 3
+            "output 0": 0,
+            "output 1": 1,
+            "output 2": 2,
+            "output 3": 3
         },
         "bias": {
             "up": 0,

@@ -45,16 +45,17 @@ Array.from(document.getElementsByTagName('filterselector')).forEach((element)=>{
         return result;
     };
 
+    const chartDiv = new Chart(normalizeFunction(chartFunction), size, size);
+    chartDiv.className = 'chart-info';
+    const refreshChart = ()=>{chartDiv.fun = normalizeFunction(chartFunction);};
+
     element.setValues = function(values) {
         for (let i=0;i<filterFunctions.length;i++)
             methods[i].set(values[i]??0);
+        refreshChart();
     };
     element.getValues = ()=>methods.map((item)=>item.value());
 
-    const chartDiv = document.createElement('div');
-    chartDiv.className = 'chart-info';
-    const chart = new Chart(chartDiv, normalizeFunction(chartFunction), size, size);
-    const refreshChart = ()=>{chart.setFunction(normalizeFunction(chartFunction));};
     methods.forEach((item)=>{item.addEvent(refreshChart);});
     element.appendChild(chartDiv);
     element.appendChild(slidersTable);
