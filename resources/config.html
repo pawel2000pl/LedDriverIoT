@@ -49,7 +49,8 @@
                     <h3>Wi-Fi priority list</h3>
                     <wifiselector id="sta-priority-list"></wifiselector>
                     <h3>Access point</h3>
-                    <p>
+                    <p> 
+                        <div><input id="enable-ap" type="checkbox"><label for="enable-ap">Enabled</label></div>
                         <div><span>SSID:</span><input id="ap-ssid"></div>
                         <div><span>Password:</span><input id="ap-password" type="password"></div>
                     </p>
@@ -211,6 +212,11 @@
             </details>
         
         </div>
+
+        <script>
+            const $id = (id)=>document.getElementById(id);
+            const $new = (...args)=>document.createElement(...args);
+        </script>
         
         <script src="/knob.js"></script>
         <script src="/conversions.js"></script>
@@ -219,6 +225,10 @@
         
         <script src="/config_fetcher.js"></script>
         <script src="/filter_selector.js"></script>
+
+        <script src="include_raw.js"></script>
+        <script src="config_components.js"></script>
+        
         <script src="/config.js"></script>
         
     </body>

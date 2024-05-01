@@ -74,8 +74,10 @@ struct Resource {
 PATH = 'resources/'
 result_content = [info_struct]; 
 resource_names = []
+max_decompressed_size = 0
+max_compressed_size = 0
 
-operators = ['<', '>', '<=', '>=', '=', '==', '===', '\\+', '-', '\\*', ',', ':', '\\/', '\\[', '\\]', '\\/=', '\\*=', '\\+=', '-=', '\\(', '\\)', '\\{', '\\}', ';', '\\|', '^', '&']
+operators = ['<', '>', '<=', '>=', '=', '==', '===', '\\+', '-', '\\*', ',', ':', '\\/', '\\[', '\\]', '\\/=', '\\*=', '\\+=', '-=', '\\(', '\\)', '\\{', '\\}', ';', '\\|', '\\^', '&']
 
 for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
@@ -106,12 +108,19 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         result_content.append(' .data = '+var_name+'_data,')
         result_content.append(' .size = '+var_name+'_size,')
         result_content.append(' .decompressed_size = '+var_name+'_decompressed_size')
+        max_decompressed_size = max(max_decompressed_size, len(content))
+        max_compressed_size = max(max_compressed_size, len(compressed))
         print(filename, len(orginal_content), len(content), len(compressed))
         result_content.append('};')
 
 
+print(max_decompressed_size, max_compressed_size)
+
 result_content.append('const struct Resource* resources[] = {'+','.join(['&'+name for name in resource_names])+'};')
 result_content.append('const unsigned int resources_count = '+str(len(resource_names))+';')
+result_content.append('')
+result_content.append('const unsigned int max_resource_compressed_buffer = '+str(max_compressed_size)+';')
+result_content.append('const unsigned int max_resource_decompressed_buffer = '+str(max_decompressed_size)+';')
 result_content.append('')
 
 with open('main/resources.h', 'w') as f: f.write("\n".join(result_content))

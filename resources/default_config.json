@@ -11,8 +11,9 @@
             }
         ],
         "access_point": {
+            "enabled": true,
             "ssid": "LedDriver",
-            "password": "passwordL"
+            "password": "passwordLed"
         },
         "strict": false,
         "strictList": [
