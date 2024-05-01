@@ -1,9 +1,12 @@
-const sqr = function(x) { return x * x; };
+"use strict";
+
+const sqr = (x)=>x*x;
 const sqrt = Math.sqrt;
 const hypot = Math.hypot;
 const abs = Math.abs;
 const atan2 = Math.atan2;
 const floor = Math.floor;
+const ceil = Math.ceil;
 const min = Math.min;
 const max = Math.max;
 const sin = Math.sin;
@@ -14,23 +17,16 @@ const array2color = function(c) {
     return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
 };
 
-class Knob {
+class Knob extends HTMLElement {
         
-    constructor(parent, radius=128, knobRadius=20, width=32, angle=5) {
-        this.__parent = parent;
-        this.__radius = radius;
-        this.__width = width;
-        this.__angle = angle;
-        this.__knobRadius = knobRadius;
-        this.__canvas = document.createElement('canvas');
-        this.__canvas.width = 2*(radius+Math.max(knobRadius, width/2));
-        this.__canvas.height = 2*(radius+Math.max(knobRadius, width));           
+    constructor(radius=128, knobRadius=20, width=32, angle=5) {
+        super();
+        this.__canvas = document.createElement('canvas');        
         this.__canvas.addEventListener('pointerdown', (event)=>this.__onMouseDown(event));   
         this.__canvas.addEventListener('pointerleave', (event)=>this.__onMouseUp(event));           
         this.__canvas.addEventListener('pointerup', (event)=>this.__onMouseUp(event));           
         this.__canvas.addEventListener('pointermove', (event)=>this.__onMouseMove(event));
-        this.__parent.appendChild(this.__canvas);    
-        this.__backgroundData = new ImageData(this.__canvas.width, this.__canvas.height);
+        this.appendChild(this.__canvas);    
         this.__minValue = 0;
         this.__maxValue = 100;
         this.__value = 33;
@@ -38,13 +34,25 @@ class Knob {
         this.__isChangingValue = false;
         this.__gradient = [[0,0,255], [0,255,255], [0,255,0], [255,255,0], [255,0,0], [255,0,255], [0,0,255]];
         this.__backgroundMap = [];
+        this.__setSize(radius, knobRadius, width, angle);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__drawBackground();this.render();});    
+        //event
+        this.onChangeValue = undefined;
+    }
+
+    __setSize(radius, knobRadius, width, angle) {
+        this.__radius = radius;
+        this.__width = width;
+        this.__angle = angle;
+        this.__knobRadius = knobRadius;
+        const canvasWidth = 2*(radius+max(knobRadius, width/2));
+        const canvasHeight = 2*(radius+max(knobRadius, width/2));
+        this.__canvas.width = canvasWidth;
+        this.__canvas.height = canvasHeight;   
+        this.__backgroundData = new ImageData(canvasWidth, canvasHeight);
         this.__createBackgroundMap();
         this.__drawBackground();
         this.render();        
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__drawBackground();this.render();});
-        
-        //event
-        this.onChangeValue = undefined;
     }
     
     __doChangeValue() {
@@ -218,26 +226,30 @@ class Knob {
     }
     
     
-    setGradient(gradient) {
+    getCurrentColor() {
+        return this.getColor((this.__value - this.__minValue) / (this.__maxValue - this.__minValue));
+    }
+    
+    
+    set gradient(gradient) {
         if (this.__gradient.every((element, index) => element === gradient[index]))
             return;
         this.__gradient = gradient;
         this.__drawBackground();
         this.render();
     }
-    
-    
-    getCurrentColor() {
-        return this.getColor((this.__value - this.__minValue) / (this.__maxValue - this.__minValue));
+
+    get gradient() {
+        return this.__gradient;
     }
     
     
-    getValue() {
+    get value() {
         return this.__value;
     }
     
     
-    setValue(value) {
+    set value(value) {
         if (this.__value !== value) {
             this.__value = value;
             this.__constrainValues();
@@ -247,17 +259,26 @@ class Knob {
     }
     
     
-    setMinValue(value) {
+    set minValue(value) {
         this.__minValue = value;
         this.__constrainValues();
         this.render();
     }
     
+    get minValue() {
+        return this.__minValue;
+    }
     
-    setMaxValue(value) {
+    set maxValue(value) {
         this.__maxValue = value;
         this.__constrainValues();
         this.render();
     }
 
+    get maxValue() {
+        return this.__maxValue;
+    }
+
 };
+
+customElements.define('knob-input', Knob);

@@ -1,3 +1,4 @@
+"use strict";
 
 function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
     
@@ -7,19 +8,17 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
     const clientWidth = parent.offsetWidth;
     const ray = clientWidth / 5;
     
-    const divs = [];
+    const knobs = [];
     for (let i=0;i<3;i++) {
-        const div = document.createElement('div');
-        div.className = 'knob';
-        div.knob = new Knob(div, ray, ray / 4, ray / 3);
-        div.knob.setMinValue(0);
-        div.knob.setMaxValue(ranges[i]);
-        div.knob.setValue(defaults[i]);
-        divs.push(div);
+        const knob = new Knob(ray, ray / 4, ray / 3);
+        knob.minValue = 0;
+        knob.maxValue = ranges[i];
+        knob.value = defaults[i];
+        knobs.push(knob);
     }
     
-    const setGradients = function() {        
-        const channels = divs.map((div)=>div.knob.getValue());
+    const setGradients = async function() {
+        const channels = knobs.map((knob)=>knob.value);
         for (let i=0;i<3;i++) {
             let gradient = [];
             let channelsCopy = channels.slice();
@@ -27,7 +26,10 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
                 channelsCopy[i] = j * ranges[i] / (gradientParts - 1);
                 gradient.push(converter(...channelsCopy));
             }
-            divs[i].knob.setGradient(gradient);
+            for (let j=0;j<gradientParts;j++)
+                if (gradient[i] instanceof Promise)
+                    gradient[i] = await gradient[i];
+            knobs[i].gradient = gradient.map((color)=>color.map((x)=>255*x));
         }
         setEvent(channels);
     };
@@ -35,17 +37,17 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
     setGradients();
     
     for (let i=0;i<3;i++) {
-        divs[i].knob.onChangeValue = setGradients;
-        mainDiv.appendChild(divs[i]);
+        knobs[i].onChangeValue = setGradients;
+        mainDiv.appendChild(knobs[i]);
     }
     
     parent.appendChild(mainDiv);  
     return {
         set: function(channels) {
             for (let i=0;i<3;i++)
-                divs[i].knob.setValue(channels[i]);
+                knobs[i].value = channels[i];
         },
-        get: ()=>divs.map((div)=>div.knob.getValue())
+        get: ()=>knobs.map((knob)=>knob.value)
     };
 }
 
@@ -55,13 +57,11 @@ function createWhiteKnob(parent) {
     const ray = clientWidth / 5;
     
     const wDiv = document.createElement('div');
-    const subDiv = document.createElement('div');
     wDiv.className = 'knob-div';
-    subDiv.className = 'knob';
-    whiteKnob = new Knob(subDiv, ray, ray / 4, ray / 3);
-    whiteKnob.setMaxValue(1);
-    whiteKnob.setGradient([[0,0,0], [255,255,255]]);   
-    whiteKnob.setValue(0);
-    wDiv.appendChild(subDiv);
+    const whiteKnob = new Knob(ray, ray / 4, ray / 3);
+    whiteKnob.maxValue = 1;
+    whiteKnob.gradient = [[0,0,0], [255,255,255]];
+    whiteKnob.value = 0;
+    wDiv.appendChild(whiteKnob);
     parent.appendChild(wDiv);     
 }

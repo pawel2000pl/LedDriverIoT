@@ -1,7 +1,9 @@
+"use strict";
+
 /**
  * Converts an RGB color value to HSL. Conversion formula
  * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
- * Assumes r, g, and b are contained in the set [0, 255] and
+ * Assumes r, g, and b are contained in the set [0, 1] and
  * returns h, s, and l in the set [0, 1].
  *
  * @param   Number  r       The red color value
@@ -10,7 +12,6 @@
  * @return  Array           The HSL representation
  */
 function rgbToHsl(r, g, b) {
-    r /= 255, g /= 255, b /= 255;
 
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, l = (max + min) / 2;
@@ -33,11 +34,21 @@ function rgbToHsl(r, g, b) {
     return [ h, s, l ];
 }
 
+
+function hue2rgb(p, q, t) {
+    if (t < 0) t += 1;
+    if (t > 1) t -= 1;
+    if (t < 1/6) return p + (q - p) * 6 * t;
+    if (t < 1/2) return q;
+    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+    return p;
+}
+
 /**
  * Converts an HSL color value to RGB. Conversion formula
  * adapted from http://en.wikipedia.org/wiki/HSL_color_space.
  * Assumes h, s, and l are contained in the set [0, 1] and
- * returns r, g, and b in the set [0, 255].
+ * returns r, g, and b in the set [0, 1].
  *
  * @param   Number  h       The hue
  * @param   Number  s       The saturation
@@ -50,14 +61,6 @@ function hslToRgb(h, s, l) {
     if (s == 0) {
         r = g = b = l; // achromatic
     } else {
-        function hue2rgb(p, q, t) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-        }
 
         var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         var p = 2 * l - q;
@@ -67,13 +70,13 @@ function hslToRgb(h, s, l) {
         b = hue2rgb(p, q, h - 1/3);
     }
 
-    return [ r * 255, g * 255, b * 255 ];
+    return [ r, g, b ];
 }
 
 /**
  * Converts an RGB color value to HSV. Conversion formula
  * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
- * Assumes r, g, and b are contained in the set [0, 255] and
+ * Assumes r, g, and b are contained in the set [0, 1] and
  * returns h, s, and v in the set [0, 1].
  *
  * @param   Number  r       The red color value
@@ -82,7 +85,6 @@ function hslToRgb(h, s, l) {
  * @return  Array           The HSV representation
  */
 function rgbToHsv(r, g, b) {
-    r /= 255, g /= 255, b /= 255;
 
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, v = max;
@@ -109,7 +111,7 @@ function rgbToHsv(r, g, b) {
  * Converts an HSV color value to RGB. Conversion formula
  * adapted from http://en.wikipedia.org/wiki/HSV_color_space.
  * Assumes h, s, and v are contained in the set [0, 1] and
- * returns r, g, and b in the set [0, 255].
+ * returns r, g, and b in the set [0, 1].
  *
  * @param   Number  h       The hue
  * @param   Number  s       The saturation
@@ -134,11 +136,11 @@ function hsvToRgb(h, s, v) {
         case 5: r = v, g = p, b = q; break;
     }
 
-    return [ r * 255, g * 255, b * 255 ];
+    return [ r, g, b ];
 }
 
 
 function rgbToRgb(r, g, b) {
-    return [r*255, g*255, b*255];
+    return [r, g, b];
 }
 

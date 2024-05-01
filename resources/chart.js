@@ -1,3 +1,5 @@
+"use strict";
+
 class Chart extends HTMLElement {
 
     constructor(fun=(x)=>x, width=64, height=64) {

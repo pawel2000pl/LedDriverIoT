@@ -1,3 +1,4 @@
+"use strict";
 
 var channels = {
     red: 0.89,

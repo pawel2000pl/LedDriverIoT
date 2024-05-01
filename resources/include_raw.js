@@ -1,3 +1,5 @@
+"use strict";
+
 class IncludeRaw extends HTMLElement {
 
     static observedAttributes = ["src"];

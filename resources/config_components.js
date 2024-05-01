@@ -1,3 +1,4 @@
+"use strict";
 
 Array.from(document.getElementsByClassName('info-function-chart')).forEach((item)=>{
     const fun = filterFunctions[Number(item.id.substring('info-function-chart-'.length))];

@@ -1,3 +1,5 @@
+"use strict";
+
 const converters = {
     hsv: hsvToRgb,
     hsl: hslToRgb,

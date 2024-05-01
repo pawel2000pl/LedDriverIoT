@@ -53,7 +53,7 @@ filterselector {
     align-items: center;
 }
 
-.knob-div .knob {
+knob-input {
     touch-action: none;
     width: min-content;
 }
