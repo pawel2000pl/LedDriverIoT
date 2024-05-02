@@ -97,3 +97,25 @@ function fillConfig(config) {
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
 }
+
+$id('save-settings-btn').onclick = saveConfig;
+$id('revert-settings-btn').onclick = ()=>{configPromise = refreshConfig();};
+$id('default-settings-btn').onclick = async ()=>{
+    if (confirm("All settings "+"(wifi credentials, filters, etc)"+" will be reverted to default values."+" "+"Are you sure you want to continue?")) {
+        await refreshConfig(true);
+        await saveConfig();
+    }
+};
+$id('export-settings-btn').onclick = exportConfigToJSON;
+$id('import-settings-btn').onclick = async ()=>{
+    try {
+        const newConfig = await importConfigFromFile();
+        if (newConfig === null) return;
+        fillConfig(newConfig);
+        config = newConfig;
+        alert("Configuration imported."+" "+"Now you can save them.");
+    } catch {
+        fillConfig(config);
+        alert('Error ocurred.'+' Invalid configuration file.');
+    }
+};

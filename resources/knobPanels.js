@@ -5,17 +5,24 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
     const mainDiv = document.createElement('div'); 
     mainDiv.className = 'knob-div';
     
-    const clientWidth = parent.offsetWidth;
-    const ray = clientWidth / 5;
+    const knobs = [null, null, null];
+
+    const resize = ()=>{
+        const clientWidth = parent.clientWidth;
+        const ray = clientWidth / 5 - 1;
+        for (let i=0;i<3;i++)
+            knobs[i].setSize(ray, ray / 4, ray / 3);
+    };
     
-    const knobs = [];
     for (let i=0;i<3;i++) {
-        const knob = new Knob(ray, ray / 4, ray / 3);
+        const knob = new Knob();
         knob.minValue = 0;
         knob.maxValue = ranges[i];
         knob.value = defaults[i];
-        knobs.push(knob);
+        knobs[i] = knob;
     }
+    resize();
+    window.addEventListener('resize', resize);
     
     const setGradients = async function() {
         const channels = knobs.map((knob)=>knob.value);
@@ -27,8 +34,8 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
                 gradient.push(converter(...channelsCopy));
             }
             for (let j=0;j<gradientParts;j++)
-                if (gradient[i] instanceof Promise)
-                    gradient[i] = await gradient[i];
+                if (gradient[j] instanceof Promise)
+                    gradient[j] = await gradient[j];
             knobs[i].gradient = gradient.map((color)=>color.map((x)=>255*x));
         }
         setEvent(channels);
@@ -52,13 +59,17 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
 }
 
 
-function createWhiteKnob(parent) { 
-    const clientWidth = parent.clientWidth;
-    const ray = clientWidth / 5;
-    
+function createWhiteKnob(parent) {     
     const wDiv = document.createElement('div');
     wDiv.className = 'knob-div';
-    const whiteKnob = new Knob(ray, ray / 4, ray / 3);
+    const whiteKnob = new Knob();
+    const resize = ()=>{
+        const clientWidth = parent.clientWidth;
+        const ray = clientWidth / 5;
+        whiteKnob.setSize(ray, ray / 4, ray / 3);
+    };
+    resize();
+    window.addEventListener('resize', resize);
     whiteKnob.maxValue = 1;
     whiteKnob.gradient = [[0,0,0], [255,255,255]];
     whiteKnob.value = 0;

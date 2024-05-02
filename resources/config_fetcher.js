@@ -41,9 +41,10 @@ const channelsInModes = {
 
 var config = null;
 
-async function refreshConfig() {
+async function refreshConfig(defaults = false) {
     try {
         try {
+            if (defaults) throw Exception("Using defaults");
             const response = await fetch('/config.json');
             config = await response.json();
         } catch {
@@ -55,4 +56,63 @@ async function refreshConfig() {
     }
 }
 
-const configPromise = refreshConfig();
+var configPromise = refreshConfig();
+
+async function saveConfig() {
+    try {
+        await configPromise;
+        const response = await fetch('/config.json', {
+            method: 'POST',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(config)
+        });
+        const result = await response.json();
+        if (result.status == "error")
+            alert(result.message)
+    } catch {
+        return alert('Error occured. Please refresh page or restart device.');
+    }
+}
+
+
+function exportConfigToJSON() {
+    const jsonConfig = JSON.stringify(config, null, 4);
+    const blob = new Blob([jsonConfig], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'config.json';
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+function importFromJSONFile(file) {
+    const reader = new FileReader();
+    return new Promise((resolve, reject)=>{
+        reader.onload = function(event) {
+            try {
+                resolve(JSON.parse(event.target.result));
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+
+function importConfigFromFile() {
+    return new Promise((resolve, reject)=>{
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) importFromJSONFile(file).then(resolve, reject);
+            else resolve(null);
+        });
+        input.click();
+    });
+}

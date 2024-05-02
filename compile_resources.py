@@ -2,6 +2,7 @@ import os
 import re
 import ctypes
 import mimetypes
+import json
 
 os.system('gcc --std=c11 -O3 -x c main/fastlz.h -fpic -shared -o fastlz.so')
 
@@ -83,14 +84,17 @@ for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
         with open(PATH+filename) as f: content = f.read()
         orginal_content = content
-        content = re.sub('/\\*(.|\n)*?\\*/', ' ', content)
-        content = re.sub('\\/\\/[^"\'\\n]*\n', ' ', content)
-        content = re.sub('^[\\s]*', ' ', content)
-        content = re.sub('[\\s]*$', ' ', content)
-        content = re.sub('[\\s]+', ' ', content)
-        for operator in operators:
-            no_escaped = operator if operator[0] != '\\' else operator[1:]
-            content = re.sub('[\\s]*'+operator+'[\\s]*', no_escaped, content)
+        if filename.endswith('.json'):
+            content = json.dumps(json.loads(content), indent=None)
+        else:
+            content = re.sub('/\\*(.|\n)*?\\*/', ' ', content)
+            content = re.sub('\\/\\/[^"\'\\n]*\n', ' ', content)
+            content = re.sub('^[\\s]*', ' ', content)
+            content = re.sub('[\\s]*$', ' ', content)
+            content = re.sub('[\\s]+', ' ', content)
+            for operator in operators:
+                no_escaped = operator if operator[0] != '\\' else operator[1:]
+                content = re.sub('[\\s]*'+operator+'[\\s]*', no_escaped, content)
         compressed = compress_data(content.encode('utf-8'))
         decompressed = decompress_data(compressed).decode('utf-8')
         assert content == decompressed        

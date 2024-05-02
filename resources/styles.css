@@ -86,6 +86,14 @@ knob-input {
     font-weight: bolder;
 }
 
+.menu-summary:hover {
+    border: 1px solid gray;
+    background-color: whitesmoke;
+    @media (prefers-color-scheme: dark) { 
+        background-color: #333839;
+    }
+}
+
 .chart-info div {
     display: inline-flex !important;
     flex-direction: row;
@@ -152,4 +160,28 @@ simple-chart canvas {
 .hardware-table td:first-child {
     width: 80px;
     text-align: left;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: row;
+}
+
+.action-buttons div {
+    margin: 4px;
+    display: inline-block;
+    text-align: center;
+    width: 20vw;  
+    padding: 5px;  
+    font-weight: bolder;
+    cursor: pointer;
+    border: 1.5px solid darkgray;
+}
+
+.action-buttons div:hover {
+    border: 1.5px solid gray;
+    background-color: whitesmoke;
+    @media (prefers-color-scheme: dark) { 
+        background-color: #333839;
+    }
 }

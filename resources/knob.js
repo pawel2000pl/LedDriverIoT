@@ -34,13 +34,35 @@ class Knob extends HTMLElement {
         this.__isChangingValue = false;
         this.__gradient = [[0,0,255], [0,255,255], [0,255,0], [255,255,0], [255,0,0], [255,0,255], [0,0,255]];
         this.__backgroundMap = [];
-        this.__setSize(radius, knobRadius, width, angle);
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__drawBackground();this.render();});    
+        this.__queues = {createMap: false, drawBackground: false, render: false};
+        this.setSize(radius, knobRadius, width, angle);
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__queue(false, true, true);});    
         //event
         this.onChangeValue = undefined;
+        this.__queue(true, true, true);
     }
 
-    __setSize(radius, knobRadius, width, angle) {
+    __queue(createMap, drawBackground, render) {
+        if (! (createMap || drawBackground || render)) 
+            return;
+        if (! (this.__queues.createMap || this.__queues.drawBackground || this.__queues.render))
+            queueMicrotask(()=>this.__execQueue());
+        this.__queues.createMap = this.__queues.createMap || createMap;
+        this.__queues.drawBackground = this.__queues.drawBackground || drawBackground;
+        this.__queues.render = this.__queues.render || render;
+    }
+
+    __execQueue() {
+        if (this.__queues.createMap)
+            this.__createBackgroundMap();
+        if (this.__queues.drawBackground)
+            this.__drawBackground();
+        if (this.__queues.render)
+            this.render();
+        this.__queues = {createMap: false, drawBackground: false, render: false};
+    }
+
+    setSize(radius=128, knobRadius=20, width=32, angle=5) {
         this.__radius = radius;
         this.__width = width;
         this.__angle = angle;
@@ -50,9 +72,7 @@ class Knob extends HTMLElement {
         this.__canvas.width = canvasWidth;
         this.__canvas.height = canvasHeight;   
         this.__backgroundData = new ImageData(canvasWidth, canvasHeight);
-        this.__createBackgroundMap();
-        this.__drawBackground();
-        this.render();        
+        this.__queue(true, true, true);
     }
     
     __doChangeValue() {
@@ -94,9 +114,10 @@ class Knob extends HTMLElement {
     }
     
     __onMouseUp(event) {
+        this.__onMouseMove(event);
         this.__isMouseDown = false;  
         this.__isChangingValue = false;
-        this.render();        
+        this.__queue(false, false, true);
     }
     
     __onMouseMove(event) {
@@ -106,7 +127,7 @@ class Knob extends HTMLElement {
         if (this.__isChangingValue) {
             this.__value = this.__valueFromPosition(x, y);       
             this.__doChangeValue();
-            this.render();
+            this.__queue(false, false, true);
         } else scrollBy({
             left: event.movementX,
             top: -2*event.movementY,
@@ -232,11 +253,10 @@ class Knob extends HTMLElement {
     
     
     set gradient(gradient) {
-        if (this.__gradient.every((element, index) => element === gradient[index]))
+        if (this.__gradient.every((element, index) => element.every((subelement, subindex)=>subelement === gradient[index][subindex])))
             return;
         this.__gradient = gradient;
-        this.__drawBackground();
-        this.render();
+        this.__queue(false, true, true);
     }
 
     get gradient() {
@@ -253,7 +273,7 @@ class Knob extends HTMLElement {
         if (this.__value !== value) {
             this.__value = value;
             this.__constrainValues();
-            this.render();
+            this.__queue(false, false, true);
             this.__doChangeValue();
         }
     }
@@ -262,7 +282,7 @@ class Knob extends HTMLElement {
     set minValue(value) {
         this.__minValue = value;
         this.__constrainValues();
-        this.render();
+        this.__queue(false, false, true);
     }
     
     get minValue() {
@@ -272,7 +292,7 @@ class Knob extends HTMLElement {
     set maxValue(value) {
         this.__maxValue = value;
         this.__constrainValues();
-        this.render();
+        this.__queue(false, false, true);
     }
 
     get maxValue() {

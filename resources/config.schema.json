@@ -1,0 +1,331 @@
+{
+    "type": "object",
+    "fields": {
+        "wifi": {
+            "type": "object",
+            "fields": {
+                "sta_priority": {
+                    "type": "array",
+                    "item": {
+                        "type": "object",
+                        "fields": {
+                            "ssid": {
+                                "type": "string",
+                                "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{,30}[^] !#;+\\/\"\t]$"
+                            },
+                            "password": {
+                                "type": "string",
+                                "regexp": ".{,63}"
+                            }
+                        }
+                    }
+                },
+                "access_point": {
+                    "type": "object",
+                    "fields": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "ssid": {
+                            "type": "string",
+                            "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{,30}[^] !#;+\\/\"\t]$"
+                        },
+                        "password": {
+                            "type": "string",
+                            "regexp": ".{,63}"
+                        }
+                    }
+                },
+                "strict": {
+                    "type": "boolean"
+                },
+                "strictList": {
+                    "type": "array",
+                    "item": {
+                       "type": "string",
+                       "regex": "^([0-9A-Fa-f]{2}[:\\-]){5}([0-9A-Fa-f]{2})$" 
+                    }
+                }
+            }
+        },
+        "bluetooth": {
+            "type": "object",
+            "fields": {
+                "active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string",
+                    "max_length": 31,
+                    "regex": "^[A-Za-z0-9\\-_. ]{1,31}$"
+                },
+                "strict": {
+                    "type": "boolean"
+                },
+                "strictList": {
+                    "type": "array",
+                    "item": {
+                       "type": "string",
+                       "regex": "^([0-9A-Fa-f]{2}[:\\-]){5}([0-9A-Fa-f]{2})$" 
+                    }
+                }
+            }
+
+        },
+        "channels": {
+            "webMode": {
+                "type": "string",
+                "regex": "^((hsl)|(hsv)|(rgb))$" 
+            },
+            "bluetoothMode": {
+                "type": "string",
+                "regex": "^((hsl)|(hsv)|(rgb))$" 
+            },
+            "knobMode": {
+                "type": "string",
+                "regex": "^((hsl)|(hsv)|(rgb))$" 
+            }
+        },
+        "filters": {
+            "filters": {
+                "type": "object",
+                "fields": {
+                    "inputFilters": {
+                        "type": "object",
+                        "fields": {
+                            "hue": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "saturation": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "value": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "lightness": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "red": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "green": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "blue": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "white": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            }
+                        }
+                    },
+                    "globalInputFilters": {
+                        "type": "array",
+                        "length": 6,
+                        "item": {
+                            "type": "float",
+                            "min_value": 0,
+                            "max_value": 1
+                        }
+                    },
+                    "globalOutputFilters": {
+                        "type": "array",
+                        "length": 6,
+                        "item": {
+                            "type": "float",
+                            "min_value": 0,
+                            "max_value": 1
+                        }
+                    },
+                    "outputFilters": {
+                        "type": "object",
+                        "fields": {
+                            "red": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "green": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "blue": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            },
+                            "white": {
+                                "type": "array",
+                                "length": 6,
+                                "item": {
+                                    "type": "float",
+                                    "min_value": 0,
+                                    "max_value": 1
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "hardware": {
+            "type": "object",
+            "fields":{
+                "potentionemterConfiguration": {
+                    "type": "object",
+                    "fields": {
+                        "hue": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "saturation": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "value": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "lightness": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "red": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "green": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "blue": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        },
+                        "white": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 5
+                        }
+                    }
+                },
+                "transistorConfiguration": {
+                    "type": "object",
+                    "fields": {
+                        "output 0": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 4
+                        },
+                        "output 1": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 4
+                        },
+                        "output 2": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 4
+                        },
+                        "output 3": {
+                            "type": "integer",
+                            "min_value": 0,
+                            "max_value": 4
+                        }
+                    }
+                },
+                "bias": {
+                    "type": "object",
+                    "fields": {
+                        "up": {
+                            "type": "float",
+                            "min_value": 0,
+                            "max_value": 1
+                        },
+                        "down": {
+                            "type": "float",
+                            "min_value": 0,
+                            "max_value": 1
+                        }
+                    }
+                },
+                "knobActivateDelta": {
+                    "type": "float",
+                    "min_value": 0,
+                    "max_value": 1
+                },
+                "enbleWhiteKnob": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

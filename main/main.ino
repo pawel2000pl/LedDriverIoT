@@ -6,10 +6,12 @@
 #include "utils.h"
 #include "resources.h"
 #include "conversions.h"
+#include "validate_json.h"
 
 
 #define CONFIGURATION_FILENAME "configuration.json"
 #define JSON_CONFIG_BUF_SIZE (16*1024)
+#define MAX_STRING_LENGTH 64
 Preferences preferences;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 
@@ -18,9 +20,9 @@ void loadConfiguration() {
   size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
   decompressed_buffer[decompressed_size] = 0;
   String buf = preferences.getString(CONFIGURATION_FILENAME, (const char*)decompressed_buffer);
-  DeserializationError err = deserializeJson(configuration, buf.c_str());
+  DeserializationError err = deserializeJson(configuration, buf);
   if (err != DeserializationError::Ok)
-    deserializeJson(configuration, (const char*)decompressed_buffer);
+    deserializeJson(configuration, String((const char*)decompressed_buffer));
 }
 
 
@@ -34,7 +36,7 @@ void saveConfiguration() {
   char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
   unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
   buf[size] = 0;
-  preferences.putString(CONFIGURATION_FILENAME, buf);
+  preferences.putString(CONFIGURATION_FILENAME, String(buf));
   delete [] buf;
 }
 
@@ -89,9 +91,22 @@ void sendOk() {
 }
 
 
-void recvConfiguration() {
+String assertConfiguration() {
+  StaticJsonDocument<JSON_CONFIG_BUF_SIZE>* configSchema = new StaticJsonDocument<JSON_CONFIG_BUF_SIZE>();
+  uint8_t decompressed_buffer[config_schema_json_decompressed_size+1];
+  size_t decompressed_size = fastlz_decompress(config_schema_json_data, config_schema_json_size, decompressed_buffer, config_schema_json_decompressed_size);
+  decompressed_buffer[decompressed_size] = 0;
+  String buf = preferences.getString(CONFIGURATION_FILENAME, (const char*)decompressed_buffer);
+  DeserializationError err = deserializeJson(*configSchema, buf);
+  String result = validateJson(configuration, *configSchema); 
+  delete configSchema;
+  return result;
+}
+
+
+void recvConfiguration(bool save=true) {
   String rawData = server.arg("plain");
-  DeserializationError err = deserializeJson(configuration, rawData.c_str());
+  DeserializationError err = deserializeJson(configuration, rawData);
   if (err != DeserializationError::Ok) {
     loadConfiguration();
     if (err == DeserializationError::EmptyInput) sendError("Empty input", 400);
@@ -102,8 +117,14 @@ void recvConfiguration() {
     else sendError("Cannot save configuration because no.", 400);
   }
 
+  const String assertMessage = assertConfiguration();
+  if (assertMessage != "")
+    sendError(assertMessage, 422);
 
-  saveConfiguration();
+  if (save)
+    saveConfiguration();
+  else
+    loadConfiguration();
   sendOk();
 }
 
@@ -115,7 +136,8 @@ void configureServer() {
   server.on("/favicon.ico", HTTP_GET, [&server](){sendDecompressedData(server, resource_favicon_svg.mime_type, resource_favicon_svg.data, resource_favicon_svg.size, resource_favicon_svg.decompressed_size);});
   for (unsigned i=0;i<resources_count;i++)
     server.on(resources[i]->name, HTTP_GET, [i, &server](){sendDecompressedData(server, resources[i]->mime_type, resources[i]->data, resources[i]->size, resources[i]->decompressed_size);});  
-  server.on("/config.json", HTTP_POST, recvConfiguration);
+  server.on("/config.json", HTTP_POST, [](){recvConfiguration(true);});
+  server.on("/assert_config", HTTP_POST, [](){recvConfiguration(false);});
   server.begin();
 }
 
