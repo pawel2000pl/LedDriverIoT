@@ -42,11 +42,11 @@
     },
     "wifi-ssid": { 
         "type": "string",
-        "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{,30}[^] !#;+\\/\"\t]$"
+        "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{0,30}[^] !#;+\\/\"\t]$"
     },
     "wifi-password": {
         "type": "string",
-        "regexp": ".{,63}"
+        "regexp": ".{0,63}"
     },
     "mac-list": {
         "type": "array",
@@ -79,7 +79,7 @@
     },
     "filter-settings": {
         "type": "array",
-        "length": 6,
+        "length": 9,
         "item": {
             "type": "float",
             "min_value": -1,
@@ -164,6 +164,15 @@
             },
             "knobActivateDelta": "fraction",
             "enbleWhiteKnob": "boolean"
+        }
+    },
+    "output-values": {
+        "type": "object",
+        "fields": {
+            "red": "fraction",
+            "green": "fraction",
+            "blue": "fraction",
+            "white": "fraction"
         }
     }
 }

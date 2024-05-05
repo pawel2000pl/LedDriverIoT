@@ -48,10 +48,10 @@ function dumpConfig() {
             "transistorConfiguration": $id('output-table').getValues(),
             "bias": {
                 "up": Number($id('low-bias-input').value),
-                "down": Number($id('high-bias-input').value),
-                "knobActivateDelta": Number($id('knob-activate-input').value),
-                "enbleWhiteKnob": $id('activate-white-knob').checked
+                "down": Number($id('high-bias-input').value)
             },
+            "knobActivateDelta": Number($id('knob-activate-input').value),
+            "enbleWhiteKnob": $id('activate-white-knob').checked
         }
     };
 }
@@ -98,8 +98,8 @@ function fillConfig(config) {
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
 }
 
-$id('save-settings-btn').onclick = saveConfig;
-$id('revert-settings-btn').onclick = ()=>{configPromise = refreshConfig();};
+$id('save-settings-btn').onclick = ()=>{config = dumpConfig(); saveConfig();};
+$id('revert-settings-btn').onclick = ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));};
 $id('default-settings-btn').onclick = async ()=>{
     if (confirm("All settings "+"(wifi credentials, filters, etc)"+" will be reverted to default values."+" "+"Are you sure you want to continue?")) {
         await refreshConfig(true);

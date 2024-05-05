@@ -6,6 +6,10 @@ var channels = {
     blue: 0.71,
 };
 
+const filterNames = [
+    "LIN", "SQR", "SQRT", "EXP", "ASIN", "COS", "XSQR", "XSQRT", "XEXP"
+];
+
 function normalizeFunction(fun, min=0, max=1) {
     const fmin = fun(min);
     const fmax = fun(max);
@@ -15,10 +19,6 @@ function normalizeFunction(fun, min=0, max=1) {
 function symFunction(fun) {
     return (x) => 1-fun(1-x);
 }
-
-const filterNames = [
-    "LIN", "SQR", "SQRT", "EXP", "ASIN", "COS", "XSQR", "XSQRT", "XEXP"
-];
 
 const filterFunctions = [
     x=>x,

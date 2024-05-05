@@ -1,33 +1,52 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WebServer.h>
-#include <Preferences.h>
+// #include <Preferences.h>
+#include "FS.h"
+#include "SPIFFS.h"
+
 #include "json.h"
 #include "utils.h"
 #include "resources.h"
 #include "conversions.h"
 #include "validate_json.h"
+#include "functions.h"
 
-
-#define CONFIGURATION_FILENAME "configuration.json"
+#define CONFIGURATION_FILENAME "/configuration.json"
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 #define MAX_STRING_LENGTH 64
-Preferences preferences;
+// Preferences preferences;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
+StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
+
 
 void loadConfiguration() {
   uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
   size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
   decompressed_buffer[decompressed_size] = 0;
-  String buf = preferences.getString(CONFIGURATION_FILENAME, (const char*)decompressed_buffer);
+  String buf;
+  File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
+  if (configFile) {
+    buf = configFile.readString();
+    configFile.close();
+  } else 
+      buf = (const char*)decompressed_buffer;
   DeserializationError err = deserializeJson(configuration, buf);
-  if (err != DeserializationError::Ok)
+  if (err != DeserializationError::Ok || assertConfiguration().length())
     deserializeJson(configuration, String((const char*)decompressed_buffer));
 }
 
 
+void loadConfigSchema() {
+  uint8_t decompressed_buffer[config_schema_json_decompressed_size+1];
+  size_t decompressed_size = fastlz_decompress(config_schema_json_data, config_schema_json_size, decompressed_buffer, config_schema_json_decompressed_size);
+  decompressed_buffer[decompressed_size] = 0;
+  deserializeJson(configSchema, String((const char*)decompressed_buffer));
+}
+
+
 void resetConfiguration() {
-  preferences.remove(CONFIGURATION_FILENAME);
+  SPIFFS.remove(CONFIGURATION_FILENAME);
   loadConfiguration();
 }
 
@@ -36,7 +55,9 @@ void saveConfiguration() {
   char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
   unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
   buf[size] = 0;
-  preferences.putString(CONFIGURATION_FILENAME, String(buf));
+  File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "w");
+  configFile.println(buf);
+  configFile.close();
   delete [] buf;
 }
 
@@ -78,8 +99,8 @@ void sendConfiguration() {
 void sendError(String message, int code = 400) {
   StaticJsonDocument<1024> messageData;
   char buf[1024];
-  messageData["result"] = "error";
-  messageData["message"] = "message";
+  messageData["status"] = "error";
+  messageData["message"] = message;
   unsigned int size = serializeJson(messageData, buf, 1023);
   buf[size] = 0;
   server.send(code, default_config_json_mime_type, buf);
@@ -87,20 +108,42 @@ void sendError(String message, int code = 400) {
 
 
 void sendOk() {
-  server.send(200, default_config_json_mime_type, "{\"result\": \"ok\"}");
+  server.send(200, default_config_json_mime_type, "{\"status\": \"ok\"}");
 }
 
 
 String assertConfiguration() {
-  StaticJsonDocument<JSON_CONFIG_BUF_SIZE>* configSchema = new StaticJsonDocument<JSON_CONFIG_BUF_SIZE>();
-  uint8_t decompressed_buffer[config_schema_json_decompressed_size+1];
-  size_t decompressed_size = fastlz_decompress(config_schema_json_data, config_schema_json_size, decompressed_buffer, config_schema_json_decompressed_size);
-  decompressed_buffer[decompressed_size] = 0;
-  String buf = preferences.getString(CONFIGURATION_FILENAME, (const char*)decompressed_buffer);
-  DeserializationError err = deserializeJson(*configSchema, buf);
-  String result = validateJson(configuration, *configSchema); 
-  delete configSchema;
-  return result;
+  return validateJson(configuration, configSchema); 
+}
+
+
+void sendDeserializationError(DeserializationError err) {
+    if (err == DeserializationError::EmptyInput) sendError("Empty input", 400);
+    else if (err == DeserializationError::IncompleteInput) sendError("Incomplete input", 422);
+    else if (err == DeserializationError::InvalidInput) sendError("Invalid input", 422);
+    else if (err == DeserializationError::NoMemory) sendError("Out of memory (configuration too long)", 413);
+    else if (err == DeserializationError::TooDeep) sendError("Configuration too deep (so it must be invalid)", 413);
+    else sendError("Cannot save configuration because no.", 400);
+}
+
+
+void customValidator() {
+  String rawData = server.arg("plain");
+  StaticJsonDocument<2*JSON_CONFIG_BUF_SIZE> *testJson = new StaticJsonDocument<2*JSON_CONFIG_BUF_SIZE>();
+  DeserializationError err = deserializeJson(*testJson, rawData);
+  if (err != DeserializationError::Ok) {
+    loadConfiguration();
+    sendDeserializationError(err);
+    delete testJson;
+    return;
+  }
+  const String assertMessage = validateJson((*testJson)["data"], (*testJson)["schema"]);
+  delete testJson;
+  if (assertMessage != "") {
+    sendError(assertMessage, 422);
+    return;
+  }
+  sendOk();
 }
 
 
@@ -109,23 +152,58 @@ void recvConfiguration(bool save=true) {
   DeserializationError err = deserializeJson(configuration, rawData);
   if (err != DeserializationError::Ok) {
     loadConfiguration();
-    if (err == DeserializationError::EmptyInput) sendError("Empty input", 400);
-    else if (err == DeserializationError::IncompleteInput) sendError("Incomplete input", 422);
-    else if (err == DeserializationError::InvalidInput) sendError("Invalid input", 422);
-    else if (err == DeserializationError::NoMemory) sendError("No memory (configuration too long)", 413);
-    else if (err == DeserializationError::TooDeep) sendError("Configuration too deep (so it must be invalid)", 413);
-    else sendError("Cannot save configuration because no.", 400);
+    sendDeserializationError(err);
+    return;
   }
 
   const String assertMessage = assertConfiguration();
-  if (assertMessage != "")
+  if (assertMessage != "") {
     sendError(assertMessage, 422);
-
+    return;
+  }
   if (save)
     saveConfiguration();
   else
     loadConfiguration();
   sendOk();
+}
+
+
+struct {
+  float red;
+  float green;
+  float blue;
+  float white;
+} outputValues = {0,0,0,0};
+
+
+void sendOutput() {
+  StaticJsonDocument<256> data;
+  data["red"] = outputValues.red;
+  data["green"] = outputValues.green;
+  data["blue"] = outputValues.blue;
+  data["white"] = outputValues.white;
+  char buf[256];
+  int size = serializeJson(data, buf, 255);
+  buf[size] = 0;
+  server.send(200, default_config_json_mime_type, buf);
+}
+
+
+void setOutput() {
+  StaticJsonDocument<256> data;
+  String rawData = server.arg("plain");
+  DeserializationError err = deserializeJson(data, rawData);
+  if (err != DeserializationError::Ok) 
+    return sendError("Deserialization error");
+  String assertMessage = validateJson(data, configSchema, configSchema["output-values"]);
+  if (assertMessage != "")
+    sendError(assertMessage, 422);
+  outputValues.red = data["red"];
+  outputValues.green = data["green"];
+  outputValues.blue = data["blue"];
+  outputValues.white = data["white"];
+  sendOutput();
 }
 
 
@@ -138,6 +216,9 @@ void configureServer() {
     server.on(resources[i]->name, HTTP_GET, [i, &server](){sendDecompressedData(server, resources[i]->mime_type, resources[i]->data, resources[i]->size, resources[i]->decompressed_size);});  
   server.on("/config.json", HTTP_POST, [](){recvConfiguration(true);});
   server.on("/assert_config", HTTP_POST, [](){recvConfiguration(false);});
+  server.on("/output.json", HTTP_GET, sendOutput);
+  server.on("/output.json", HTTP_POST, setOutput);
+  server.on("/assert_json", HTTP_POST, customValidator);
   server.begin();
 }
 
@@ -145,7 +226,9 @@ void configureServer() {
 void setup() {
   Serial.begin(115200);
 
-  preferences.begin("led-driver", false);
+  // preferences.begin("led-driver", false);
+  SPIFFS.begin(true);
+  loadConfigSchema();
   loadConfiguration();
   autoConnectWifi(); 
   configureServer();
