@@ -75,6 +75,22 @@ async function saveConfig() {
 }
 
 
+async function assertConfig(configObject) {
+    const schemaResponse = fetch("config.schema.json");
+    const schema = await schemaResponse.json();
+    const payload = {
+        "data": configObject,
+        "schema": schema
+    };
+    const response = await fetch('/assert_json', {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+    return await response.json();
+}
+
+
 function exportConfigToJSON() {
     const jsonConfig = JSON.stringify(config, null, 4);
     const blob = new Blob([jsonConfig], { type: 'application/json' });
@@ -93,7 +109,13 @@ function importFromJSONFile(file) {
     return new Promise((resolve, reject)=>{
         reader.onload = function(event) {
             try {
-                resolve(JSON.parse(event.target.result));
+                const parsed = JSON.parse(event.target.result);
+                assertConfig(parsed).then((result)=>{
+                    if (result.status === "ok")
+                        resolve(parsed);
+                    else
+                        reject(result);
+                });
             } catch (error) {
                 reject(error);
             }

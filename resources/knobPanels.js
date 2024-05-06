@@ -1,6 +1,6 @@
 "use strict";
 
-function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
+function createTriColorPanel(parent, converter, converterIverted, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
     
     const mainDiv = document.createElement('div'); 
     mainDiv.className = 'knob-div';
@@ -51,18 +51,21 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
     parent.appendChild(mainDiv);  
     return {
         set: function(channels) {
+            channels = converterIverted(...channels);
             for (let i=0;i<3;i++)
                 knobs[i].value = channels[i];
         },
-        get: ()=>knobs.map((knob)=>knob.value)
+        get: ()=>converter(...knobs.map((knob)=>knob.value))
     };
 }
 
 
-function createWhiteKnob(parent) {     
+function createWhiteKnob(parent, visible=true, changeEvent=()=>{}) {     
     const wDiv = document.createElement('div');
+    if (!visible) wDiv.style.display = 'none';
     wDiv.className = 'knob-div';
     const whiteKnob = new Knob();
+    whiteKnob.onChangeValue = changeEvent;
     const resize = ()=>{
         const clientWidth = parent.clientWidth;
         const ray = clientWidth / 5;
@@ -75,4 +78,11 @@ function createWhiteKnob(parent) {
     whiteKnob.value = 0;
     wDiv.appendChild(whiteKnob);
     parent.appendChild(wDiv);     
+
+    return {
+        set: (value)=>{
+            whiteKnob.value = value;
+        },
+        get: ()=>whiteKnob.value
+    };
 }

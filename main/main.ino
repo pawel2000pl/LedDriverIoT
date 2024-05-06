@@ -1,9 +1,12 @@
+#include <BTAddress.h>
+#include <BTAdvertisedDevice.h>
+#include <BTScan.h>
+
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WebServer.h>
-// #include <Preferences.h>
-#include "FS.h"
-#include "SPIFFS.h"
+#include <FS.h>
+#include <SPIFFS.h>
 
 #include "json.h"
 #include "utils.h"
@@ -12,13 +15,12 @@
 #include "validate_json.h"
 #include "functions.h"
 
+#define CONNECTION_TIMEOUT 5000
 #define CONFIGURATION_FILENAME "/configuration.json"
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 #define MAX_STRING_LENGTH 64
-// Preferences preferences;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
-
 
 void loadConfiguration() {
   uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
@@ -74,8 +76,14 @@ void autoConnectWifi() {
   for (int i=0;i<staPriority.size();i++) {
     WiFi.mode(WIFI_STA);
     Serial.print("Connecting to ");
-    Serial.println(staPriority[i]["ssid"].as<String>());
-    if (WiFi.begin(staPriority[i]["ssid"].as<String>(), staPriority[i]["password"].as<String>()) == WL_CONNECTED)
+    Serial.print(staPriority[i]["ssid"].as<String>());
+    Serial.print(" with password ");
+    Serial.println(staPriority[i]["password"].as<String>());
+    WiFi.begin(staPriority[i]["ssid"].as<String>(), staPriority[i]["password"].as<String>());
+    unsigned long long int timeout_time = millis() + CONNECTION_TIMEOUT;
+    while (WiFi.status() != WL_CONNECTED && millis() <= timeout_time)
+      delay(10);
+    if (WiFi.status() == WL_CONNECTED)
       return;
   }
   if (apConfig["enabled"]) {
@@ -226,10 +234,10 @@ void configureServer() {
 void setup() {
   Serial.begin(115200);
 
-  // preferences.begin("led-driver", false);
   SPIFFS.begin(true);
   loadConfigSchema();
   loadConfiguration();
+
   autoConnectWifi(); 
   configureServer();
 }
