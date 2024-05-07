@@ -70,41 +70,77 @@ function componentList(element, factory) {
         Array.from(listTable.childNodes).forEach((element)=>listTable.removeChild(element));
         values.forEach((value)=>(addElement().setValue(value)));
     };
+    element.addElement = addElement;
 }
 
 
+function wifi_selector_factory(ssid="") {
+    const div = $new('div');
+    const div1 = $new('div');
+    const div2 = $new('div');
+    const text1 = $new('span');
+    text1.textContent = 'SSID: ';
+    const ssid_input = $new('input');
+    ssid_input.value = ssid;
+    const text2 = $new('span');
+    text2.textContent = 'Password: ';
+    const password_input = $new('input');
+    password_input.type = 'password';
+    const connectBtn = $new('button');
+    connectBtn.textContent = 'Connect';
+    connectBtn.onclick = ()=>{
+        fetch('/connect_to', {
+            method: 'POST',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                "ssid": ssid_input.value,
+                "password": password_input.value,
+            })
+        });
+    };
+    div1.appendChild(text1);
+    div1.appendChild(ssid_input);
+    div2.appendChild(text2);
+    div2.appendChild(password_input);
+    div.appendChild(div1);
+    div.appendChild(div2);
+    div.appendChild(connectBtn);
+    div.getValue = ()=>{return {
+        "ssid": ssid_input.value,
+        "password": password_input.value
+    }};
+    div.setValue = (value)=>{
+        ssid_input.value = value.ssid;
+        password_input.value = value.password;
+    };
+    return div;
+};
+
+
 Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
-    componentList(element, ()=>{
-        const div = $new('div');
-        const div1 = $new('div');
-        const div2 = $new('div');
-        const text1 = $new('span');
-        text1.textContent = 'SSID: ';
-        const ssid_input = $new('input');
-        const text2 = $new('span');
-        text2.textContent = 'Password: ';
-        const password_input = $new('input');
-        password_input.type = 'password';
-        const connectBtn = $new('button');
-        connectBtn.textContent = 'Connect';
-        div1.appendChild(text1);
-        div1.appendChild(ssid_input);
-        div2.appendChild(text2);
-        div2.appendChild(password_input);
-        div.appendChild(div1);
-        div.appendChild(div2);
-        div.appendChild(connectBtn);
-        div.getValue = ()=>{return {
-            "ssid": ssid_input.value,
-            "password": password_input.value
-        }};
-        div.setValue = (value)=>{
-            ssid_input.value = value.ssid;
-            password_input.value = value.password;
-        };
-        return div;
-    });
+    componentList(element, wifi_selector_factory);
 });
+
+
+async function getNetworks() {
+    const response = await fetch("/networks.json");
+    const data = await response.json();
+    const listTable = $id('networks-list');
+    listTable.innerHTML = '';
+    data.forEach(element => {
+        const entryTr = document.createElement('tr');
+        const buttonTr = document.createElement('td');
+        const ssidTd = document.createElement('td');
+        ssidTd.textContent = element;
+        const button = document.createElement('button');
+        button.textContent = 'Add to list';
+        button.onclick = ()=>$id('sta-priority-list').addElement(element);
+        buttonTr.appendChild(button);
+        entryTr.appendChild(ssidTd);
+        entryTr.appendChild(buttonTr);
+        listTable.appendChild(entryTr);
+    });
+};
 
 
 function createRadioTable(tableId, headers, columns, radioPrefix) {

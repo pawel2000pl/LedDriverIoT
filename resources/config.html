@@ -45,6 +45,14 @@
                     <input id="wifi-hostname">
                     <h3>Wi-Fi priority list</h3>
                     <wifiselector id="sta-priority-list"></wifiselector>
+                    <p>
+                        <p><button onclick="getNetworks()">Show scanned networks</button></p>
+                        <table id="networks-list"></table>
+                        <p>
+                            <button onclick="refreshNetworks()">Refresh list</button>
+                            <p>Warning:&#32;led driver must disconnect from the current network to scan.</p>
+                        </p>
+                    </p>
                     <h3>Access point</h3>
                     <p> 
                         <div><input id="enable-ap" type="checkbox"><label for="enable-ap">Enabled</label></div>

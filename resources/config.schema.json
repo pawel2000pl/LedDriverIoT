@@ -25,13 +25,7 @@
             "hostname": "hostname-string",
             "sta_priority": {
                 "type": "array",
-                "item": {
-                    "type": "object",
-                    "fields": {
-                        "ssid": "wifi-ssid",
-                        "password": "wifi-password"
-                    }
-                }
+                "item": "wifi-entry"
             },
             "access_point": {
                 "type": "object",
@@ -56,6 +50,13 @@
     "wifi-password": {
         "type": "string",
         "regexp": ".{0,63}"
+    },
+    "wifi-entry": {
+        "type": "object",
+        "fields": {
+            "ssid": "wifi-ssid",
+            "password": "wifi-password"
+        }
     },
     "ap-password": {
         "type": "string",

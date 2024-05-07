@@ -1,12 +1,13 @@
 #include <BTAddress.h>
 #include <BTAdvertisedDevice.h>
 #include <BTScan.h>
-
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WebServer.h>
 #include <FS.h>
 #include <SPIFFS.h>
+#include <functional>
+#include <list>
 
 #include "json.h"
 #include "utils.h"
@@ -15,12 +16,14 @@
 #include "validate_json.h"
 #include "functions.h"
 
-#define CONNECTION_TIMEOUT 5000
+#define CONNECTION_TIMEOUT 15000
 #define CONFIGURATION_FILENAME "/configuration.json"
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 #define MAX_STRING_LENGTH 64
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
+StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
+std::list<std::function<void()>> taskQueue;
 
 void loadConfiguration() {
   uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
@@ -82,7 +85,50 @@ IPAddress str2ip(const String& str) {
   return IPAddress(numbers[0], numbers[1], numbers[2], numbers[3]);
 }
 
+
+void scanNetworks() {
+  delay(100);
+  Serial.println("Scanning networks");
+  int n = WiFi.scanNetworks();
+  scannedNetworks.clear();
+  for (int i=0;i<n;i++)
+    scannedNetworks.add(WiFi.SSID(i));
+  WiFi.scanDelete();
+  delay(100);
+}
+
+
+void sendNetworks() {
+  char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
+  unsigned size = serializeJson(scannedNetworks, buf, JSON_CONFIG_BUF_SIZE);
+  buf[size] = 0;
+  server.send(200, default_config_json_mime_type, buf);
+  delete [] buf;
+}
+
+
+bool connectToNetwork(String ssid, String password) {
+  if (WiFi.status() == WL_CONNECTED)
+    WiFi.disconnect();
+  delay(100);
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+  unsigned long long int timeout_time = millis() + CONNECTION_TIMEOUT;
+  WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
+        delay(10);
+  return WiFi.status() == WL_CONNECTED;
+}
+
+
 void autoConnectWifi() {
+  if (WiFi.status() == WL_CONNECTED) {
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+  }
+
+  scanNetworks();
+
   const auto& wifiConfig = configuration["wifi"];
   const auto& staPriority = wifiConfig["sta_priority"];
   const auto& apConfig = wifiConfig["access_point"];
@@ -92,15 +138,7 @@ void autoConnectWifi() {
 
   for (int i=0;i<staPriority.size();i++) {
     WiFi.mode(WIFI_STA);
-    Serial.print("Connecting to ");
-    Serial.print(staPriority[i]["ssid"].as<String>());
-    Serial.print(" with password ");
-    Serial.println(staPriority[i]["password"].as<String>());
-    WiFi.begin(staPriority[i]["ssid"].as<String>(), staPriority[i]["password"].as<String>());
-    unsigned long long int timeout_time = millis() + CONNECTION_TIMEOUT;
-    while (WiFi.status() != WL_CONNECTED && millis() <= timeout_time)
-      delay(10);
-    if (WiFi.status() == WL_CONNECTED)
+    if (connectToNetwork(staPriority[i]["ssid"].as<String>(), staPriority[i]["password"].as<String>()))
       return;
   }
   if (apConfig["enabled"]) {
@@ -162,13 +200,39 @@ void customValidator() {
     delete testJson;
     return;
   }
-  const String assertMessage = validateJson((*testJson)["data"], (*testJson)["schema"]);
+  const String assertMessage = testJson->containsKey("type") ? validateJson((*testJson)["data"], configSchema, configSchema[(*testJson)["type"].as<String>()]) : validateJson((*testJson)["data"], (*testJson)["schema"]);
   delete testJson;
   if (assertMessage != "") {
     sendError(assertMessage, 422);
     return;
   }
   sendOk();
+}
+
+
+void connectToNetworkEndpoint() {
+  String rawData = server.arg("plain");
+  StaticJsonDocument<768> data;
+  DeserializationError err = deserializeJson(data, rawData);
+  if (err != DeserializationError::Ok) {
+    sendDeserializationError(err);
+    return;
+  }
+  const String assertMessage = validateJson(data, configSchema, configSchema["wifi-entry"]);
+  if (assertMessage != "") {
+    sendError(assertMessage, 422);
+    return;
+  }
+  sendOk();
+  const String ssid = data["ssid"].as<String>();
+  const String password = data["password"].as<String>();
+  taskQueue.push_back([ssid, password](){delay(100); connectToNetwork(ssid, password);});
+}
+
+
+void autoScanWifiEndpoint() {
+  sendOk(); 
+  taskQueue.push_back([](){delay(100); autoConnectWifi();});
 }
 
 
@@ -244,6 +308,9 @@ void configureServer() {
   server.on("/output.json", HTTP_GET, sendOutput);
   server.on("/output.json", HTTP_POST, setOutput);
   server.on("/assert_json", HTTP_POST, customValidator);
+  server.on("/networks.json", HTTP_GET, sendNetworks);
+  server.on("/connect_to", HTTP_POST, connectToNetworkEndpoint);
+  server.on("/refresh_networks", HTTP_GET, autoScanWifiEndpoint);
   server.begin();
 }
 
@@ -260,4 +327,9 @@ void setup() {
 
 void loop() {
   server.handleClient();
+  for (auto fun: taskQueue) 
+    fun();
+  taskQueue.clear();
+  if (WiFi.status() != WL_CONNECTED)
+    autoConnectWifi(); 
 }

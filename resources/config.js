@@ -111,3 +111,8 @@ $id('import-settings-btn').onclick = async ()=>{
         alert('Error ocurred.'+' Invalid configuration file.');
     }
 };
+
+
+function refreshNetworks() {
+    fetch('/refresh_networks');
+}
