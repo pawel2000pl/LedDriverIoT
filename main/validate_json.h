@@ -81,17 +81,18 @@ String validateJson(const JsonVariantConst& object, const JsonVariantConst& sche
   if (type == "bool" || type == "boolean") {
     if (!object.is<bool>()) return "Invalid type: " + path + " expected: boolean";
   }
-  if (type == "string") {
+  if (type == "string" || type == "text") {
     if (!object.is<const char*>()) return "Invalid type: " + path + " expected: string";
-    if (objectSchema.containsKey("max_length") && object.size() > objectSchema["max_length"]) return "String too long: " + path;
+    const JsonString& casted = object.as<JsonString>();
+    if (objectSchema.containsKey("max_length") && casted.size() > objectSchema["max_length"]) return "Text too long: " + path;
+    if (objectSchema.containsKey("min_length") && casted.size() < objectSchema["min_length"]) return "Text too short: " + path;
     if (objectSchema.containsKey("regexp") || objectSchema.containsKey("regex")) {
-      String testString = object.as<String>();
       String pattern = objectSchema.containsKey("regexp") ? objectSchema["regexp"].as<String>() : objectSchema["regex"].as<String>();
       regex_t restrict;
       regcomp(&restrict, pattern.c_str(), REG_EXTENDED | REG_NOSUB);      
-      int result = regexec(&restrict, testString.c_str(), 0, NULL, 0);
+      int result = regexec(&restrict, casted.c_str(), 0, NULL, 0);
       if (result == REG_NOMATCH)
-          return "Text does not match the regular expression: " + path ;
+          return "Text does not match the required pattern: " + path ;
       else if (result != 0)
           return "Unexpected error during validation of regular expression of entry: " + path;
       regfree(&restrict);

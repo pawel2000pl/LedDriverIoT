@@ -1,24 +1,26 @@
 <p>
     The WiFi connection feature of your LED RGB controller operates on a prioritized list basis.
 </p>
-<p>
-    1. Adding Networks: Users can add entries to the list containing the name of the network and its password.
-</p>
-<p>
-    2. Connection Priority: When the device searches for available networks, it tries to connect to the first network on
-    the list. If a connection is not established, it moves to the next network on the list, following the priority
-    order.
-</p>
-<p>
-    3. Fallback Option: If none of the networks on the list are found, the device creates its own network (access point)
-    with the specified name and password below the list. However, if the access point is disabled, it won't create a
-    new netwodk and will instead resume searching after a certain period.
-</p>
-<p>
-    4. Repetition of Algorithm: The device repeats this algorithm each time it fails to establish a connection with a
-    network. If it enters access point mode, it does so only after a restart or manual selection of a network from the
-    list (via the "connect" button).
-</p>
+<ol>
+    <li>
+        Adding Networks: Users can add entries to the list containing the name of the network and its password.
+    </li>
+    <li>
+        Connection Priority: When the device searches for available networks, it tries to connect to the first
+        network on the list. If a connection is not established, it moves to the next network on the list, following the
+        priority order.
+    </li>
+    <li>
+        Fallback Option: If none of the networks on the list are found, the device creates its own network (access
+        point) with the specified name and password below the list. However, if the access point is disabled, it won't
+        create a new netwodk and will instead resume searching after a certain period.
+    </li>
+    <li>
+        Repetition of Algorithm: The device repeats this algorithm each time it fails to establish a connection with
+        a network. If it enters access point mode, it does so only after a restart or manual selection of a network from
+        the list (via the "connect" button).
+    </li>
+</ol>
 <p>
     This approach ensures seamless connectivity by attempting to connect to preferred networks first, with a fallback
     option to create its own network if necessary.
@@ -26,4 +28,97 @@
 <p>
     Users can manage network priorities and configurations efficiently through the provided interface, ensuring reliable
     and user-friendly WiFi connectivity for the LED RGB controller.
+</p>
+<p>
+    Users have the option to configure an access point with specific parameters. Here's how it works:
+</p>
+<ul>
+    <li>
+        SSID and Password: These fields allow users to define the name and password for the network that will be
+        created. The password must consist of 8 to 63 characters or be left empty for an open network.
+    </li>
+    <li>
+        Address, Gateway, and Subnet: Address refers to the IPv4 address where the device's web panel can be accessed
+        through a web browser. Gateway and Subnet are network-related settings.
+    </li>
+    <li>
+        Gateway: This is the IP address of the router or access point that connects the device to the broader network,
+        typically the Internet. It serves as the entry point for network traffic going outside the local network.
+    </li>
+    <li>
+        Subnet: Subnet defines the range of IP addresses that devices on the local network can use. It determines the
+        size of the network and helps in routing traffic between devices within the network.
+    </li>
+</ul>
+<p>
+    It's recommended that users avoid changing the default settings for Address, Gateway, and Subnet unless they fully
+    understand their implications. Altering these settings without proper knowledge may lead to network connectivity
+    issues.
+</p>
+<p>
+    Dependencies between Address, Gateway, and Subnet:
+</p>
+<ul>
+    <li>
+        Address: Must be within the same subnet range as the Gateway to ensure proper communication between devices on
+        the local network.
+    </li>
+    <li>
+        Gateway: Should be the same as the router's IP address within the network to ensure connectivity to the broader
+        network, such as the Internet.
+    </li>
+    <li>
+        Subnet: Must be consistent across devices within the same network to facilitate communication and data exchange.
+        Changing the subnet may result in devices being unable to communicate with each other.
+    </li>
+</ul>
+<p>
+    By adhering to these guidelines and understanding the dependencies between Address, Gateway, and Subnet, users can
+    effectively configure the access point for their LED RGB controller while maintaining network stability and
+    functionality.
+</p>
+<p>
+    Examples of Different IP Addresses with Corresponding Gateway and Subnet:
+<ol>
+    <li>
+        Example 1:
+        <ul>
+            <li>Address: 192.168.1.100</li>
+            <li>Gateway: 192.168.1.1</li>
+            <li>Subnet: 255.255.255.0</li>
+        </ul>
+    </li>
+    <li>
+        Example 2:
+        <ul>
+            <li>Address: 10.0.0.50</li>
+            <li>Gateway: 10.0.0.1</li>
+            <li>Subnet: 255.255.255.0</li>
+        </ul>
+    </li>
+    <li>
+        Example 3:
+        <ul>
+            <li>Address: 172.16.0.10</li>
+            <li>Gateway: 172.16.0.1</li>
+            <li>Subnet: 255.255.0.0</li>
+        </ul>
+    </li>
+    <li>
+        Example 4:
+        <ul>
+            <li>Address: 192.168.0.200</li>
+            <li>Gateway: 192.168.0.254</li>
+            <li>Subnet: 255.255.255.0</li>
+        </ul>
+    </li>
+    <li>
+        Example 5:
+        <ul>
+            <li>Address: 192.168.10.5</li>
+            <li>Gateway: 192.168.10.1</li>
+            <li>Subnet: 255.255.255.0</li>
+        </ul>
+    </li>
+</ol>
 </p>

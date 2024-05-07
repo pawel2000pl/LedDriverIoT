@@ -3,24 +3,19 @@
 function dumpConfig() {
     return {
         "wifi": {
+            "hostname": $id('wifi-hostname').value,
             "sta_priority": $id('sta-priority-list').getValues(),
             "access_point": {
                 "enabled": $id('enable-ap').checked,
                 "ssid": $id('ap-ssid').value,
-                "password": $id('ap-password').value
+                "password": $id('ap-password').value,
+                "address": $id('ap-address').value,
+                "gateway": $id('ap-gateway').value,
+                "subnet": $id('ap-subnet').value
             },
-            "strict": $id('wifi-whitelist').checked,
-            "strictList": $id('wifi-macs').getValues()
-        },
-        "bluetooth": {
-            "active": $id('bluetooth-active').checked,
-            "name": $id('bluetooth-name').value,
-            "strict": false,
-            "strictList": $id('bluetooth-macs').getValues()
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
-            "bluetoothMode": $id('bluetooth-mode-colorspace').value,
             "knobMode": $id('knobs-mode-colorspace').value
         },
         "filters": {
@@ -58,19 +53,16 @@ function dumpConfig() {
 
 
 function fillConfig(config) {
+    $id('wifi-hostname').value = config.wifi.hostname;
     $id('sta-priority-list').setValues(config.wifi.sta_priority);
     $id('enable-ap').checked = config.wifi.access_point.enabled;
     $id('ap-ssid').value = config.wifi.access_point.ssid;
     $id('ap-password').value = config.wifi.access_point.password;
-    $id('wifi-whitelist').checked = config.wifi.strict;
-    $id('wifi-macs').setValues(config.wifi.strictList);
-
-    $id('bluetooth-active').checked = config.bluetooth.active;
-    $id('bluetooth-name').value = config.bluetooth.name;
-    $id('bluetooth-macs').setValues(config.bluetooth.strictList);
+    $id('ap-address').value = config.wifi.access_point.address;
+    $id('ap-gateway').value = config.wifi.access_point.gateway;
+    $id('ap-subnet').value = config.wifi.access_point.subnet;
 
     $id('web-mode-colorspace').value = config.channels.webMode;
-    $id('bluetooth-mode-colorspace').value = config.channels.bluetoothMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
 
     $id('input-hue').setValues(config.filters.inputFilters.hue);

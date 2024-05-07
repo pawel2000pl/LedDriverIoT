@@ -69,10 +69,27 @@ IPAddress subnet(255,255,255,0);
 
 WebServer server(80);
 
+IPAddress str2ip(const String& str) {
+  uint8_t numbers[4] = {0, 0, 0, 0};
+  int j = 0;
+  for (int i=0;i<4;i++) {
+    while (1) {
+      char currChar = str[j++];
+      if (currChar < '0' || currChar > '9') break;
+      numbers[i] = numbers[i] * 10 + (currChar - '0');
+    }
+  }
+  return IPAddress(numbers[0], numbers[1], numbers[2], numbers[3]);
+}
+
 void autoConnectWifi() {
   const auto& wifiConfig = configuration["wifi"];
   const auto& staPriority = wifiConfig["sta_priority"];
   const auto& apConfig = wifiConfig["access_point"];
+
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
+  WiFi.setHostname(wifiConfig["hostname"].as<JsonString>().c_str());
+
   for (int i=0;i<staPriority.size();i++) {
     WiFi.mode(WIFI_STA);
     Serial.print("Connecting to ");
@@ -89,7 +106,7 @@ void autoConnectWifi() {
   if (apConfig["enabled"]) {
     Serial.println("Switching to AP-mode");
     WiFi.mode(WIFI_AP);
-    WiFi.softAPConfig(local_ip, gateway, subnet);
+    WiFi.softAPConfig(str2ip(apConfig["address"].as<String>()), str2ip(apConfig["gateway"].as<String>()), str2ip(apConfig["subnet"].as<String>()));
     WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>());
   }
 }
@@ -237,7 +254,6 @@ void setup() {
   SPIFFS.begin(true);
   loadConfigSchema();
   loadConfiguration();
-
   autoConnectWifi(); 
   configureServer();
 }

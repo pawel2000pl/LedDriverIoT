@@ -25,10 +25,6 @@
                             <select id="web-mode-colorspace" class="colorspace-option"></select>
                         </p>
                         <p class="prevent-select">
-                            Select colorspace for bluetooth: 
-                            <select id="bluetooth-mode-colorspace" class="colorspace-option"></select>
-                        </p>
-                        <p class="prevent-select">
                             Select colorspace for knobs: 
                             <select id="knobs-mode-colorspace" class="colorspace-option"></select>
                         </p>
@@ -42,54 +38,25 @@
             </details>
 
             <details class="menu-details">
-                <summary class="menu-summary prevent-select">WiFi</summary>
-                
+                <summary class="menu-summary prevent-select">WiFi</summary>                
 
                 <div id="wifi-mac-selector" class="details-div">
+                    <h3>Hostname</h3>
+                    <input id="wifi-hostname">
                     <h3>Wi-Fi priority list</h3>
                     <wifiselector id="sta-priority-list"></wifiselector>
                     <h3>Access point</h3>
                     <p> 
                         <div><input id="enable-ap" type="checkbox"><label for="enable-ap">Enabled</label></div>
                         <div><span>SSID:</span><input id="ap-ssid"></div>
-                        <div><span>Password:</span><input id="ap-password" type="password"></div>
+                        <div><span>Password:</span><input id="ap-password" type="password"></div>                        
+                        <div><span>IP Address:</span><input id="ap-address"></div>
+                        <div><span>Gateway:</span><input id="ap-gateway"></div>
+                        <div><span>Subnet:</span><input id="ap-subnet"></div>
                     </p>
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
                         <include-raw src="wifi_desc.html"></include-raw>
-                    </details>
-                    <h3>Whitelist of MAC addresses</h3>
-                    <input id="wifi-whitelist" type="checkbox">
-                    <label for="wifi-whitelist">Enable whitelist</label>
-                    <macselector id="wifi-macs"></macselector>
-
-                    <details class="info-div">
-                        <summary class="prevent-select">Description</summary>
-                        <include-raw src="/whitelist_desc.html"></include-raw>
-                    </details>
-                </div>
-
-            </details>
-            
-            <details class="menu-details">
-                <summary class="menu-summary prevent-select">Bluetooth</summary>
-                
-                <div id="bluetooth-mac-selector" class="details-div">
-                    <h3>Activate Bluetooth</h3>
-                    <p>
-                        <input id="bluetooth-active" type="checkbox">
-                        <label for="bluetooth-active">Enable bluetooth</label>
-                    </p>
-                    <p>
-                        Bluetooth device name: 
-                        <input id="bluetooth-name">
-                    </p>
-                    
-                    <h3>Whitelist of MAC addresses</h3>
-                    <macselector id="bluetooth-macs"></macselector>
-                    <details class="info-div">
-                        <summary class="prevent-select">Description</summary>    
-                        <include-raw src="/whitelist_desc.html"></include-raw>
                     </details>
                 </div>
 
@@ -115,7 +82,7 @@
                         </div>
                     </p>
                     <p>
-                        <span>Switch from wifi / bluetooth to knobs after changing them for:</span>
+                        <span>Switch from wifi to knobs after changing them for:</span>
                         <input id="knob-activate-input" type="number" min="0.001" max="0.999" step="0.001" value="0">
                     </p>
                     <input id="activate-white-knob" type="checkbox">

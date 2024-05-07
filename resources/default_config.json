@@ -1,5 +1,6 @@
 {
     "wifi": {
+        "hostname": "led-driver",
         "sta_priority": [
             {
                 "ssid": "router0",
@@ -13,24 +14,14 @@
         "access_point": {
             "enabled": true,
             "ssid": "LedDriver",
-            "password": "passwordLed"
-        },
-        "strict": false,
-        "strictList": [
-            "4E-57-62-19-28-53"
-        ]
-    },
-    "bluetooth": {
-        "active": true,
-        "name": "LedDriver",
-        "strict": false,
-        "strictList": [
-            "4E-57-62-19-28-53"
-        ]
+            "password": "passwordLed",
+            "address": "192.168.1.1",
+            "gateway": "192.168.1.254",
+            "subnet": "255.255.255.0"
+        }
     },
     "channels": {
         "webMode": "hsv",
-        "bluetoothMode": "hsv",
         "knobMode": "hsv"
     },
     "filters": {

@@ -128,11 +128,7 @@ class Knob extends HTMLElement {
             this.__value = this.__valueFromPosition(x, y);       
             this.__doChangeValue();
             this.__queue(false, false, true);
-        } else scrollBy({
-            left: event.movementX,
-            top: -2*event.movementY,
-            behavior: "instant"        
-        });
+        }
     }
     
     

@@ -73,19 +73,6 @@ function componentList(element, factory) {
 }
 
 
-Array.from(document.getElementsByTagName('macselector')).forEach((element)=>{
-    componentList(element, ()=>{
-        const input = $new('input');
-        input.pattern = '^([0-9A-Fa-f]{2}[:\\\-]){5}([0-9A-Fa-f]{2})$';
-        input.getValue = ()=>input.value;
-        input.setValue = (value)=>{
-            input.value = value
-        };
-        return input;
-    });
-});
-
-
 Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
     componentList(element, ()=>{
         const div = $new('div');

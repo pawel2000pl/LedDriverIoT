@@ -4,15 +4,25 @@
         "type": "object",
         "fields": {
             "wifi": "wifi-settings",
-            "bluetooth": "bluetooth-settings",
             "channels": "channels-settings",
             "filters": "filters-settings",
             "hardware": "hardware-settings"
         }
     },
+    "ip-address": {
+        "type": "string",
+        "regexp": "^((25[0-5])|(2[0-4][0-9])|(([0-1]?[0-9])?[0-9]))\\.((25[0-5])|(2[0-4][0-9])|(([0-1]?[0-9])?[0-9]))\\.((25[0-5])|(2[0-4][0-9])|(([0-1]?[0-9])?[0-9]))\\.((25[0-5])|(2[0-4][0-9])|(([0-1]?[0-9])?[0-9]))$"
+    },
+    "hostname-string": {
+        "type": "string",
+        "regexp": "^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\\-]*[A-Za-z0-9])$",
+        "max_length": 64,
+        "min_length": 4
+    },
     "wifi-settings": {
         "type": "object",
         "fields": {
+            "hostname": "hostname-string",
             "sta_priority": {
                 "type": "array",
                 "item": {
@@ -30,13 +40,12 @@
                         "type": "boolean"
                     },
                     "ssid": "wifi-ssid",
-                    "password": "wifi-password"
+                    "password": "ap-password",
+                    "address": "ip-address",
+                    "gateway": "ip-address",
+                    "subnet": "ip-address"
                 }
-            },
-            "strict": {
-                "type": "boolean"
-            },
-            "strictList": "mac-list"
+            }
         }
 
     },
@@ -48,29 +57,12 @@
         "type": "string",
         "regexp": ".{0,63}"
     },
-    "mac-list": {
-        "type": "array",
-        "item": {
-           "type": "string",
-           "regex": "^([0-9A-Fa-f]{2}[:\\-]){5}([0-9A-Fa-f]{2})$"
-        }
-    },
-    "bluetooth-settings": {
-        "type": "object",
-        "fields": {
-            "active": "boolean",
-            "name": {
-                "type": "string",
-                "max_length": 31,
-                "regex": "^[A-Za-z0-9\\-_. ]{1,31}$"
-            },
-            "strict": "boolean",
-            "strictList": "mac-list"
-        }
+    "ap-password": {
+        "type": "string",
+        "regexp": "^(.{8,63})?$"
     },
     "channels-settings": {
         "webMode": "channel-setting",
-        "bluetoothMode": "channel-setting",
         "knobMode": "channel-setting"
     },
     "channel-setting": {
