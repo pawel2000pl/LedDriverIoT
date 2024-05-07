@@ -33,6 +33,25 @@ filterFunctions.push(symFunction(filterFunctions[1]));
 filterFunctions.push(symFunction(filterFunctions[2]));
 filterFunctions.push(symFunction(filterFunctions[3]));
 
+function constrainFunction(fun, min_y=0, max_y=1) {
+    return (x)=>{
+        const y = fun(x);
+        return (y < min_y) ? min_y : (y > max_y) ? max_y : y;
+    };
+}
+
+function mixFilterFunctions(filters) {
+    let values = [];
+    for (let i=0;i<9;i++)
+        values.push(filters[i]);
+    return constrainFunction(normalizeFunction((x)=>{ 
+      let sum = 0;
+      for (let i=0;i<9;i++)
+        sum += values[i] * filterFunctions[i](x);
+      return sum;
+    }));
+};
+
 const channelsInModes = {
     hsv: ["hue", "saturation", "value"],
     hsl: ["hue", "saturation", "lightness"],

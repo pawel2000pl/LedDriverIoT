@@ -38,13 +38,24 @@ const colorPromise = getColors();
 
 
 configPromise.then(()=>{
+    const currentFilterFunctions = channelsInModes[config.channels.webMode].map((channel)=>
+        mixFilterFunctions(config.filters.inputFilters[channel])
+    );
+    const whiteFilter = mixFilterFunctions(config.filters.inputFilters["white"]);
+    const globalFilterFunction = mixFilterFunctions(config.filters.globalInputFilters);
+    const invertedConverter = (a, b, c)=>convertersIverted[config.channels.webMode](
+        globalFilterFunction(currentFilterFunctions[0](a)),
+        globalFilterFunction(currentFilterFunctions[1](b)),
+        globalFilterFunction(currentFilterFunctions[2](c))
+    );
+
     const colorKnob = document.getElementById('color-knob');
     var modified = false;
     var ready = true;
     const colors = createTriColorPanel(
         colorKnob, 
         converters[config.channels.webMode], 
-        convertersIverted[config.channels.webMode], 
+        invertedConverter, 
         [1, 1, 1], 
         12, 
         ()=>{modified = true;}, 
@@ -58,7 +69,7 @@ configPromise.then(()=>{
             modified = false;
             ready = false;
             const [r, g, b] = colors.get();
-            const w = white.get();
+            const w = globalFilterFunction(whiteFilter(white.get()));
             setColors(r, g, b, w).finally(()=>{ready = true;});
         }
     };
