@@ -10,11 +10,11 @@
 #include <list>
 
 #include "json.h"
-#include "utils.h"
 #include "resources.h"
 #include "conversions.h"
 #include "validate_json.h"
 #include "functions.h"
+#include "fastlz.h"
 
 #define CONNECTION_TIMEOUT 15000
 #define CONFIGURATION_FILENAME "/configuration.json"
@@ -24,6 +24,34 @@ StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
 std::list<std::function<void()>> taskQueue;
+
+
+struct RGBW {
+  float red;
+  float green;
+  float blue;
+  float white;
+
+  float& operator[] (const int i) {
+    return *(&red + i);
+  }
+};
+
+
+int sendDecompressedData(WebServer& server, const char* content_type, const void* compressed_buffer, size_t compressed_size, size_t max_decompressed_size) {
+    uint8_t* decompressed_buffer = new uint8_t[max_decompressed_size+1];
+    size_t decompressed_size = fastlz_decompress(compressed_buffer, compressed_size, decompressed_buffer, max_decompressed_size);
+    if (decompressed_size == 0) {
+        Serial.println("Błąd dekompresji");
+        delete [] decompressed_buffer;
+        return 0;
+    }
+    decompressed_buffer[decompressed_size] = 0;
+    server.send(200, content_type, (const char*)decompressed_buffer);
+    delete [] decompressed_buffer;
+    return 1;
+}
+
 
 void loadConfiguration() {
   uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
@@ -258,12 +286,85 @@ void recvConfiguration(bool save=true) {
 }
 
 
-struct {
-  float red;
-  float green;
-  float blue;
-  float white;
-} colorValues = {0,0,0,0};
+RGBW colorValues = {0,0,0,0};
+RGBW filteredValues = {0,0,0,0};
+float lastKnobValues[4] = {0,0,0,0};
+float outputValues[4] = {0,0,0,0};
+bool knobMode = true;
+
+
+void updateOutputs() {
+  const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
+  char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '0', 0};
+  int idx;
+  for (idx=0;key[idx]!='0';idx++);
+  for (int i=0;i<4;i++) {
+    key[idx] = '0' + i;
+    unsigned selectedChannel = (unsigned)transistorConfiguration[(const char*)key].as<int>();
+    outputValues[i] = selectedChannel <= 4 ? filteredValues[selectedChannel] : 0;
+  }
+  //TODO: update phisical outputs
+}
+
+
+void updateFilteredValues() {
+  const auto& filters = configuration["filters"];
+  const auto& channelFilters = filters["outputFilters"];
+  FloatFunction global = mixFilterFunctions(filters["globalOutputFilters"].as<JsonArrayConst>());
+  FloatFunction red = mixFilterFunctions(channelFilters["red"].as<JsonArrayConst>());
+  FloatFunction green = mixFilterFunctions(channelFilters["green"].as<JsonArrayConst>());
+  FloatFunction blue = mixFilterFunctions(channelFilters["blue"].as<JsonArrayConst>());
+  FloatFunction white = mixFilterFunctions(channelFilters["white"].as<JsonArrayConst>());
+  filteredValues.red = red(global(colorValues.red));
+  filteredValues.green = green(global(colorValues.green));
+  filteredValues.blue = blue(global(colorValues.blue));
+  filteredValues.white = white(global(colorValues.white));
+  updateOutputs();
+}
+
+
+void setFromKnobs(const float values[4]) {
+  if (!knobMode) {
+    float epsilon = configuration["hardware"]["knobActivateDelta"].as<float>();
+    for (int i=0;i<4;i++)
+      if (abs(values[i] - lastKnobValues[i]) > epsilon)
+        knobMode = true;
+    if (!knobMode) return;
+  }
+  for (int i=0;i<4;i++)
+    lastKnobValues[i] = values[i];
+
+  const auto& bias = configuration["hardware"]["bias"];
+  float biasUp = bias["up"].as<float>();
+  float biasDown = bias["down"].as<float>();
+  const auto applyBias = [biasUp, biasDown](float x) { return (x - biasDown) / (1.f - biasUp - biasDown); };
+
+  const float fixedValues[] = {applyBias(values[0]), applyBias(values[1]), applyBias(values[2]), applyBias(values[3]), 0, 1};
+  const String knobMode = configuration["channels"]["knobMode"];
+  const char* colorspaces[] = {"hsv", "hsl", "rgb"};
+  const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
+  std::function<void(float, float, float, float&, float&, float&)> conversionFunctions[] = {hsvToRgb, hslToRgb, rgbToRgb};
+  auto conversionFunction = conversionFunctions[0];
+  const char** channelsInCurrentColorspace = channels[0];
+  for (int i=0;i<3;i++)
+    if (knobMode == colorspaces[i]) {
+      channelsInCurrentColorspace = channels[i];
+      conversionFunction = conversionFunctions[i];
+    }
+  const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
+  const auto& filters = configuration["filters"];
+  const auto& channelFilters = filters["inputFilters"];
+  const auto globalFilter = mixFilterFunctions(filters["globalOutputFilters"].as<JsonArrayConst>());
+  float outputChannels[4];
+  for (int i=0;i<4;i++) {
+    unsigned selectedPotentiometer = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<int>();
+    const auto filter = mixFilterFunctions(filters[channelsInCurrentColorspace[i]].as<JsonArrayConst>());
+    outputChannels[i] = globalFilter(filter(selectedPotentiometer < 6 ? fixedValues[selectedPotentiometer] : 0));
+  }
+  conversionFunction(outputChannels[0], outputChannels[1], outputChannels[2], filteredValues.red, filteredValues.green, filteredValues.blue);
+  filteredValues.white = outputChannels[4];
+  updateFilteredValues();
+}
 
 
 void sendColors() {
@@ -292,6 +393,8 @@ void setColors() {
   colorValues.green = data["green"];
   colorValues.blue = data["blue"];
   colorValues.white = data["white"];
+  knobMode = false;
+  updateFilteredValues();
   sendColors();
 }
 
@@ -324,6 +427,7 @@ void setup() {
   autoConnectWifi(); 
   configureServer();
 }
+
 
 void loop() {
   server.handleClient();
