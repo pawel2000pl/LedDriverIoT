@@ -159,7 +159,7 @@
             "enbleWhiteKnob": "boolean"
         }
     },
-    "output-values": {
+    "color-values": {
         "type": "object",
         "fields": {
             "red": "fraction",

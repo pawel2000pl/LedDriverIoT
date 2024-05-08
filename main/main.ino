@@ -263,15 +263,15 @@ struct {
   float green;
   float blue;
   float white;
-} outputValues = {0,0,0,0};
+} colorValues = {0,0,0,0};
 
 
-void sendOutput() {
+void sendColors() {
   StaticJsonDocument<256> data;
-  data["red"] = outputValues.red;
-  data["green"] = outputValues.green;
-  data["blue"] = outputValues.blue;
-  data["white"] = outputValues.white;
+  data["red"] = colorValues.red;
+  data["green"] = colorValues.green;
+  data["blue"] = colorValues.blue;
+  data["white"] = colorValues.white;
   char buf[256];
   int size = serializeJson(data, buf, 255);
   buf[size] = 0;
@@ -279,20 +279,20 @@ void sendOutput() {
 }
 
 
-void setOutput() {
+void setColors() {
   StaticJsonDocument<256> data;
   String rawData = server.arg("plain");
   DeserializationError err = deserializeJson(data, rawData);
   if (err != DeserializationError::Ok) 
     return sendError("Deserialization error");
-  String assertMessage = validateJson(data, configSchema, configSchema["output-values"]);
+  String assertMessage = validateJson(data, configSchema, configSchema["color-values"]);
   if (assertMessage != "")
     sendError(assertMessage, 422);
-  outputValues.red = data["red"];
-  outputValues.green = data["green"];
-  outputValues.blue = data["blue"];
-  outputValues.white = data["white"];
-  sendOutput();
+  colorValues.red = data["red"];
+  colorValues.green = data["green"];
+  colorValues.blue = data["blue"];
+  colorValues.white = data["white"];
+  sendColors();
 }
 
 
@@ -305,8 +305,8 @@ void configureServer() {
     server.on(resources[i]->name, HTTP_GET, [i, &server](){sendDecompressedData(server, resources[i]->mime_type, resources[i]->data, resources[i]->size, resources[i]->decompressed_size);});  
   server.on("/config.json", HTTP_POST, [](){recvConfiguration(true);});
   server.on("/assert_config", HTTP_POST, [](){recvConfiguration(false);});
-  server.on("/output.json", HTTP_GET, sendOutput);
-  server.on("/output.json", HTTP_POST, setOutput);
+  server.on("/color.json", HTTP_GET, sendColors);
+  server.on("/color.json", HTTP_POST, setColors);
   server.on("/assert_json", HTTP_POST, customValidator);
   server.on("/networks.json", HTTP_GET, sendNetworks);
   server.on("/connect_to", HTTP_POST, connectToNetworkEndpoint);

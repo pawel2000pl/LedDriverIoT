@@ -1,6 +1,6 @@
 "use strict";
 
-function createTriColorPanel(parent, converter, converterIverted, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
+function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
     
     const mainDiv = document.createElement('div'); 
     mainDiv.className = 'knob-div';
@@ -51,11 +51,10 @@ function createTriColorPanel(parent, converter, converterIverted, ranges = [1, 1
     parent.appendChild(mainDiv);  
     return {
         set: function(channels) {
-            channels = converterIverted(...channels);
             for (let i=0;i<3;i++)
                 knobs[i].value = channels[i];
         },
-        get: ()=>converter(...knobs.map((knob)=>knob.value))
+        get: ()=>knobs.map((knob)=>knob.value)
     };
 }
 

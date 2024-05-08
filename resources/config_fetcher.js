@@ -52,6 +52,26 @@ function mixFilterFunctions(filters) {
     }));
 };
 
+function createInverseFunction(originalFunction) {
+    const minus = originalFunction(0) > originalFunction(1);
+    const searchFunction = minus ? (x)=>1-originalFunction(x) : originalFunction;
+    function inverseFunction(y) {
+        let left = 0;
+        let right = 1;
+        const epsilon = 1e-6;
+        while (right - left > epsilon) {
+            const mid = (left + right) / 2;
+            if (searchFunction(mid) < y) {
+                left = mid;
+            } else {
+                right = mid;
+            }
+        }
+        return left; 
+    }
+    return minus ? (x)=>inverseFunction(1-x) : inverseFunction;
+}
+
 const channelsInModes = {
     hsv: ["hue", "saturation", "value"],
     hsl: ["hue", "saturation", "lightness"],
