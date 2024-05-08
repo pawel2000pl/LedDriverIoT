@@ -12,17 +12,21 @@ const convertersInverted = {
     rgb: rgbToRgb
 };
 
+var prevSendData = '';
 
 async function setColors(r, g, b, w) {
+    const data = JSON.stringify({
+        "red": r,
+        "green": g,
+        "blue": b,
+        "white": w
+    });
+    if (data === prevSendData) return;
+    prevSendData = data;
     const response = await fetch('/color.json', {
         method: 'POST',
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            "red": r,
-            "green": g,
-            "blue": b,
-            "white": w
-        })
+        body: data
     });
     return await response.json();
 }

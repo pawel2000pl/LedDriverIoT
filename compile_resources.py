@@ -4,7 +4,7 @@ import ctypes
 import mimetypes
 import json
 
-os.system('gcc --std=c11 -O3 -x c main/fastlz.h -fpic -shared -o fastlz.so')
+os.system('gcc --std=c11 -O3 -x c main/fastlz.cpp -fpic -shared -o fastlz.so')
 
 lib = ctypes.CDLL('./fastlz.so')
 fastlz_compress_level = lib.fastlz_compress_level
@@ -61,6 +61,8 @@ def str2c(c_str):
 
 
 info_struct = """
+#pragma once
+
 struct Resource {
     const char* name;
     const char* mime_type;
@@ -73,7 +75,8 @@ struct Resource {
 
 
 PATH = 'resources/'
-result_content = [info_struct]; 
+result_header = [info_struct]
+result_content = ['#include "resources.h"', '']
 resource_names = []
 max_decompressed_size = 0
 max_compressed_size = 0
@@ -99,26 +102,44 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         decompressed = decompress_data(compressed).decode('utf-8')
         assert content == decompressed        
         var_name = filename.replace('.', '_')
+        resource_names.append('resource_'+var_name)
+
+        result_header.append('extern const unsigned char '+var_name+'_data[];')
+        result_header.append('extern const char '+var_name+'_filename[];')
+        result_header.append('extern const char '+var_name+'_mime_type[];')
+        result_header.append('extern const unsigned int '+var_name+'_size;')
+        result_header.append('extern const unsigned int '+var_name+'_decompressed_size;')
+        result_header.append('extern const struct Resource resource_'+var_name+';')
+        result_header.append('')
+
         result_content.append('const unsigned char '+var_name+'_data[] = {'+str2c(compressed)+'};')
         result_content.append('const char '+var_name+'_filename[] = {'+str2c('/'+filename+"\0")+'};')
         result_content.append('const char '+var_name+'_mime_type[] = {'+str2c(mimetypes.guess_type(PATH+filename)[0]+"\0")+'};')
         result_content.append('const unsigned int '+var_name+'_size = '+str(len(compressed))+';')
         result_content.append('const unsigned int '+var_name+'_decompressed_size = '+str(len(content))+';')
-        
-        resource_names.append('resource_'+var_name);
         result_content.append('const struct Resource resource_'+var_name+' = {')
         result_content.append(' .name = '+var_name+'_filename,')
         result_content.append(' .mime_type = '+var_name+'_mime_type,')
         result_content.append(' .data = '+var_name+'_data,')
         result_content.append(' .size = '+var_name+'_size,')
         result_content.append(' .decompressed_size = '+var_name+'_decompressed_size')
+        result_content.append('};')
+        result_content.append('')
+
         max_decompressed_size = max(max_decompressed_size, len(content))
         max_compressed_size = max(max_compressed_size, len(compressed))
         print(filename, len(orginal_content), len(content), len(compressed))
-        result_content.append('};')
 
 
 print(max_decompressed_size, max_compressed_size)
+
+
+result_header.append('extern const struct Resource* resources[];')
+result_header.append('extern const unsigned int resources_count;')
+result_header.append('')
+result_header.append('extern const unsigned int max_resource_compressed_buffer;')
+result_header.append('extern const unsigned int max_resource_decompressed_buffer;')
+result_header.append('')
 
 result_content.append('const struct Resource* resources[] = {'+','.join(['&'+name for name in resource_names])+'};')
 result_content.append('const unsigned int resources_count = '+str(len(resource_names))+';')
@@ -127,4 +148,5 @@ result_content.append('const unsigned int max_resource_compressed_buffer = '+str
 result_content.append('const unsigned int max_resource_decompressed_buffer = '+str(max_decompressed_size)+';')
 result_content.append('')
 
-with open('main/resources.h', 'w') as f: f.write("\n".join(result_content))
+with open('main/resources.h', 'w') as f: f.write("\n".join(result_header))
+with open('main/resources.cpp', 'w') as f: f.write("\n".join(result_content))
