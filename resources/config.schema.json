@@ -30,9 +30,8 @@
             "access_point": {
                 "type": "object",
                 "fields": {
-                    "enabled": {
-                        "type": "boolean"
-                    },
+                    "enabled": "boolean",
+                    "hidden": "boolean",
                     "ssid": "wifi-ssid",
                     "password": "ap-password",
                     "address": "ip-address",
@@ -55,7 +54,8 @@
         "type": "object",
         "fields": {
             "ssid": "wifi-ssid",
-            "password": "wifi-password"
+            "password": "wifi-password",
+            "hidden": "boolean"
         }
     },
     "ap-password": {

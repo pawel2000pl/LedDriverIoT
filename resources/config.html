@@ -55,13 +55,21 @@
                     </p>
                     <h3>Access point</h3>
                     <p> 
-                        <div><input id="enable-ap" type="checkbox"><label for="enable-ap">Enabled</label></div>
-                        <div><span>SSID:</span><input id="ap-ssid"></div>
-                        <div><span>Password:</span><input id="ap-password" type="password"></div>                        
-                        <div><span>IP Address:</span><input id="ap-address"></div>
-                        <div><span>Gateway:</span><input id="ap-gateway"></div>
-                        <div><span>Subnet:</span><input id="ap-subnet"></div>
+                        <p>
+                            <div><input id="enable-ap" type="checkbox"><label for="enable-ap">Enabled</label></div>
+                        </p>
+                        <p>
+                            <div><span>SSID:</span><input id="ap-ssid"></div>
+                            <div><span>Password:</span><input id="ap-password" type="password"></div>    
+                            <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>                        
+                        </p>
+                        <p>
+                            <div><span>IP Address:</span><input id="ap-address"></div>
+                            <div><span>Gateway:</span><input id="ap-gateway"></div>
+                            <div><span>Subnet:</span><input id="ap-subnet"></div>
+                        </p>
                     </p>
+                    <button onclick="openAccessPoint()">Open access-point now</button>
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
                         <include-raw src="wifi_desc.html"></include-raw>

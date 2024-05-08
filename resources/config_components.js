@@ -1,5 +1,11 @@
 "use strict";
 
+function uuidv4() {
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+        (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+    );
+}
+
 Array.from(document.getElementsByClassName('info-function-chart')).forEach((item)=>{
     const fun = filterFunctions[Number(item.id.substring('info-function-chart-'.length))];
     const size = Math.ceil(Math.min(document.body.clientWidth, document.body.clientHeight) / 2);
@@ -75,7 +81,7 @@ function componentList(element, factory) {
 
 
 function wifi_selector_factory(ssid="") {
-    const div = $new('div');
+    const div = $new('p');
     const div1 = $new('div');
     const div2 = $new('div');
     const text1 = $new('span');
@@ -86,6 +92,12 @@ function wifi_selector_factory(ssid="") {
     text2.textContent = 'Password: ';
     const password_input = $new('input');
     password_input.type = 'password';
+    const hiddenInput = $new('input');
+    hiddenInput.type = 'checkbox';
+    hiddenInput.id = uuidv4();
+    const hiddenLabel = $new('label');
+    hiddenLabel.htmlFor = hiddenInput.id;
+    hiddenLabel.textContent = 'Network is hidden ';
     const connectBtn = $new('button');
     connectBtn.textContent = 'Connect';
     connectBtn.onclick = ()=>{
@@ -95,6 +107,7 @@ function wifi_selector_factory(ssid="") {
             body: JSON.stringify({
                 "ssid": ssid_input.value,
                 "password": password_input.value,
+                "hidden": hiddenInput.checked
             })
         });
     };
@@ -104,14 +117,18 @@ function wifi_selector_factory(ssid="") {
     div2.appendChild(password_input);
     div.appendChild(div1);
     div.appendChild(div2);
+    div.appendChild(hiddenInput);
+    div.appendChild(hiddenLabel);
     div.appendChild(connectBtn);
     div.getValue = ()=>{return {
         "ssid": ssid_input.value,
-        "password": password_input.value
+        "password": password_input.value,
+        "hidden": hiddenInput.checked
     }};
     div.setValue = (value)=>{
         ssid_input.value = value.ssid;
         password_input.value = value.password;
+        hiddenInput.checked = value.checked;
     };
     return div;
 };

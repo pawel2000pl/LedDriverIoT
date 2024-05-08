@@ -115,7 +115,7 @@ async function saveConfig() {
 
 
 async function assertConfig(configObject) {
-    const schemaResponse = fetch("config.schema.json");
+    const schemaResponse = await fetch("config.schema.json");
     const schema = await schemaResponse.json();
     const payload = {
         "data": configObject,

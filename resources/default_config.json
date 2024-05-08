@@ -4,15 +4,18 @@
         "sta_priority": [
             {
                 "ssid": "router0",
-                "password": "password0"
+                "password": "password0",
+                "hidden": false
             },
             {
                 "ssid": "router1",
-                "password": "password1"
+                "password": "password1",
+                "hidden": false
             }
         ],
         "access_point": {
             "enabled": true,
+            "hidden": false,
             "ssid": "LedDriver",
             "password": "passwordLed",
             "address": "192.168.1.1",

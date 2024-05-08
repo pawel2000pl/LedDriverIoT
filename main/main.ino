@@ -136,6 +136,7 @@ void sendNetworks() {
 
 
 bool connectToNetwork(String ssid, String password) {
+  WiFi.mode(WIFI_STA);
   if (WiFi.status() == WL_CONNECTED)
     WiFi.disconnect();
   delay(100);
@@ -146,6 +147,27 @@ bool connectToNetwork(String ssid, String password) {
     while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
         delay(10);
   return WiFi.status() == WL_CONNECTED;
+}
+
+
+void openAccessPoint() {
+  Serial.println("Switching to AP-mode");
+  if (WiFi.status() == WL_CONNECTED)
+    WiFi.disconnect();
+  const auto& apConfig = configuration["wifi"]["access_point"];
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(str2ip(apConfig["address"].as<String>()), str2ip(apConfig["gateway"].as<String>()), str2ip(apConfig["subnet"].as<String>()));
+  WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>(), 1, apConfig["hidden"].as<bool>());
+}
+
+
+bool networkIsInScanned(String name) {
+  const JsonArrayConst& list = scannedNetworks.as<JsonArrayConst>();
+  int size = list.size();
+  for (int i=0;i<size;i++)
+    if (list[i].as<String>() == name)
+      return true;
+  return false;
 }
 
 
@@ -166,15 +188,15 @@ void autoConnectWifi() {
 
   for (int i=0;i<staPriority.size();i++) {
     WiFi.mode(WIFI_STA);
-    if (connectToNetwork(staPriority[i]["ssid"].as<String>(), staPriority[i]["password"].as<String>()))
-      return;
+    const auto& entry = staPriority[i];
+    String ssid = staPriority[i]["ssid"].as<String>();
+    if (entry["hidden"].as<bool>() || networkIsInScanned(ssid)) {
+      if (connectToNetwork(ssid, staPriority[i]["password"].as<String>()))
+        return;
+    }
   }
-  if (apConfig["enabled"]) {
-    Serial.println("Switching to AP-mode");
-    WiFi.mode(WIFI_AP);
-    WiFi.softAPConfig(str2ip(apConfig["address"].as<String>()), str2ip(apConfig["gateway"].as<String>()), str2ip(apConfig["subnet"].as<String>()));
-    WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>());
-  }
+  if (apConfig["enabled"])
+      openAccessPoint();
 }
 
 
@@ -261,6 +283,12 @@ void connectToNetworkEndpoint() {
 void autoScanWifiEndpoint() {
   sendOk(); 
   taskQueue.push_back([](){delay(100); autoConnectWifi();});
+}
+
+
+void openAccessPointEndpoint() {
+  sendOk(); 
+  taskQueue.push_back([](){delay(100); openAccessPoint();});
 }
 
 
@@ -414,6 +442,7 @@ void configureServer() {
   server.on("/networks.json", HTTP_GET, sendNetworks);
   server.on("/connect_to", HTTP_POST, connectToNetworkEndpoint);
   server.on("/refresh_networks", HTTP_GET, autoScanWifiEndpoint);
+  server.on("/open_access_point", HTTP_GET, openAccessPointEndpoint);
   server.begin();
 }
 
@@ -434,6 +463,6 @@ void loop() {
   for (auto fun: taskQueue) 
     fun();
   taskQueue.clear();
-  if (WiFi.status() != WL_CONNECTED)
+  if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP)
     autoConnectWifi(); 
 }

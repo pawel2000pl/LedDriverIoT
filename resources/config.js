@@ -9,6 +9,7 @@ function dumpConfig() {
                 "enabled": $id('enable-ap').checked,
                 "ssid": $id('ap-ssid').value,
                 "password": $id('ap-password').value,
+                "hidden": $id('ap-hidden').checked,
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
                 "subnet": $id('ap-subnet').value
@@ -58,6 +59,7 @@ function fillConfig(config) {
     $id('enable-ap').checked = config.wifi.access_point.enabled;
     $id('ap-ssid').value = config.wifi.access_point.ssid;
     $id('ap-password').value = config.wifi.access_point.password;
+    $id('ap-hidden').checked = config.wifi.access_point.hidden;
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;
     $id('ap-subnet').value = config.wifi.access_point.subnet;
@@ -112,7 +114,10 @@ $id('import-settings-btn').onclick = async ()=>{
     }
 };
 
-
 function refreshNetworks() {
     fetch('/refresh_networks');
+}
+
+function openAccessPoint() {
+    fetch('/open_access_point');
 }
