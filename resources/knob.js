@@ -200,13 +200,14 @@ class Knob extends HTMLElement {
         ctx.beginPath();
         ctx.lineWidth = "4";
         ctx.fillStyle = color;
-        ctx.rect(this.__canvas.width / 2 - w / 2, this.__canvas.height / 2 - h / 2, w, h);
+        ctx.arc(this.__canvas.width / 2, this.__canvas.height / 2, w - h, 0, 2 * Math.PI);
+        ctx.circ
         ctx.fill();
         
         
-        ctx.font = "bold " + 0.8*h + "px Arial";
         ctx.textAlign = "center"; 
         ctx.fillStyle = textColor;
+        ctx.font = "bold " + 0.8*h + "px sans-serif";
         ctx.fillText(this.__value.toFixed(4),this.__canvas.width / 2, this.__canvas.height / 2 + 0.3 * h);
     }     
     
