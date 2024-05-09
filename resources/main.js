@@ -14,16 +14,11 @@ const convertersInverted = {
 
 var prevSendData = '';
 
-async function setColors(r, g, b, w) {
-    const data = JSON.stringify({
-        "red": r,
-        "green": g,
-        "blue": b,
-        "white": w
-    });
+async function setColors(c1, c2, c3, w) {
+    const data = JSON.stringify([c1, c2, c3, w]);
     if (data === prevSendData) return;
     prevSendData = data;
-    const response = await fetch('/color.json', {
+    const response = await fetch('/filtered_color.json', {
         method: 'POST',
         headers: {"Content-Type": "application/json"},
         body: data
@@ -33,7 +28,7 @@ async function setColors(r, g, b, w) {
 
 
 async function getColors() {
-    const response = await fetch('/color.json');
+    const response = await fetch('/filtered_color.json');
     return await response.json();
 }
 
@@ -42,20 +37,6 @@ const colorPromise = getColors();
 
 
 configPromise.then(()=>{
-    const currentFilterFunctions = channelsInModes[config.channels.webMode].map((channel)=>
-        mixFilterFunctions(config.filters.inputFilters[channel])
-    );
-    const invertedCurrentFilterFunctions = currentFilterFunctions.map((fun)=>createInverseFunction(fun));
-    const whiteFilter = mixFilterFunctions(config.filters.inputFilters["white"]);
-    const invertedWhiteFilter = createInverseFunction(whiteFilter);
-    const globalFilterFunction = mixFilterFunctions(config.filters.globalInputFilters);
-    const invertedGlobalFilterFunction = createInverseFunction(globalFilterFunction);
-    const filteredConverters = (a, b, c)=>converters[config.channels.webMode](
-        globalFilterFunction(currentFilterFunctions[0](a)),
-        globalFilterFunction(currentFilterFunctions[1](b)),
-        globalFilterFunction(currentFilterFunctions[2](c))
-    );
-
     const colorKnob = document.getElementById('color-knob');
     var modified = false;
     var ready = true;
@@ -74,20 +55,15 @@ configPromise.then(()=>{
         if (modified && ready) {
             modified = false;
             ready = false;
-            const [r, g, b] = filteredConverters(...colors.get());
-            const w = globalFilterFunction(whiteFilter(white.get()));
-            setColors(r, g, b, w).finally(()=>{ready = true;});
+            const [c1, c2, c3] = colors.get();
+            const w = white.get();
+            setColors(c1, c2, c3, w).finally(()=>{ready = true;});
         }
     };
 
     colorPromise.then((values)=>{
-        const asColorspace = convertersInverted[config.channels.webMode](values.red, values.green, values.blue);
-        colors.set([
-            invertedCurrentFilterFunctions[0](invertedGlobalFilterFunction(asColorspace[0])),
-            invertedCurrentFilterFunctions[1](invertedGlobalFilterFunction(asColorspace[1])),
-            invertedCurrentFilterFunctions[2](invertedGlobalFilterFunction(asColorspace[2]))
-        ]);
-        white.set(invertedWhiteFilter(invertedGlobalFilterFunction(values.white)));
+        colors.set(values);
+        white.set(values[3]);
         modified = false;
         setInterval(updateFunction, 50);
     });

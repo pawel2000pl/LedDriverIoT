@@ -7,7 +7,8 @@
 using FloatFunction = std::function<float(float)>;
 extern FloatFunction filterFunctions[];
 
-FloatFunction normalizeFunction(FloatFunction fun, float min_x=0, float max_x=0);
+FloatFunction normalizeFunction(FloatFunction fun, float min_x=0, float max_x=1);
 FloatFunction constrainFunction(FloatFunction fun, float min_y=0, float max_y=1);
 FloatFunction symFunction(FloatFunction fun);
 FloatFunction mixFilterFunctions(const JsonArrayConst& filters);
+FloatFunction createInverseFunction(FloatFunction originalFunction);

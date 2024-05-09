@@ -1,5 +1,6 @@
 #include <math.h>
 #include <functional>
+#include <array>
 #include "json.h"
 #include "functions.h"
 
@@ -9,18 +10,18 @@ FloatFunction normalizeFunction(FloatFunction fun, float min_x, float max_x) {
   const float x_diff = max_x-min_x;
   const float minff = min(fmin, fmax);
   const float absfdiff = abs(fmax-fmin);
-  return [fun, min_x, x_diff, minff, absfdiff](float x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
+  return [=](float x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
 }
 
 FloatFunction constrainFunction(FloatFunction fun, float min_y, float max_y) {
-  return [fun, min_y, max_y](float x) {
+  return [=](float x) {
     float y = fun(x);
     return (y < min_y) ? min_y : (y > max_y) ? max_y : y;
   };
 }
 
 FloatFunction symFunction(FloatFunction fun) {
-  return [fun](float x) { return 1-fun(1-x); };
+  return [=](float x) { return 1-fun(1-x); };
 }
 
 FloatFunction filterFunctions[] = {
@@ -36,14 +37,40 @@ FloatFunction filterFunctions[] = {
 };
 
 FloatFunction mixFilterFunctions(const JsonArrayConst& filters) {
-  float values[9];
+  std::array<float, 9> values;
   for (int i=0;i<9;i++)
     values[i] = filters[i].as<float>();
-  return constrainFunction(normalizeFunction([values, filterFunctions](float x) { 
+  return constrainFunction(normalizeFunction([=](float x) { 
     float sum = 0;
     for (int i=0;i<9;i++)
       sum += values[i] * filterFunctions[i](x);
     return sum;
   }));
+}
+
+FloatFunction createInverseFunction(FloatFunction originalFunction) {
+    const bool minus = originalFunction(0) > originalFunction(1);
+    FloatFunction searchFunction = minus ? 
+        [=](float x){ return 1 - originalFunction(x); } : 
+        originalFunction;
+    
+    FloatFunction inverseFunction = [=](float y) {
+        float left = 0;
+        float right = 1;
+        const float epsilon = 1e-6;
+        while (right - left > epsilon) {
+            const float mid = (left + right) / 2;
+            if (searchFunction(mid) < y) {
+                left = mid;
+            } else {
+                right = mid;
+            }
+        }
+        return left; 
+    };
+
+    return minus ? 
+        [=](float x){ return inverseFunction(1 - x); } : 
+        inverseFunction;
 }
 

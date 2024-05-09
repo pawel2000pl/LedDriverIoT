@@ -167,5 +167,10 @@
             "blue": "fraction",
             "white": "fraction"
         }
+    },
+    "color-channels": {
+        "type": "array",
+        "length": 4,
+        "item": "fraction"
     }
 }

@@ -4,8 +4,9 @@
 
 #include "main/validate_json.h"
 
-#define JSON_CONFIG_BUF_SIZE (16*1024)
+// g++ validate_config.cpp main/validate_json.cpp && ./a.out
 
+#define JSON_CONFIG_BUF_SIZE (16*1024)
 
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> schema;

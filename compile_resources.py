@@ -80,6 +80,7 @@ result_content = ['#include "resources.h"', '']
 resource_names = []
 max_decompressed_size = 0
 max_compressed_size = 0
+total_compressed = 0
 
 operators = ['<', '>', '<=', '>=', '=', '==', '===', '\\+', '-', '\\*', ',', ':', '\\/', '\\[', '\\]', '\\/=', '\\*=', '\\+=', '-=', '\\(', '\\)', '\\{', '\\}', ';', '\\|', '\\^', '&']
 
@@ -128,10 +129,13 @@ for root, dirs, files in os.walk(PATH, topdown=False):
 
         max_decompressed_size = max(max_decompressed_size, len(content))
         max_compressed_size = max(max_compressed_size, len(compressed))
+        total_compressed += len(compressed)
         print(filename, len(orginal_content), len(content), len(compressed))
 
 
-print(max_decompressed_size, max_compressed_size)
+print("Max decompressed:", max_decompressed_size)
+print("Max compressed:", max_compressed_size)
+print("Total compressed:", total_compressed)
 
 
 result_header.append('extern const struct Resource* resources[];')

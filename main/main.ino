@@ -15,6 +15,7 @@
 #include "validate_json.h"
 #include "functions.h"
 #include "fastlz.h"
+#include "color_endpoints.h"
 
 #define CONNECTION_TIMEOUT 15000
 #define CONFIGURATION_FILENAME "/configuration.json"
@@ -24,18 +25,6 @@ StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
 std::list<std::function<void()>> taskQueue;
-
-
-struct RGBW {
-  float red;
-  float green;
-  float blue;
-  float white;
-
-  float& operator[] (const int i) {
-    return *(&red + i);
-  }
-};
 
 
 int sendDecompressedData(WebServer& server, const char* content_type, const void* compressed_buffer, size_t compressed_size, size_t max_decompressed_size) {
@@ -157,7 +146,7 @@ void openAccessPoint() {
   const auto& apConfig = configuration["wifi"]["access_point"];
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(str2ip(apConfig["address"].as<String>()), str2ip(apConfig["gateway"].as<String>()), str2ip(apConfig["subnet"].as<String>()));
-  WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>(), 1, apConfig["hidden"].as<bool>());
+  WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>(), 1, apConfig["hidden"].as<bool>(), 16);
 }
 
 
@@ -351,6 +340,12 @@ void updateFilteredValues() {
 }
 
 
+void updateColorValues(float r, float g, float b, float w) {
+  colorValues = RGBW(r, g, b, w);
+  updateFilteredValues();
+}
+
+
 void setFromKnobs(const float values[4]) {
   if (!knobMode) {
     float epsilon = configuration["hardware"]["knobActivateDelta"].as<float>();
@@ -365,33 +360,24 @@ void setFromKnobs(const float values[4]) {
   const auto& bias = configuration["hardware"]["bias"];
   float biasUp = bias["up"].as<float>();
   float biasDown = bias["down"].as<float>();
-  const auto applyBias = [biasUp, biasDown](float x) { return (x - biasDown) / (1.f - biasUp - biasDown); };
-
+  const auto applyBias = [biasUp, biasDown](float x) { return constrain((x - biasDown) / (1.f - biasUp - biasDown), 0, 1); };
   const float fixedValues[] = {applyBias(values[0]), applyBias(values[1]), applyBias(values[2]), applyBias(values[3]), 0, 1};
-  const String knobMode = configuration["channels"]["knobMode"];
+  const String knobColorspace = configuration["channels"]["knobMode"];
   const char* colorspaces[] = {"hsv", "hsl", "rgb"};
   const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
-  std::function<void(float, float, float, float&, float&, float&)> conversionFunctions[] = {hsvToRgb, hslToRgb, rgbToRgb};
-  auto conversionFunction = conversionFunctions[0];
   const char** channelsInCurrentColorspace = channels[0];
   for (int i=0;i<3;i++)
-    if (knobMode == colorspaces[i]) {
+    if (knobColorspace == colorspaces[i])
       channelsInCurrentColorspace = channels[i];
-      conversionFunction = conversionFunctions[i];
-    }
   const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
-  const auto& filters = configuration["filters"];
-  const auto& channelFilters = filters["inputFilters"];
-  const auto globalFilter = mixFilterFunctions(filters["globalOutputFilters"].as<JsonArrayConst>());
   float outputChannels[4];
   for (int i=0;i<4;i++) {
     unsigned selectedPotentiometer = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<int>();
-    const auto filter = mixFilterFunctions(filters[channelsInCurrentColorspace[i]].as<JsonArrayConst>());
-    outputChannels[i] = globalFilter(filter(selectedPotentiometer < 6 ? fixedValues[selectedPotentiometer] : 0));
+    outputChannels[i] = selectedPotentiometer < 6 ? fixedValues[selectedPotentiometer] : 0;
   }
-  conversionFunction(outputChannels[0], outputChannels[1], outputChannels[2], filteredValues.red, filteredValues.green, filteredValues.blue);
-  filteredValues.white = outputChannels[4];
-  updateFilteredValues();
+  setColorAuto(configuration, knobColorspace, outputChannels[0], outputChannels[1], outputChannels[2], outputChannels[3],
+    [&](const JsonVariantConst&, float r, float g, float b, float w) {updateColorValues(r, g, b, w);}
+  );
 }
 
 
@@ -427,6 +413,43 @@ void setColors() {
 }
 
 
+void sendColorsAuto() {
+  getColorAuto(configuration, configuration["channels"]["webMode"], 
+    colorValues.red, colorValues.green, colorValues.blue, colorValues.white,
+    [&](const JsonVariantConst&, float c1, float c2, float c3, float w) {
+      StaticJsonDocument<256> data;
+      data.add(c1);
+      data.add(c2);
+      data.add(c3);
+      data.add(w);
+      char buf[256];
+      int size = serializeJson(data, buf, 255);
+      buf[size] = 0;
+      server.send(200, default_config_json_mime_type, buf);
+    }
+  );
+}
+
+
+void setColorsAuto() {
+  StaticJsonDocument<256> data;
+  String rawData = server.arg("plain");
+  DeserializationError err = deserializeJson(data, rawData);
+  if (err != DeserializationError::Ok) 
+    return sendError("Deserialization error");
+  String assertMessage = validateJson(data, configSchema, configSchema["color-channels"]);
+  if (assertMessage != "")
+    sendError(assertMessage, 422);
+  setColorAuto(configuration, configuration["channels"]["webMode"], data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>(),
+      [&](const JsonVariantConst&, float r, float g, float b, float w) {
+        knobMode = false;
+        updateColorValues(r, g, b, w);
+        sendOk();
+      }
+    );    
+}
+
+
 void configureServer() {
   server.on("/", HTTP_GET, [&server](){server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
   server.on("/config.json", HTTP_GET, sendConfiguration);
@@ -443,6 +466,8 @@ void configureServer() {
   server.on("/connect_to", HTTP_POST, connectToNetworkEndpoint);
   server.on("/refresh_networks", HTTP_GET, autoScanWifiEndpoint);
   server.on("/open_access_point", HTTP_GET, openAccessPointEndpoint);
+  server.on("/filtered_color.json", HTTP_GET, sendColorsAuto);
+  server.on("/filtered_color.json", HTTP_POST, setColorsAuto);
   server.begin();
 }
 
