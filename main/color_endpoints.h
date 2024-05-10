@@ -2,7 +2,11 @@
 #pragma once
 
 #include <functional>
+#include <array>
 #include "json.h"
+
+using ColorChannels = std::array<float, 4>;
+using ConversionFunction = std::function<void(float, float, float, float&, float&, float&)>;
 
 struct RGBW {
   float red;
@@ -17,6 +21,13 @@ struct RGBW {
     white = w;
   }
 
+  explicit RGBW(ColorChannels channels) {
+    red = channels[0];
+    green = channels[1];
+    blue = channels[2];
+    white = channels[3];
+  }
+
   float& operator[] (const int i) {
     return *(&red + i);
   }
@@ -29,15 +40,18 @@ struct RGBW {
   }
 };
 
-using CallbackColorFunction = std::function<void(const JsonVariantConst&, float, float, float, float)>;
-using ConversionFunction = std::function<void(float, float, float, float&, float&, float&)>;
+ColorChannels somethingColorCustom(const JsonVariantConst& configuration, ConversionFunction converter, 
+  const char* firstGlobalFilterName, const char* middleFilterGroup, const char* lastFilterName,
+  bool invertFilters, bool filtersToOutput,
+  const char* channel1, const char* channel2, const char* channel3, 
+  float c1, float c2, float c3, float w);
 
-void setColorRGB(const JsonVariantConst& configuration, float r, float g, float b, float w, const CallbackColorFunction& callback);
-void setColorHSV(const JsonVariantConst& configuration, float h, float s, float v, float w, const CallbackColorFunction& callback);
-void setColorHSL(const JsonVariantConst& configuration, float h, float s, float l, float w, const CallbackColorFunction& callback);
-void setColorAuto(const JsonVariantConst& configuration, String colorspace, float c1, float c2, float c3, float w, const CallbackColorFunction& callback);
+ColorChannels setColorRGB(const JsonVariantConst& configuration, float r, float g, float b, float w);
+ColorChannels setColorHSV(const JsonVariantConst& configuration, float h, float s, float v, float w);
+ColorChannels setColorHSL(const JsonVariantConst& configuration, float h, float s, float l, float w);
+ColorChannels setColorAuto(const JsonVariantConst& configuration, String colorspace, float c1, float c2, float c3, float w);
 
-void getColorRGB(const JsonVariantConst& configuration, float r, float g, float b, float w, const CallbackColorFunction& callback);
-void getColorHSV(const JsonVariantConst& configuration, float r, float g, float b, float w, const CallbackColorFunction& callback);
-void getColorHSL(const JsonVariantConst& configuration, float r, float g, float b, float w, const CallbackColorFunction& callback);
-void getColorAuto(const JsonVariantConst& configuration, String colorspace, float c1, float c2, float c3, float w, const CallbackColorFunction& callback);
+ColorChannels getColorRGB(const JsonVariantConst& configuration, float r, float g, float b, float w);
+ColorChannels getColorHSV(const JsonVariantConst& configuration, float r, float g, float b, float w);
+ColorChannels getColorHSL(const JsonVariantConst& configuration, float r, float g, float b, float w);
+ColorChannels getColorAuto(const JsonVariantConst& configuration, String colorspace, float c1, float c2, float c3, float w);

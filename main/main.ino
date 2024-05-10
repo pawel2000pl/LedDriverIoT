@@ -325,18 +325,12 @@ void updateOutputs() {
 
 
 void updateFilteredValues() {
-  const auto& filters = configuration["filters"];
-  const auto& channelFilters = filters["outputFilters"];
-  FloatFunction global = mixFilterFunctions(filters["globalOutputFilters"].as<JsonArrayConst>());
-  FloatFunction red = mixFilterFunctions(channelFilters["red"].as<JsonArrayConst>());
-  FloatFunction green = mixFilterFunctions(channelFilters["green"].as<JsonArrayConst>());
-  FloatFunction blue = mixFilterFunctions(channelFilters["blue"].as<JsonArrayConst>());
-  FloatFunction white = mixFilterFunctions(channelFilters["white"].as<JsonArrayConst>());
-  filteredValues.red = red(global(colorValues.red));
-  filteredValues.green = green(global(colorValues.green));
-  filteredValues.blue = blue(global(colorValues.blue));
-  filteredValues.white = white(global(colorValues.white));
-  updateOutputs();
+  filteredValues = (RGBW)somethingColorCustom(
+      configuration, rgbToRgb, "globalOutputFilters", "outputFilters", NULL,
+      false, false,
+      "red", "green", "blue",
+      colorValues.red, colorValues.green, colorValues.blue, colorValues.white
+    );
 }
 
 
@@ -375,9 +369,8 @@ void setFromKnobs(const float values[4]) {
     unsigned selectedPotentiometer = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<int>();
     outputChannels[i] = selectedPotentiometer < 6 ? fixedValues[selectedPotentiometer] : 0;
   }
-  setColorAuto(configuration, knobColorspace, outputChannels[0], outputChannels[1], outputChannels[2], outputChannels[3],
-    [&](const JsonVariantConst&, float r, float g, float b, float w) {updateColorValues(r, g, b, w);}
-  );
+  ColorChannels filteredChannels = setColorAuto(configuration, knobColorspace, outputChannels[0], outputChannels[1], outputChannels[2], outputChannels[3]);
+  updateColorValues(filteredChannels[0], filteredChannels[1], filteredChannels[2], filteredChannels[3]);
 }
 
 
@@ -414,20 +407,18 @@ void setColors() {
 
 
 void sendColorsAuto() {
-  getColorAuto(configuration, configuration["channels"]["webMode"], 
-    colorValues.red, colorValues.green, colorValues.blue, colorValues.white,
-    [&](const JsonVariantConst&, float c1, float c2, float c3, float w) {
-      StaticJsonDocument<256> data;
-      data.add(c1);
-      data.add(c2);
-      data.add(c3);
-      data.add(w);
-      char buf[256];
-      int size = serializeJson(data, buf, 255);
-      buf[size] = 0;
-      server.send(200, default_config_json_mime_type, buf);
-    }
+  ColorChannels channels = getColorAuto(configuration, configuration["channels"]["webMode"], 
+    colorValues.red, colorValues.green, colorValues.blue, colorValues.white
   );
+  StaticJsonDocument<256> data;
+  data.add(channels[0]);
+  data.add(channels[1]);
+  data.add(channels[2]);
+  data.add(channels[3]);
+  char buf[256];
+  int size = serializeJson(data, buf, 255);
+  buf[size] = 0;
+  server.send(200, default_config_json_mime_type, buf);
 }
 
 
@@ -440,13 +431,13 @@ void setColorsAuto() {
   String assertMessage = validateJson(data, configSchema, configSchema["color-channels"]);
   if (assertMessage != "")
     sendError(assertMessage, 422);
-  setColorAuto(configuration, configuration["channels"]["webMode"], data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>(),
-      [&](const JsonVariantConst&, float r, float g, float b, float w) {
-        knobMode = false;
-        updateColorValues(r, g, b, w);
-        sendOk();
-      }
-    );    
+  ColorChannels channels = setColorAuto(
+    configuration, configuration["channels"]["webMode"], 
+    data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()
+  );
+  knobMode = false;
+  updateColorValues(channels[0], channels[1], channels[2], channels[3]);
+  sendOk();   
 }
 
 
