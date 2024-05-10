@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+
+<html>
+
+<head>
+    <link rel="stylesheet" href="/styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<form method="POST" action="/simple.html">
+    <p>
+        <span>%s</span>
+        <br>
+        <input type="range" name="ch0" min="0" max="15" value="%d">
+    </p>
+    <p>
+        <span>%s</span>
+        <br>
+        <input type="range" name="ch1" min="0" max="15" value="%d">
+    </p>
+    <p>
+        <span>%s</span>
+        <br>
+        <input type="range" name="ch2" min="0" max="15" value="%d">
+    </p>
+    <p>
+    <div %s>
+        <span>%s</span>
+        <br>
+        <input type="range" name="ch3" min="0" max="15" value="%d">
+    </div>
+    </p>
+    <input type="submit" name="apply" value="Apply">
+</form>
+<br>
+<p>
+    <a href="/index.html">Go to standard interface</a>
+</p>
+</body>
+
+</html>

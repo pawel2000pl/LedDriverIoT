@@ -201,7 +201,6 @@ class Knob extends HTMLElement {
         ctx.lineWidth = "4";
         ctx.fillStyle = color;
         ctx.arc(this.__canvas.width / 2, this.__canvas.height / 2, w - h, 0, 2 * Math.PI);
-        ctx.circ
         ctx.fill();
         
         

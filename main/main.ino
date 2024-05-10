@@ -26,12 +26,30 @@ StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
 std::list<std::function<void()>> taskQueue;
 
+WebServer server(80);
+
+
+void sendError(String message, int code = 400) {
+  StaticJsonDocument<1024> messageData;
+  char buf[1024];
+  messageData["status"] = "error";
+  messageData["message"] = message;
+  unsigned int size = serializeJson(messageData, buf, 1023);
+  buf[size] = 0;
+  server.send(code, default_config_json_mime_type, buf);
+}
+
+
+void sendOk() {
+  server.send(200, default_config_json_mime_type, "{\"status\": \"ok\"}");
+}
+
 
 int sendDecompressedData(WebServer& server, const char* content_type, const void* compressed_buffer, size_t compressed_size, size_t max_decompressed_size) {
     uint8_t* decompressed_buffer = new uint8_t[max_decompressed_size+1];
     size_t decompressed_size = fastlz_decompress(compressed_buffer, compressed_size, decompressed_buffer, max_decompressed_size);
     if (decompressed_size == 0) {
-        Serial.println("Błąd dekompresji");
+        sendError("Decompression error");
         delete [] decompressed_buffer;
         return 0;
     }
@@ -83,12 +101,6 @@ void saveConfiguration() {
   delete [] buf;
 }
 
-IPAddress local_ip(192,168,1,1);
-IPAddress gateway(192,168,1,254);
-IPAddress subnet(255,255,255,0);
-
-WebServer server(80);
-
 IPAddress str2ip(const String& str) {
   uint8_t numbers[4] = {0, 0, 0, 0};
   int j = 0;
@@ -128,6 +140,8 @@ bool connectToNetwork(String ssid, String password) {
   WiFi.mode(WIFI_STA);
   if (WiFi.status() == WL_CONNECTED)
     WiFi.disconnect();
+  else if (WiFi.getMode() == WIFI_AP)
+    WiFi.softAPdisconnect();
   delay(100);
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -195,22 +209,6 @@ void sendConfiguration() {
   buf[size] = 0;
   server.send(200, default_config_json_mime_type, buf);
   delete [] buf;
-}
-
-
-void sendError(String message, int code = 400) {
-  StaticJsonDocument<1024> messageData;
-  char buf[1024];
-  messageData["status"] = "error";
-  messageData["message"] = message;
-  unsigned int size = serializeJson(messageData, buf, 1023);
-  buf[size] = 0;
-  server.send(code, default_config_json_mime_type, buf);
-}
-
-
-void sendOk() {
-  server.send(200, default_config_json_mime_type, "{\"status\": \"ok\"}");
 }
 
 
@@ -440,6 +438,54 @@ void setColorsAuto() {
   sendOk();   
 }
 
+int floatFilter15(float x) { 
+  return (int)round(x * 15.f); 
+};
+
+void simpleMode() {
+  if (server.method() == HTTP_POST) {
+    auto fun = [](String value) { return constrain((double)atoi(value.c_str())/15.f, 0, 1);};    
+    ColorChannels channels = setColorAuto(configuration, configuration["channels"]["webMode"], 
+      fun(server.arg("ch0")), fun(server.arg("ch1")), fun(server.arg("ch2")), fun(server.arg("ch3")));
+    knobMode = false;
+    updateColorValues(channels[0], channels[1], channels[2], channels[3]);
+  }
+  uint8_t* decompressed_buffer = new uint8_t[simple_template_html_decompressed_size+1];
+  char* render_buffer = new char[simple_template_html_decompressed_size+256];
+  size_t decompressed_size = fastlz_decompress(simple_template_html_data, simple_template_html_size, decompressed_buffer, simple_template_html_decompressed_size);
+  if (decompressed_size == 0) {
+      delete [] render_buffer;
+      delete [] decompressed_buffer;
+      sendError("Decompression error");
+  }
+  decompressed_buffer[decompressed_size] = 0;
+  const char* colorspaces[] = {"hsv", "hsl", "rgb"};
+  const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
+  const char** channelsInCurrentColorspace = channels[0];
+  String destColorspace = configuration["channels"]["webMode"];
+  for (int i=0;i<3;i++)
+    if (destColorspace == colorspaces[i])
+      channelsInCurrentColorspace = channels[i];
+  ColorChannels filteredChannels = getColorAuto(configuration, configuration["channels"]["webMode"], 
+    colorValues.red, colorValues.green, colorValues.blue, colorValues.white
+  );
+  sprintf(
+    render_buffer, (const char*)decompressed_buffer, 
+    channelsInCurrentColorspace[0],
+    floatFilter15(filteredChannels[0]),
+    channelsInCurrentColorspace[1],
+    floatFilter15(filteredChannels[1]),
+    channelsInCurrentColorspace[2],
+    floatFilter15(filteredChannels[2]),
+    configuration["hardware"]["enbleWhiteKnob"].as<bool>() ? "" : "style=\"display: none;\"",
+    channelsInCurrentColorspace[3],
+    floatFilter15(filteredChannels[3])
+  );
+  server.send(200, "text/html", (const char*)render_buffer);
+  delete [] render_buffer;
+  delete [] decompressed_buffer;
+}
+
 
 void configureServer() {
   server.on("/", HTTP_GET, [&server](){server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
@@ -459,6 +505,8 @@ void configureServer() {
   server.on("/open_access_point", HTTP_GET, openAccessPointEndpoint);
   server.on("/filtered_color.json", HTTP_GET, sendColorsAuto);
   server.on("/filtered_color.json", HTTP_POST, setColorsAuto);
+  server.on("/simple.html", HTTP_GET, simpleMode);
+  server.on("/simple.html", HTTP_POST, simpleMode);
   server.begin();
 }
 
