@@ -16,18 +16,23 @@
 #include "functions.h"
 #include "fastlz.h"
 #include "color_endpoints.h"
+#include "ledc_driver.h"
 
 #define CONNECTION_TIMEOUT 15000
 #define CONFIGURATION_FILENAME "/configuration.json"
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 #define MAX_STRING_LENGTH 64
+
+const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
+const int POTENTIOMETER_GPIO_INPUTS[] = {A0, A1, A2, A3};
+const int RESET_CONFIGURATION_PIN = D4;
+
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
 std::list<std::function<void()>> taskQueue;
 
 WebServer server(80);
-
 
 void sendError(String message, int code = 400) {
   StaticJsonDocument<1024> messageData;
@@ -303,9 +308,10 @@ void recvConfiguration(bool save=true) {
 
 RGBW colorValues = {0,0,0,0};
 RGBW filteredValues = {0,0,0,0};
-float lastKnobValues[4] = {0,0,0,0};
-float outputValues[4] = {0,0,0,0};
+ColorChannels lastKnobValues = {0,0,0,0};
+ColorChannels outputValues = {0,0,0,0};
 bool knobMode = true;
+bool outputRequiresUpdate = true;
 
 
 void updateOutputs() {
@@ -318,7 +324,8 @@ void updateOutputs() {
     unsigned selectedChannel = (unsigned)transistorConfiguration[(const char*)key].as<int>();
     outputValues[i] = selectedChannel <= 4 ? filteredValues[selectedChannel] : 0;
   }
-  //TODO: update phisical outputs
+  for (int i=0;i<4;i++) 
+    setLedC(LED_GPIO_OUTPUTS[i], i, outputValues[i]);
 }
 
 
@@ -334,11 +341,11 @@ void updateFilteredValues() {
 
 void updateColorValues(float r, float g, float b, float w) {
   colorValues = RGBW(r, g, b, w);
-  updateFilteredValues();
+  outputRequiresUpdate = true;
 }
 
 
-void setFromKnobs(const float values[4]) {
+void setFromKnobs(const ColorChannels values) {
   if (!knobMode) {
     float epsilon = configuration["hardware"]["knobActivateDelta"].as<float>();
     for (int i=0;i<4;i++)
@@ -371,6 +378,14 @@ void setFromKnobs(const float values[4]) {
   updateColorValues(filteredChannels[0], filteredChannels[1], filteredChannels[2], filteredChannels[3]);
 }
 
+void checkKnobs() {
+  ColorChannels values;
+  for (int i=0;i<4;i++) {
+    double readed = analogRead(POTENTIOMETER_GPIO_INPUTS[i]);
+    values[i] = readed / 4095;
+  }
+  setFromKnobs(values);
+}
 
 void sendColors() {
   StaticJsonDocument<256> data;
@@ -399,7 +414,7 @@ void setColors() {
   colorValues.blue = data["blue"];
   colorValues.white = data["white"];
   knobMode = false;
-  updateFilteredValues();
+  outputRequiresUpdate = true;
   sendColors();
 }
 
@@ -511,9 +526,15 @@ void configureServer() {
 }
 
 
+unsigned long long int reset_timer = 0;
+
+
 void setup() {
   Serial.begin(115200);
-
+  
+  pinMode(RESET_CONFIGURATION_PIN, INPUT_PULLUP);
+  analogReadResolution(12);
+  initLedC();
   SPIFFS.begin(true);
   loadConfigSchema();
   loadConfiguration();
@@ -524,9 +545,28 @@ void setup() {
 
 void loop() {
   server.handleClient();
+
   for (auto fun: taskQueue) 
     fun();
   taskQueue.clear();
+
   if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP)
     autoConnectWifi(); 
+
+  checkKnobs();
+
+  if (outputRequiresUpdate) {
+    updateFilteredValues();
+    updateOutputs();
+  }
+
+  if (digitalRead(RESET_CONFIGURATION_PIN) == 0) {
+    if (reset_timer == 0)
+      reset_timer = millis();
+    else if (millis() - reset_timer >= 10000) {
+      SPIFFS.remove(CONFIGURATION_FILENAME);
+      ESP.restart();
+    }      
+  } else 
+    reset_timer = 0;
 }
