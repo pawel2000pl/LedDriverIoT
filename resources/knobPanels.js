@@ -9,7 +9,8 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
 
     const resize = ()=>{
         const clientWidth = parent.clientWidth;
-        const ray = clientWidth / 5 - 1;
+        const clientHeight = parent.clientHeight;
+        const ray = (clientWidth > clientHeight) ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
         for (let i=0;i<3;i++)
             knobs[i].setSize(ray, ray / 4, ray / 3);
     };
@@ -67,7 +68,8 @@ function createWhiteKnob(parent, visible=true, changeEvent=()=>{}) {
     whiteKnob.onChangeValue = changeEvent;
     const resize = ()=>{
         const clientWidth = parent.clientWidth;
-        const ray = clientWidth / 5;
+        const clientHeight = parent.clientHeight;
+        const ray = (clientWidth > clientHeight) ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
         whiteKnob.setSize(ray, ray / 4, ray / 3);
     };
     resize();
