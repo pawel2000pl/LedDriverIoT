@@ -49,28 +49,22 @@ FloatFunction mixFilterFunctions(const JsonArrayConst& filters) {
 }
 
 FloatFunction createInverseFunction(FloatFunction originalFunction) {
-    const bool minus = originalFunction(0) > originalFunction(1);
-    FloatFunction searchFunction = minus ? 
-        [=](float x){ return 1 - originalFunction(x); } : 
-        originalFunction;
-    
-    FloatFunction inverseFunction = [=](float y) {
+    const bool minus = originalFunction(0) > originalFunction(1);    
+    return [=](float y) {
         float left = 0;
         float right = 1;
         const float epsilon = 1e-6;
+        if (minus) y = -y;
         while (right - left > epsilon) {
             const float mid = (left + right) / 2;
-            if (searchFunction(mid) < y) {
-                left = mid;
-            } else {
-                right = mid;
-            }
+            float value = originalFunction(mid);
+            if (minus) value = -value;
+            if (value < y)
+              left = mid;
+            else
+              right = mid;
         }
         return left; 
     };
-
-    return minus ? 
-        [=](float x){ return inverseFunction(1 - x); } : 
-        inverseFunction;
 }
 

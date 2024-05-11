@@ -34,6 +34,8 @@ std::list<std::function<void()>> taskQueue;
 
 WebServer server(80);
 
+void updateFilteredValues();
+
 void sendError(String message, int code = 400) {
   StaticJsonDocument<1024> messageData;
   char buf[1024];
@@ -79,6 +81,7 @@ void loadConfiguration() {
   DeserializationError err = deserializeJson(configuration, buf);
   if (err != DeserializationError::Ok || assertConfiguration().length())
     deserializeJson(configuration, String((const char*)decompressed_buffer));
+  taskQueue.push_back(updateFilteredValues);
 }
 
 
@@ -268,19 +271,19 @@ void connectToNetworkEndpoint() {
   sendOk();
   const String ssid = data["ssid"].as<String>();
   const String password = data["password"].as<String>();
-  taskQueue.push_back([ssid, password](){delay(100); connectToNetwork(ssid, password);});
+  taskQueue.push_back([ssid, password](){connectToNetwork(ssid, password);});
 }
 
 
 void autoScanWifiEndpoint() {
   sendOk(); 
-  taskQueue.push_back([](){delay(100); autoConnectWifi();});
+  taskQueue.push_back(autoConnectWifi);
 }
 
 
 void openAccessPointEndpoint() {
   sendOk(); 
-  taskQueue.push_back([](){delay(100); openAccessPoint();});
+  taskQueue.push_back(openAccessPoint);
 }
 
 
@@ -525,9 +528,19 @@ void configureServer() {
   server.begin();
 }
 
-
 unsigned long long int reset_timer = 0;
 
+void checkReset() {
+  if (digitalRead(RESET_CONFIGURATION_PIN) == 0) {
+    if (reset_timer == 0)
+      reset_timer = millis();
+    else if (millis() - reset_timer >= 10000) {
+      SPIFFS.remove(CONFIGURATION_FILENAME);
+      ESP.restart();
+    }      
+  } else 
+    reset_timer = 0;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -560,13 +573,5 @@ void loop() {
     updateOutputs();
   }
 
-  if (digitalRead(RESET_CONFIGURATION_PIN) == 0) {
-    if (reset_timer == 0)
-      reset_timer = millis();
-    else if (millis() - reset_timer >= 10000) {
-      SPIFFS.remove(CONFIGURATION_FILENAME);
-      ESP.restart();
-    }      
-  } else 
-    reset_timer = 0;
+  checkReset();
 }

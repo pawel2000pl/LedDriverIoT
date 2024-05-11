@@ -1,5 +1,9 @@
 "use strict";
 
+function screenIsLandscape() {
+    return screen.orientation.type.search("landscape") >= 0;
+}
+
 function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
     
     const mainDiv = document.createElement('div'); 
@@ -9,8 +13,7 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
 
     const resize = ()=>{
         const clientWidth = parent.clientWidth;
-        const clientHeight = parent.clientHeight;
-        const ray = (clientWidth > clientHeight) ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
+        const ray = screenIsLandscape() ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
         for (let i=0;i<3;i++)
             knobs[i].setSize(ray, ray / 4, ray / 3);
     };
@@ -68,8 +71,7 @@ function createWhiteKnob(parent, visible=true, changeEvent=()=>{}) {
     whiteKnob.onChangeValue = changeEvent;
     const resize = ()=>{
         const clientWidth = parent.clientWidth;
-        const clientHeight = parent.clientHeight;
-        const ray = (clientWidth > clientHeight) ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
+        const ray = screenIsLandscape() ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
         whiteKnob.setSize(ray, ray / 4, ray / 3);
     };
     resize();

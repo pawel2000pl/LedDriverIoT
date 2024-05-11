@@ -1,6 +1,6 @@
 
 Array.from(document.getElementsByTagName('filterselector')).forEach((element)=>{
-    const k = 0.001;
+    const k = 0.05;
     let i=0;
     const size = Math.ceil(Math.min(document.body.clientWidth, document.body.clientHeight) / 2);
     const slidersTable = document.createElement('table');
@@ -8,13 +8,15 @@ Array.from(document.getElementsByTagName('filterselector')).forEach((element)=>{
         const slider = document.createElement('input');
         const defaultValue = i == 0 ? 1/k : 0;
         slider.type = 'range';
-        slider.min = -1000;
-        slider.max = 1000;
+        slider.min = -1/k;
+        slider.max = 1/k;
         slider.value = defaultValue;
         const filterName = filterNames[i];
         const tr = document.createElement('tr');
         const labelTd = document.createElement('td');
-        const sliderChange = ()=>labelTd.textContent = filterName + ': ' + (slider.value*k).toFixed(3);
+        const valueTd = document.createElement('td');
+        labelTd.textContent = filterName;
+        const sliderChange = ()=>valueTd.textContent = (slider.value*k).toFixed(2);
         slider.addEventListener('change', sliderChange);
         slider.addEventListener('input', sliderChange);
         const sliderTd = document.createElement('td');
@@ -24,6 +26,7 @@ Array.from(document.getElementsByTagName('filterselector')).forEach((element)=>{
         refreshTd.style.cursor = 'pointer';
         refreshTd.onclick = ()=>{slider.value = defaultValue; slider.dispatchEvent(new Event('change'));};
         tr.appendChild(labelTd);
+        tr.appendChild(valueTd);
         tr.appendChild(refreshTd);
         tr.appendChild(sliderTd);
         slidersTable.appendChild(tr);
