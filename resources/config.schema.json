@@ -156,7 +156,8 @@
                 }
             },
             "knobActivateDelta": "fraction",
-            "enbleWhiteKnob": "boolean"
+            "enbleWhiteKnob": "boolean",
+            "invertOutputs": "boolean"
         }
     },
     "color-values": {

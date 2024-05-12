@@ -47,7 +47,8 @@ function dumpConfig() {
                 "down": Number($id('high-bias-input').value)
             },
             "knobActivateDelta": Number($id('knob-activate-input').value),
-            "enbleWhiteKnob": $id('activate-white-knob').checked
+            "enbleWhiteKnob": $id('activate-white-knob').checked,
+            "invertOutputs": $id('invert-outputs').checked
         }
     };
 }
@@ -90,6 +91,7 @@ function fillConfig(config) {
 
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
+    $id('invert-outputs').checked = config.hardware.invertOutputs;
 }
 
 $id('save-settings-btn').onclick = ()=>{config = dumpConfig(); saveConfig();};

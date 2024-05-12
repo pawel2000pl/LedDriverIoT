@@ -209,6 +209,7 @@
             "down": 0.001
         },
         "knobActivateDelta": 0.01,
-        "enbleWhiteKnob": true
+        "enbleWhiteKnob": true,
+        "invertOutputs": false
     }
 }
