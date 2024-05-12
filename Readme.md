@@ -5,7 +5,7 @@ Project was designed for XIAO ESP32C3.
 
 ## Example hardware application
 
-![image](doc/example_application.drawio.png)
+![image](doc/example_application.png)
 
 ## Screenshots
 
