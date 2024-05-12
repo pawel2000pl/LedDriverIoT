@@ -23,6 +23,7 @@ void initLedC(void) {
 
 
 void setLedC(unsigned gpio, unsigned channel, float value) {
+  value = constrain(value, 0, 1);
   ledc_channel_config_t ledc_channel = {
     .gpio_num       = gpio,
     .speed_mode     = LEDC_MODE,
