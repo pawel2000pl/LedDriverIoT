@@ -43,7 +43,8 @@ FloatFunction mixFilterFunctions(const JsonArrayConst& filters) {
   return constrainFunction(normalizeFunction([=](float x) { 
     float sum = 0;
     for (int i=0;i<9;i++)
-      sum += values[i] * filterFunctions[i](x);
+      if (values[i] != 0)
+        sum += values[i] * filterFunctions[i](x);
     return sum;
   }));
 }

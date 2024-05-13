@@ -1,6 +1,3 @@
-#include <BTAddress.h>
-#include <BTAdvertisedDevice.h>
-#include <BTScan.h>
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WebServer.h>
