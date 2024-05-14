@@ -396,6 +396,7 @@ void updateColorValues(float r, float g, float b, float w) {
 void setFromKnobs(const ColorChannels values) {
   if (!knobMode) {
     float epsilon = configuration["hardware"]["knobActivateDelta"].as<float>();
+    if (epsilon >= 1) return;
     for (int i=0;i<4;i++)
       if (abs(values[i] - lastKnobValues[i]) > epsilon)
         knobMode = true;
@@ -598,7 +599,7 @@ void checkReset() {
     else if (millis() - reset_timer >= 10000) {
       SPIFFS.remove(CONFIGURATION_FILENAME);
       ESP.restart();
-    }      
+    }
   } else 
     reset_timer = 0;
 }
