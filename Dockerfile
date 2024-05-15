@@ -19,11 +19,14 @@ COPY compile_resources.py /app/compile_resources.py
 WORKDIR /app
 RUN python3 compile_resources.py
 WORKDIR /app/main
-RUN arduino-cli compile -b esp32:esp32:XIAO_ESP32C3 ./main.ino
+RUN arduino-cli compile -b esp32:esp32:XIAO_ESP32C3 --build-property build.partitions=min_spiffs --build-property upload.maximum_size=1966080  ./main.ino
 
-RUN mkdir -p /var/www/
-RUN cp /app/main/build/esp32.esp32.XIAO_ESP32C3/main.ino.bin /var/www/main.ino.bin
+RUN mkdir -p /var/www/builds
+RUN cp /app/main/build/esp32.esp32.XIAO_ESP32C3/* /var/www/builds/
+
+WORKDIR /var/www/builds
+RUN find -type f -not -name "*.md5" -exec bash -c "md5sum {} | head -c 32 > {}.md5" \;
+RUN date > /var/www/builds/timestamp.txt
 
 EXPOSE 8000
 CMD python3 -m http.server --directory /var/www
-
