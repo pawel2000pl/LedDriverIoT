@@ -104,6 +104,11 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
 }
 
 
+String assertConfiguration() {
+  return validateJson(configuration, configSchema, defaultConfiguration); 
+}
+
+
 void loadDefautltConfiguration() {
   uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
   size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
@@ -266,11 +271,6 @@ void sendConfiguration() {
   buf[size] = 0;
   server.send(200, default_config_json_mime_type, buf);
   delete [] buf;
-}
-
-
-String assertConfiguration() {
-  return validateJson(configuration, configSchema, defaultConfiguration); 
 }
 
 
