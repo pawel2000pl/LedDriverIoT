@@ -5,6 +5,7 @@
 #include <ESPmDNS.h>
 #include <FS.h>
 #include <SPIFFS.h>
+#include <Update.h>
 #include <functional>
 #include <list>
 #include <vector>
@@ -65,6 +66,7 @@ const InputHardwareAction POTENTIOMETER_HARDWARE_ACTIONS[] = {
 };
 
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
+StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
 std::list<std::function<void()>> taskQueue;
@@ -105,24 +107,27 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
 
 
 String assertConfiguration() {
-  return validateJson(configuration, configSchema); 
+  return validateJson(configuration, configSchema, defaultConfiguration);
+}
+
+
+void loadDefautltConfiguration() {
+  uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
+  size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
+  decompressed_buffer[decompressed_size] = 0;
+  deserializeJson(defaultConfiguration, String((const char*)decompressed_buffer));
 }
 
 
 void loadConfiguration() {
-  uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
-  size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
-  decompressed_buffer[decompressed_size] = 0;
-  String buf;
   File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
   if (configFile) {
-    buf = configFile.readString();
+    String buf = configFile.readString();
     configFile.close();
-  } else 
-      buf = (const char*)decompressed_buffer;
-  DeserializationError err = deserializeJson(configuration, buf);
-  if (err != DeserializationError::Ok || assertConfiguration().length())
-    deserializeJson(configuration, String((const char*)decompressed_buffer));
+    DeserializationError err = deserializeJson(configuration, buf);
+    if (err != DeserializationError::Ok || assertConfiguration().length())
+      configuration = defaultConfiguration;
+  }
   taskQueue.push_back(updateFilteredValues);
 }
 
@@ -352,6 +357,50 @@ void recvConfiguration(bool save=true) {
   else
     loadConfiguration();
   sendOk();
+}
+
+
+void update() {
+  HTTPUpload& upload = server.upload();
+  if (upload.status == UPLOAD_FILE_START) {
+    Serial.printf("Update: %s\n", upload.filename.c_str());
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    Serial.println("Finished");
+    Update.end(true);
+    Update.printError(Serial);    
+  }
+}
+
+
+void updateEnd() {
+  server.sendHeader("Connection", "close");
+  if (Update.hasError()) 
+    sendError(Update.errorString());
+  else {
+    sendOk();
+    taskQueue.push_back([](){ESP.restart();});
+  }
+}
+
+
+void getBuildInfo() {
+  const char* format = "%s %s";
+  char messageBuf[64];
+  sprintf(messageBuf, format, __DATE__, __TIME__);
+  StaticJsonDocument<256> messageData;
+  char buf[256];
+  messageData["status"] = "ok";
+  messageData["message"] = messageBuf;
+  unsigned int size = serializeJson(messageData, buf, 255);
+  buf[size] = 0;
+  server.send(200, default_config_json_mime_type, buf);
 }
 
 
@@ -585,6 +634,8 @@ void configureServer() {
   server.on("/filtered_color.json", HTTP_POST, setColorsAuto);
   server.on("/simple.html", HTTP_GET, simpleMode);
   server.on("/simple.html", HTTP_POST, simpleMode);
+  server.on("/update", HTTP_POST, updateEnd, update);
+  server.on("/build_info.json", HTTP_GET, getBuildInfo);
   server.begin();
 }
 
@@ -640,6 +691,7 @@ void setup() {
   initLedC();
   SPIFFS.begin(true);
   loadConfigSchema();
+  loadDefautltConfiguration();
   loadConfiguration();
   autoConnectWifi(); 
   configureServer();

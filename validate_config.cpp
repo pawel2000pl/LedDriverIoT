@@ -9,6 +9,7 @@
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
+StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configurationCopy;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> schema;
 
 void printError(const DeserializationError err) {
@@ -33,6 +34,8 @@ int main() {
     buf[size] = 0;
     printError(deserializeJson(configuration, String(buf)));
     configuration.garbageCollect();
+    configurationCopy = configuration;
+ 
 
     fptr = fopen("resources/config.schema.json", "r"); 
     size = fread(buf, 1, JSON_CONFIG_BUF_SIZE-1, fptr);
@@ -42,6 +45,14 @@ int main() {
     schema.garbageCollect();
 
     puts(validateJson(configuration, schema).c_str());
+
+    configuration.remove("wifi");
+    configuration["filters"]["inputFilters"]["hue"].remove(8);
+    puts(validateJson(configuration, schema, configurationCopy).c_str());
+    if (configuration.containsKey("wifi"))
+        puts("Key restored");    
+    if (configuration["filters"]["inputFilters"]["hue"].size() == 9)
+        puts("Array restored");
 
     return 0;
 }

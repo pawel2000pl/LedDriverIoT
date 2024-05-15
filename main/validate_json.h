@@ -4,6 +4,9 @@
 #ifndef ARDUINO
   using String = std::string;
 #endif
+ 
+extern StaticJsonDocument<64> JsonEmpty;
+extern StaticJsonDocument<64> JsonNull;
 
-String validateJson(const JsonVariantConst& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path=".");
-String validateJson(const JsonVariantConst& object, const JsonVariantConst& schema);
+String validateJson(JsonVariant object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults=JsonNull);
+String validateJson(JsonVariant object, const JsonVariantConst& schema, const JsonVariantConst& defaults=JsonNull);
