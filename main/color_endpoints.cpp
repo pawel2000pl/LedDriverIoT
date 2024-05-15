@@ -106,6 +106,7 @@ ColorChannels setColorAuto(const JsonVariantConst& configuration, String colorsp
   if (colorspace == "rgb") return setColorRGB(configuration, c1, c2, c3, w);
   if (colorspace == "hsl") return setColorHSL(configuration, c1, c2, c3, w);
   if (colorspace == "hsv") return setColorHSV(configuration, c1, c2, c3, w);
+  return {0, 0, 0, 0};
 }
 
 
@@ -140,5 +141,6 @@ ColorChannels getColorAuto(const JsonVariantConst& configuration, String colorsp
   if (colorspace == "rgb") return getColorRGB(configuration, c1, c2, c3, w);
   if (colorspace == "hsl") return getColorHSL(configuration, c1, c2, c3, w);
   if (colorspace == "hsv") return getColorHSV(configuration, c1, c2, c3, w);
+  return {0, 0, 0, 0};
 }
 

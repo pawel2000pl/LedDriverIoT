@@ -22,7 +22,7 @@ void initLedC(void) {
 }
 
 
-void setLedC(unsigned gpio, unsigned channel, float value) {
+void setLedC(int gpio, unsigned channel, float value) {
   value = constrain(value, 0, 1);
   ledc_channel_config_t ledc_channel = {
     .gpio_num       = gpio,
@@ -30,8 +30,8 @@ void setLedC(unsigned gpio, unsigned channel, float value) {
     .channel        = (ledc_channel_t)channel,
     .intr_type      = LEDC_INTR_DISABLE,
     .timer_sel      = LEDC_TIMER,
-    .duty           = floor(value * 2047),
-    .hpoint         = floor((1 - value) * 1023)
+    .duty           = (uint32_t)floor(value * 2047),
+    .hpoint         = (int)floor((1 - value) * 1023)
   };
   ledc_channel_config(&ledc_channel);
 }

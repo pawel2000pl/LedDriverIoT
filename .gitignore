@@ -5,3 +5,6 @@ a.out
 main/resources.h
 main/resources.cpp
 *.bkp
+components
+build
+managed_components
