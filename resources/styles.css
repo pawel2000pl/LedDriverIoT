@@ -186,3 +186,11 @@ simple-chart canvas {
         background-color: #333839;
     }
 }
+
+
+#networks-list  {
+    border: 1px solid black;
+    @media(prefers-color-scheme:dark) {
+        border-color:white;
+    }
+}

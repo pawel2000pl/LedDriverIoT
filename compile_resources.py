@@ -96,9 +96,9 @@ for root, dirs, files in os.walk(PATH, topdown=False):
             content = re.sub('^[\\s]*', ' ', content)
             content = re.sub('[\\s]*$', ' ', content)
             content = re.sub('[\\s]+', ' ', content)
-            for operator in operators:
-                no_escaped = operator if operator[0] != '\\' else operator[1:]
-                content = re.sub('[\\s]*'+operator+'[\\s]*', no_escaped, content)
+            # for operator in operators:
+            #     no_escaped = operator if operator[0] != '\\' else operator[1:]
+            #     content = re.sub('[\\s]*'+operator+'[\\s]*', no_escaped, content)
         compressed = compress_data(content.encode('utf-8'))
         decompressed = decompress_data(compressed).decode('utf-8')
         assert content == decompressed        

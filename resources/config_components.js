@@ -225,3 +225,4 @@ createRadioTable(
 );
 
 configPromise.then(()=>fillConfig(config));
+configPromise.then(getNetworks);

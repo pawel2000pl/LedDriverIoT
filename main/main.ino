@@ -4,6 +4,7 @@
 #include <ESPmDNS.h>
 #include <FS.h>
 #include <SPIFFS.h>
+#include <Update.h>
 #include <functional>
 #include <list>
 #include <vector>
@@ -353,6 +354,50 @@ void recvConfiguration(bool save=true) {
 }
 
 
+void update() {
+  HTTPUpload& upload = server.upload();
+  if (upload.status == UPLOAD_FILE_START) {
+    Serial.printf("Update: %s\n", upload.filename.c_str());
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_WRITE) {
+    if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+      Update.printError(Serial);
+    }
+  } else if (upload.status == UPLOAD_FILE_END) {
+    Serial.println("Finished");
+    Update.end(true);
+    Update.printError(Serial);    
+  }
+}
+
+
+void updateEnd() {
+  server.sendHeader("Connection", "close");
+  if (Update.hasError()) 
+    sendError(Update.errorString());
+  else {
+    sendOk();
+    taskQueue.push_back([](){ESP.restart();});
+  }
+}
+
+
+void getBuildInfo() {
+  const char* format = "%s %s";
+  char messageBuf[64];
+  sprintf(messageBuf, format, __DATE__, __TIME__);
+  StaticJsonDocument<256> messageData;
+  char buf[256];
+  messageData["status"] = "ok";
+  messageData["message"] = messageBuf;
+  unsigned int size = serializeJson(messageData, buf, 255);
+  buf[size] = 0;
+  server.send(200, default_config_json_mime_type, buf);
+}
+
+
 RGBW colorValues = {0,0,0,0};
 RGBW filteredValues = {0,0,0,0};
 ColorChannels lastKnobValues = {0,0,0,0};
@@ -583,6 +628,8 @@ void configureServer() {
   server.on("/filtered_color.json", HTTP_POST, setColorsAuto);
   server.on("/simple.html", HTTP_GET, simpleMode);
   server.on("/simple.html", HTTP_POST, simpleMode);
+  server.on("/update", HTTP_POST, updateEnd, update);
+  server.on("/build_info.json", HTTP_GET, getBuildInfo);
   server.begin();
 }
 

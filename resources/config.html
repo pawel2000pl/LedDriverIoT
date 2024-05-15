@@ -46,7 +46,7 @@
                     <h3>Wi-Fi priority list</h3>
                     <wifiselector id="sta-priority-list"></wifiselector>
                     <p>
-                        <p><button onclick="getNetworks()">Show scanned networks</button></p>
+                        <p>Currently scanned networks</p>
                         <table id="networks-list"></table>
                         <p>
                             <button onclick="refreshNetworks()">Refresh list</button>
@@ -192,12 +192,24 @@
                             </div>
 
                         </details>
-                    </div>
-                    
-                    
+                    </div>                                    
                 </div>
                 
             </details>
+
+
+            <details class="menu-details">
+                <summary class="menu-summary prevent-select">Update</summary>
+                <div class="details-div">
+                    <p id="version-p"></p>
+                    <form method="POST" action="#" enctype="multipart/form-data" id="update-form">
+                        <input type="file" name="update">
+                        <input type="submit" value="Update">
+                    </form>                    
+                    <div id="prg"></div>
+                </div>
+            </details>
+             
 
             <div class="action-buttons">
                 <div id="save-settings-btn">Save</div>
@@ -207,6 +219,7 @@
                 <div id="export-settings-btn">Export</div>
             </div>
             
+
 
         </div>
 
@@ -224,6 +237,7 @@
         <script src="include_raw.js"></script>
         <script src="/config.js"></script>
         <script src="config_components.js"></script>
+        <script src="update.js"></script>
         
         
     </body>
