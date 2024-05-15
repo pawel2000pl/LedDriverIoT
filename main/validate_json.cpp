@@ -30,43 +30,56 @@ bool isSimpleJsonType(String typeName) {
 }
 
 StaticJsonDocument<64> JsonEmpty;
+StaticJsonDocument<64> JsonNull;
 bool loadJsonEmpty() {
   String emptyJson = "{}";
   deserializeJson(JsonEmpty, emptyJson);
+  String emptyNull = "null";
+  deserializeJson(JsonNull, emptyNull);
   return 1;
 }
 bool JsonEmptyLoaded = loadJsonEmpty();
 
-String validateJson(const JsonVariantConst& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path) {
+String validateJson(const JsonVariant object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults) {
 
   bool objectTypeIsInline = objectType.is<String>();
 
   if (objectTypeIsInline && !isSimpleJsonType(objectType.as<String>()))
-    return validateJson(object, schema, schema[objectType.as<String>()], path);
+    return validateJson(object, schema, schema[objectType.as<String>()], path, defaults);
   
   const JsonVariantConst& objectSchema = objectTypeIsInline ? JsonEmpty.as<JsonVariantConst>() : objectType;
   String type = objectTypeIsInline ? objectType : objectSchema.containsKey("type") ? objectSchema["type"] : String("object");
 
   if (type == "object") {
-    if (!object.is<JsonObjectConst>()) return "Invalid type: " + path + " expected: object";
+    if (!object.is<JsonObject>()) return "Invalid type: " + path + " expected: object";
     const auto& fields = objectSchema["fields"].as<JsonObjectConst>();
     for (const JsonPairConst& keyValue: fields) {
       const auto& key = keyValue.key();
-      if (!object.containsKey(key)) return "Missing key: " + path + "/" + key.c_str();
-      String result = validateJson(object[key], schema, keyValue.value(), path+"/"+key.c_str());
+      if (!object.containsKey(key)) {
+        if (defaults.isNull())
+          return "Missing key: " + path + "/" + key.c_str();
+        object[key] = defaults[key];
+      }
+      String result = validateJson(object[key], schema, keyValue.value(), path+"/"+key.c_str(), defaults[key]);
       if (result.length() != 0) return result;
     }
   }
 
   if (type == "array") {
-    if (!object.is<JsonArrayConst>()) return "Invalid type: " + path + " expected: array";
+    if (!object.is<JsonArray>()) return "Invalid type: " + path + " expected: array";
     const auto& item = objectSchema["item"];
-    const int size = object.size();
+    int size = object.size();
+    int defaultsSize = defaults.size();
+    if (!defaults.isNull() && size < defaultsSize && (objectSchema.containsKey("min_length") || objectSchema.containsKey("length"))) {
+      for (int i=size;i<defaultsSize;i++)
+        object.add(defaults[i]);
+      size = defaultsSize;
+    }
     if (objectSchema.containsKey("max_length") && size > objectSchema["max_length"]) return "Array too long: " + path;
     if (objectSchema.containsKey("min_length") && size < objectSchema["min_length"]) return "Array too short: " + path;
     if (objectSchema.containsKey("length") && size != objectSchema["length"]) return "Invalid array size: " + path;
     for (int i=0;i<size;i++) {
-      String result = validateJson(object[i], schema, item, path+"/"+inttostr(i));
+      String result = validateJson(object[i], schema, item, path+"/"+inttostr(i), defaults[i<defaultsSize?i:(defaultsSize-1)]);
       if (result.length() != 0) return result;
     }
   }
@@ -103,6 +116,6 @@ String validateJson(const JsonVariantConst& object, const JsonVariantConst& sche
   return "";
 }
 
-String validateJson(const JsonVariantConst& object, const JsonVariantConst& schema) {
-  return validateJson(object, schema, schema["main"]);
+String validateJson(JsonVariant object, const JsonVariantConst& schema, const JsonVariantConst& defaults) {
+  return validateJson(object, schema, schema["main"], ".", defaults);
 }

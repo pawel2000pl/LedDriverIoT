@@ -3,6 +3,7 @@ $id('update-form').addEventListener('submit', function(e) {
     e.preventDefault();
     var form = $id('update-form');
     var data = new FormData(form);
+    $id('update-btn').disabled = true;
 
     fetch('/update', {
         method: 'POST',
@@ -31,6 +32,8 @@ $id('update-form').addEventListener('submit', function(e) {
     })
     .catch(error => {
         alert('There was a problem with the fetch operation: ' + error.toString());
+    }).finally(()=>{
+        $id('update-btn').disabled = false;
     });
 });
 

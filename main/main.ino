@@ -64,6 +64,7 @@ const InputHardwareAction POTENTIOMETER_HARDWARE_ACTIONS[] = {
 };
 
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
+StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
 std::list<std::function<void()>> taskQueue;
@@ -103,20 +104,23 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
 }
 
 
-void loadConfiguration() {
+void loadDefautltConfiguration() {
   uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
   size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
   decompressed_buffer[decompressed_size] = 0;
-  String buf;
+  deserializeJson(defaultConfiguration, String((const char*)decompressed_buffer));
+}
+
+
+void loadConfiguration() {
   File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
   if (configFile) {
-    buf = configFile.readString();
+    String buf = configFile.readString();
     configFile.close();
-  } else 
-      buf = (const char*)decompressed_buffer;
-  DeserializationError err = deserializeJson(configuration, buf);
-  if (err != DeserializationError::Ok || assertConfiguration().length())
-    deserializeJson(configuration, String((const char*)decompressed_buffer));
+    DeserializationError err = deserializeJson(configuration, buf);
+    if (err != DeserializationError::Ok || assertConfiguration().length())
+      configuration = defaultConfiguration;
+  }
   taskQueue.push_back(updateFilteredValues);
 }
 
@@ -266,7 +270,7 @@ void sendConfiguration() {
 
 
 String assertConfiguration() {
-  return validateJson(configuration, configSchema); 
+  return validateJson(configuration, configSchema, defaultConfiguration); 
 }
 
 
@@ -685,6 +689,7 @@ void setup() {
   initLedC();
   SPIFFS.begin(true);
   loadConfigSchema();
+  loadDefautltConfiguration();
   loadConfiguration();
   autoConnectWifi(); 
   configureServer();
