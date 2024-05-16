@@ -66,7 +66,8 @@ const InputHardwareAction POTENTIOMETER_HARDWARE_ACTIONS[] = {
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
-StaticJsonDocument<JSON_CONFIG_BUF_SIZE> scannedNetworks;
+StaticJsonDocument<4096> scannedNetworks;
+StaticJsonDocument<1024> versionInfo;
 std::list<std::function<void()>> taskQueue;
 
 WebServer server(80);
@@ -114,6 +115,16 @@ void loadDefautltConfiguration() {
   size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
   decompressed_buffer[decompressed_size] = 0;
   deserializeJson(defaultConfiguration, String((const char*)decompressed_buffer));
+}
+
+
+void loadVersionInfo() {
+  uint8_t decompressed_buffer[version_json_decompressed_size+1];
+  size_t decompressed_size = fastlz_decompress(version_json_data, version_json_size, decompressed_buffer, version_json_decompressed_size);
+  decompressed_buffer[decompressed_size] = 0;
+  deserializeJson(versionInfo, String((const char*)decompressed_buffer));
+  versionInfo["date"] = __DATE__;
+  versionInfo["time"] = __TIME__;
 }
 
 
@@ -388,15 +399,9 @@ void updateEnd() {
 }
 
 
-void getBuildInfo() {
-  const char* format = "%s %s";
-  char messageBuf[64];
-  sprintf(messageBuf, format, __DATE__, __TIME__);
-  StaticJsonDocument<256> messageData;
+void getVersionInfo() {
   char buf[256];
-  messageData["status"] = "ok";
-  messageData["message"] = messageBuf;
-  unsigned int size = serializeJson(messageData, buf, 255);
+  unsigned int size = serializeJson(versionInfo, buf, 255);
   buf[size] = 0;
   server.send(200, default_config_json_mime_type, buf);
 }
@@ -633,7 +638,7 @@ void configureServer() {
   server.on("/simple.html", HTTP_GET, simpleMode);
   server.on("/simple.html", HTTP_POST, simpleMode);
   server.on("/update", HTTP_POST, updateEnd, update);
-  server.on("/build_info.json", HTTP_GET, getBuildInfo);
+  server.on("/version_info.json", HTTP_GET, getVersionInfo);
   server.begin();
 }
 
@@ -688,6 +693,7 @@ void setup() {
   initTemperature();
   initLedC();
   SPIFFS.begin(true);
+  loadVersionInfo();
   loadConfigSchema();
   loadDefautltConfiguration();
   loadConfiguration();

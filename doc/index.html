@@ -66,7 +66,7 @@
         <h2>Software update</h2>
 
         <a id="download-btn" href="/build/main.ino.bin">Download update</a>
-        <p>Last server update: <span id="update-span"></span></p>
+        <p>Current version: <span id="update-span"></span></p>
 
         <p>All downloads</p>
         <table id="file-table">
@@ -86,8 +86,8 @@
 
     <script>
 
-        fetch('/build/timestamp.txt').then(async (response)=>{
-           document.getElementById('update-span').textContent = await response.text();
+        fetch('/build/version.json').then(async (response)=>{
+           document.getElementById('update-span').textContent = (await response.json()).version;
         });
 
         function wrapInA(text, href) {

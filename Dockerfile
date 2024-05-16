@@ -21,7 +21,7 @@ WORKDIR /app/main
 RUN arduino-cli compile -b esp32:esp32:XIAO_ESP32C3 --build-property build.partitions=min_spiffs --build-property upload.maximum_size=1966080 ./main.ino
 
 RUN mkdir -p /var/www/build
-RUN cp /app/main/build/esp32.esp32.XIAO_ESP32C3/* /var/www/build/
+RUN cp /tmp/arduino/sketches/*/main* /var/www/build/
 RUN cp -r /app/doc /var/www/doc
 RUN cp /app/doc/index.html /var/www/index.html
 
@@ -29,6 +29,7 @@ WORKDIR /var/www/build
 RUN find -type f -not -name "*.md5" -and -not -name "*.size" -exec bash -c "md5sum {} | head -c 32 > {}.md5" \;
 RUN find -type f -not -name "*.md5" -and -not -name "*.size" -exec bash -c "du {} | grep -oP '^[0-9]*' > {}.size" \;
 RUN date > /var/www/build/timestamp.txt
+RUN cp -r /app/resources/version.json /var/www/build/version.json
 
 EXPOSE 8000
 CMD python3 -m http.server --directory /var/www

@@ -38,7 +38,7 @@ $id('update-form').addEventListener('submit', function(e) {
 });
 
 
-fetch('/build_info.json').then(async (response)=>{
+fetch('/version_info.json').then(async (response)=>{
     const data = await response.json();
-    $id('version-p').textContent = "Current version: " + data.message;
+    $id('version-p').textContent = "Current version: " + data.version + " [" + data.date + " " + data.time + "]";
 });
