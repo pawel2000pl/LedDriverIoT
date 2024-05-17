@@ -1,0 +1,13 @@
+Copyright (c) 2024, Pawel Bielecki (pbielecki2000@gmail.com)
+
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0) with Additional Terms
+
+1. **Attribution**: You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+
+2. **NonCommercial**: You may not use the material for commercial purposes without explicit written consent from the original author.
+
+3. **ShareAlike**: If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+
+4. **Additional Attribution Requirement**: Any distribution of this software, modified or unmodified, must include an attribution to the original author in any related documentation or credit notice.
+
+5. **No Warranty**: This software is provided "as-is" without any warranty of any kind. The author is not responsible for any damages arising from the use of this software.

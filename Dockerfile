@@ -14,6 +14,7 @@ RUN mkdir -p /app
 COPY doc /app/doc
 COPY resources /app/resources
 COPY main /app/main
+COPY License.txt /app/License.txt
 COPY compile_resources.py /app/compile_resources.py
 WORKDIR /app
 RUN python3 compile_resources.py
@@ -23,6 +24,8 @@ RUN arduino-cli compile -b esp32:esp32:XIAO_ESP32C3 --build-property build.parti
 RUN mkdir -p /var/www/build
 RUN cp /tmp/arduino/sketches/*/main* /var/www/build/
 RUN cp -r /app/doc /var/www/doc
+RUN cp /app/License.txt /var/www/doc/license.txt
+RUN cp /app/License.txt /var/www/build/license.txt
 RUN cp /app/doc/index.html /var/www/index.html
 
 WORKDIR /var/www/build
