@@ -2,9 +2,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "main/validate_json.h"
+#include "../main/validate_json.h"
 
-// g++ validate_config.cpp main/validate_json.cpp && ./a.out
+// g++ tests/validate_config.cpp main/validate_json.cpp && ./a.out
 
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 

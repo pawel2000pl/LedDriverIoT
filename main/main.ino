@@ -18,6 +18,7 @@
 #include "fastlz.h"
 #include "color_endpoints.h"
 #include "ledc_driver.h"
+#include "resistance_matrix.h"
 
 #define CONNECTION_TIMEOUT 15000
 #define CONFIGURATION_FILENAME "/configuration.json"
@@ -34,6 +35,9 @@ struct InputHardwareAction {
 
 const int RESET_CONFIGURATION_AND_FAN_PIN = D2;
 const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
+const int MATRIX_ANALOG_READ = A0;
+const std::vector<int> MATRIX_COL_WRITE = {D5, D6};
+const std::vector<int> MATRIX_ROW_WRITE = {D3, D4};
 const int POTENTIOMETER_GPIO_INPUTS[] = {A0, A1, A2, A3};
 
 const InputHardwareAction POTENTIOMETER_HARDWARE_ACTIONS[] = {
@@ -483,22 +487,26 @@ void setFromKnobs(const ColorChannels values) {
 
 void checkKnobs() {
   ColorChannels values;
-  for (int i=0;i<4;i++) {
-    const InputHardwareAction& actions = POTENTIOMETER_HARDWARE_ACTIONS[i];
-    for (auto& pin : actions.hz_pins)
-      pinMode(pin, INPUT);
-    for (auto& pin : actions.high_pins) {
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, HIGH);
-    }
-    for (auto& pin : actions.low_pins) {
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, LOW);
-    }
-    delayMicroseconds(10);
-    double readed = analogRead(actions.read_pin);
-    values[i] = readed / 4095;
-  }
+  
+  Serial.print("{");
+  calculate(
+    MATRIX_COL_WRITE,
+    MATRIX_ROW_WRITE,
+    [=]() { float v = (float)analogRead(MATRIX_ANALOG_READ) / 4095.f; Serial.print(v*4095.f); Serial.print(", "); return v;},
+    [](int pin, bool value) { digitalWrite(pin, value ? HIGH : LOW); },
+    []() { delayMicroseconds(10); },
+    [&](int i, calc_type value) { values[i] = value; }
+  );
+  Serial.println("}");
+
+  Serial.print(values[0]);
+  Serial.print(" ");
+  Serial.print(values[1]);
+  Serial.print(" ");
+  Serial.print(values[2]);
+  Serial.print(" ");
+  Serial.print(values[3]);
+  Serial.println(" ");
   setFromKnobs(values);
 }
 
@@ -689,6 +697,8 @@ void checkTemperatureOrReset() {
 void setup() {
   Serial.begin(115200);  
   pinMode(RESET_CONFIGURATION_AND_FAN_PIN, INPUT_PULLUP);
+  for (const auto pin: MATRIX_COL_WRITE) pinMode(pin, OUTPUT);
+  for (const auto pin: MATRIX_ROW_WRITE) pinMode(pin, OUTPUT);
   analogReadResolution(12);
   initTemperature();
   initLedC();
