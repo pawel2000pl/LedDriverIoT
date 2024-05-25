@@ -21,6 +21,23 @@
 #include "ledc_driver.h"
 #include "configuration.h"
 
+#define CONNECTION_TIMEOUT 15000
+#define CONFIGURATION_FILENAME "/configuration.json"
+#define JSON_CONFIG_BUF_SIZE (16*1024)
+#define MAX_STRING_LENGTH 64
+
+#define FAN_TURN_ON_TEMP 70
+#define FAN_TURN_OFF_TEMP 50
+#define THERMISTOR_CONST 4050.0f
+#define THERMISTOR_R0 47000
+#define THERMISTOR_IN_SERIES_RESISTOR 47000
+#define THERMISTOR_T0 (25.0f + 273.15f)
+
+
+const int RESET_CONFIGURATION_PIN = D3;
+const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
+
+
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
@@ -645,9 +662,8 @@ void checkTemperature() {
 
 void setup() {
   Serial.begin(115200);  
-  pinMode(FAN_PIN, OUTPUT);
+  detectHardware();
   pinMode(RESET_CONFIGURATION_PIN, INPUT_PULLUP);
-  analogReadResolution(12);
   initTemperature();
   initLedC();
   SPIFFS.begin(true);
