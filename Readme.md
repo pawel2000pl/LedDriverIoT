@@ -34,7 +34,7 @@ Project was designed for XIAO ESP32C3.
 ## Applications
 
 When multiplexer:
- * multiplexer select to D6, D5, D4; COM OUT/IN to A0
+ * multiplexer select to D4, D5, D6; COM OUT/IN to A0
 
  * when A1 is disconnected:
    - max 4 thermistors: reading from A0 and connect them to multiplexer to channels 0, 1, 2, 3
@@ -52,6 +52,6 @@ When multiplexer:
 
 
 When no multiplexer:
- * connect together pins D6, D5, D4
+ * connect together pins D4, D5, D6
  * max 3 potentiomters connected to A0, A1, A2
  * fan connected to D4

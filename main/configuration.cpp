@@ -1,14 +1,16 @@
+#include <esp32-hal-gpio.h>
 #include "configuration.h"
 
 const int ANALOG_READ_MAIN = A0;
 const int THERIMSTOR_CHECKER = A1;
 const int ANALOG_READ_SECONDARY[] = {A0, A1, A2};
-const int ANALOG_SELECT[] = {D6, D5, D4};
+const int ANALOG_SELECT[] = {D4, D5, D6};
 const int FAN_PIN_MAIN = D2;
 const int FAN_PIN_ALT = D4;
 
 
 float InputHardwareAction::read() const {
+    if (!enabled) return 0.f;
     for (auto& pin : hz_pins)
         pinMode(pin, INPUT);
     for (auto& pin : high_pins) {
@@ -31,15 +33,13 @@ int FAN_PIN;
 
 
 bool analogHasPotentiometer(int pin) {
-  for (unsigned i=0;i<3;i++) 
-    pinMode(ANALOG_SELECT[i], INPUT_PULLDOWN);
   pinMode(pin, INPUT_PULLDOWN);
-  delayMicroseconds(RELAXATION_DELAY);
+  delayMicroseconds(RELAXATION_PULL_DELAY);
   unsigned v1 = analogRead(pin);
   pinMode(pin, INPUT_PULLUP);
-  delayMicroseconds(RELAXATION_DELAY);
+  delayMicroseconds(RELAXATION_PULL_DELAY);
   unsigned v2 = analogRead(pin);
-  return (v1 < ANALOG_READ_MAX * 0.01f) && (v2 > ANALOG_READ_MAX * 0.99f);
+  return (v1 > ANALOG_READ_MAX * 0.3f) || (v2 < ANALOG_READ_MAX * 0.7f);
 }
 
 
@@ -48,14 +48,14 @@ bool multiplexerAvailable() {
   pinMode(ANALOG_SELECT[1], INPUT_PULLDOWN);
   pinMode(ANALOG_SELECT[2], OUTPUT);
   digitalWrite(ANALOG_SELECT[2], HIGH);
-  delayMicroseconds(RELAXATION_DELAY);
+  delayMicroseconds(RELAXATION_PULL_DELAY);
   int v1 = digitalRead(ANALOG_SELECT[0]);
   int v2 = digitalRead(ANALOG_SELECT[1]);
   digitalWrite(ANALOG_SELECT[2], LOW);
-  delayMicroseconds(RELAXATION_DELAY);
+  delayMicroseconds(RELAXATION_PULL_DELAY);
   int v3 = !digitalRead(ANALOG_SELECT[0]);
   int v4 = !digitalRead(ANALOG_SELECT[1]);
-  return (v1 && v2 && v3 && v4);
+  return !(v1 && v2 && v3 && v4);
 }
 
 
@@ -85,8 +85,8 @@ void detectHardware() {
   if (multiplexerAvailable()) {
     unsigned x = 0;
     FAN_PIN = FAN_PIN_MAIN;
-    pinMode(THERIMSTOR_CHECKER, INPUT_HIGH);
-    delayMicroseconds(RELAXATION_DELAY);
+    pinMode(THERIMSTOR_CHECKER, INPUT_PULLUP);
+    delayMicroseconds(RELAXATION_PULL_DELAY);
     bool thermistorsAvailable = digitalRead(THERIMSTOR_CHECKER) == HIGH;
 
     for (unsigned i=0;i<4;i++) {
@@ -101,23 +101,24 @@ void detectHardware() {
       if(thermistorsAvailable) x++;
     }
 
-    pinMode(THERIMSTOR_CHECKER, INPUT_LOW);
-    delayMicroseconds(RELAXATION_DELAY);
-    bool potemtiometersAvailable = digitalRead(THERIMSTOR_CHECKER) == HIGH;
+    pinMode(THERIMSTOR_CHECKER, INPUT_PULLDOWN);
+    delayMicroseconds(RELAXATION_PULL_DELAY);
+    bool potentiometersAvailable = digitalRead(THERIMSTOR_CHECKER) == LOW;
 
     for (unsigned i=0;i<4;i++) {
       setAnalog(x);
       POTENTIOMETER_HARDWARE_ACTIONS[i] = (InputHardwareAction){
-        .enabled = potemtiometersAvailable && analogHasPotentiometer(ANALOG_READ_MAIN),
+        .enabled = potentiometersAvailable && analogHasPotentiometer(ANALOG_READ_MAIN),
         .read_pin = ANALOG_READ_MAIN,
         .hz_pins = {},
         .low_pins = getAnalogSelectPins(x, false),
         .high_pins = getAnalogSelectPins(x, true)
       };
-      if (potemtiometersAvailable) x++;
+      if (potentiometersAvailable) x++;
     }
 
-    getAnalogSelectPins(0);
+    pinMode(THERIMSTOR_CHECKER, INPUT);
+    setAnalog(0);
 
   } else {
     FAN_PIN = FAN_PIN_ALT;

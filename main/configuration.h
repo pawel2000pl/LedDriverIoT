@@ -5,7 +5,8 @@
 #include <array>
 
 #define ANALOG_READ_MAX 4095
-#define RELAXATION_DELAY 10
+#define RELAXATION_DELAY 30
+#define RELAXATION_PULL_DELAY 5000
 
 
 struct InputHardwareAction {

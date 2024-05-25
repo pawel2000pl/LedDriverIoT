@@ -32,6 +32,7 @@
 #define THERMISTOR_R0 47000
 #define THERMISTOR_IN_SERIES_RESISTOR 47000
 #define THERMISTOR_T0 (25.0f + 273.15f)
+#define KNOBS_AMORTISATION_STRENGTH (0.9f)
 
 
 const int RESET_CONFIGURATION_PIN = D3;
@@ -456,17 +457,12 @@ void setFromKnobs(const ColorChannels values) {
   updateColorValues(filteredChannels[0], filteredChannels[1], filteredChannels[2], filteredChannels[3]);
 }
 
+ColorChannels knobsAmortisation = {0,0,0,0};
 void checkKnobs() {
   ColorChannels values;
-  for (int i=0;i<4;i++) {
-    const InputHardwareAction& actions = POTENTIOMETER_HARDWARE_ACTIONS[i];
-    if (!actions.enabled) {
-      values[i] = 0;
-      continue;
-    }
-    values[i] = actions.read();
-  }
-  setFromKnobs(values);
+  for (int i=0;i<4;i++)
+    knobsAmortisation[i] = POTENTIOMETER_HARDWARE_ACTIONS[i].read() * (1.f-KNOBS_AMORTISATION_STRENGTH) + KNOBS_AMORTISATION_STRENGTH * knobsAmortisation[i];
+  setFromKnobs(knobsAmortisation);
 }
 
 void sendColors() {
