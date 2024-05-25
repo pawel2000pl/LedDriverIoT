@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <WebServer.h>
@@ -18,50 +19,7 @@
 #include "fastlz.h"
 #include "color_endpoints.h"
 #include "ledc_driver.h"
-
-#define CONNECTION_TIMEOUT 15000
-#define CONFIGURATION_FILENAME "/configuration.json"
-#define JSON_CONFIG_BUF_SIZE (16*1024)
-#define MAX_STRING_LENGTH 64
-
-// created to omit "ADC2 is no longer supported"
-struct InputHardwareAction {
-  int read_pin;
-  std::vector<int> hz_pins;
-  std::vector<int> low_pins;
-  std::vector<int> high_pins;
-};
-
-const int RESET_CONFIGURATION_AND_FAN_PIN = D2;
-const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
-const int POTENTIOMETER_GPIO_INPUTS[] = {A0, A1, A2, A3};
-
-const InputHardwareAction POTENTIOMETER_HARDWARE_ACTIONS[] = {
-  {
-    .read_pin = A0,
-    .hz_pins = {D4, D6},
-    .low_pins = {D5},
-    .high_pins = {D3}
-  },
-  {
-    .read_pin = A1,
-    .hz_pins = {D4, D6},
-    .low_pins = {D5},
-    .high_pins = {D3}
-  },
-  {
-    .read_pin = A0,
-    .hz_pins = {D3, D5},
-    .low_pins = {D6},
-    .high_pins = {D4}
-  },
-  {
-    .read_pin = A1,
-    .hz_pins = {D3, D5},
-    .low_pins = {D6},
-    .high_pins = {D4}
-  },
-};
+#include "configuration.h"
 
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
@@ -485,19 +443,11 @@ void checkKnobs() {
   ColorChannels values;
   for (int i=0;i<4;i++) {
     const InputHardwareAction& actions = POTENTIOMETER_HARDWARE_ACTIONS[i];
-    for (auto& pin : actions.hz_pins)
-      pinMode(pin, INPUT);
-    for (auto& pin : actions.high_pins) {
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, HIGH);
+    if (!actions.enabled) {
+      values[i] = 0;
+      continue;
     }
-    for (auto& pin : actions.low_pins) {
-      pinMode(pin, OUTPUT);
-      digitalWrite(pin, LOW);
-    }
-    delayMicroseconds(10);
-    double readed = analogRead(actions.read_pin);
-    values[i] = readed / 4095;
+    values[i] = actions.read();
   }
   setFromKnobs(values);
 }
@@ -647,9 +597,7 @@ bool fanStatus = false;
 uint8_t measureTemperature = 0;
 
 void checkReset() {
-  pinMode(RESET_CONFIGURATION_AND_FAN_PIN, INPUT_PULLUP);
-  delayMicroseconds(100);
-  if (digitalRead(RESET_CONFIGURATION_AND_FAN_PIN) == 0) {
+  if (digitalRead(RESET_CONFIGURATION_PIN) == 0) {
     if (reset_timer == 0)
       reset_timer = millis();
     else if (millis() - reset_timer >= 10000) {
@@ -661,6 +609,13 @@ void checkReset() {
 }
 
 
+float readTemperature(float x) {
+  float RT = x * THERMISTOR_IN_SERIES_RESISTOR / (1.f - x);
+  float Tk = 1.0/(log(RT/THERMISTOR_R0)/4050.0 + 1.0/THERMISTOR_T0);   
+  return Tk - 273.15;
+}
+
+
 void initTemperature() {
   temp_sensor_config_t tsens;
   tsens.clk_div = 1;
@@ -668,27 +623,30 @@ void initTemperature() {
   temp_sensor_set_config(tsens);
 }
 
+
 void checkTemperature() {
   float tsens_out;
   temp_sensor_start();
   temp_sensor_read_celsius(&tsens_out);
   temp_sensor_stop();
-  fanStatus = ((fanStatus) && (tsens_out > 50)) || ((!fanStatus) && (tsens_out > 70));
-  if (!fanStatus)
-    pinMode(RESET_CONFIGURATION_AND_FAN_PIN, INPUT_PULLDOWN);
-}
+  float temp_max = tsens_out;
 
-void checkTemperatureOrReset() {
-  measureTemperature = (measureTemperature + 1) & 15;
-  if (measureTemperature == 0)
-    checkReset();
-  checkTemperature();
+  for (unsigned i=0;i<4;i++) {
+    const auto& actions = THERMISTOR_HARDWARE_ACTIONS[i];
+    if (!actions.enabled) continue;
+    float T = readTemperature(actions.read());
+    temp_max = max(temp_max, T);
+  }
+
+  fanStatus = ((fanStatus) && (temp_max > FAN_TURN_OFF_TEMP)) || ((!fanStatus) && (temp_max > FAN_TURN_ON_TEMP));
+  digitalWrite(FAN_PIN, fanStatus ? HIGH : LOW);
 }
 
 
 void setup() {
   Serial.begin(115200);  
-  pinMode(RESET_CONFIGURATION_AND_FAN_PIN, INPUT_PULLUP);
+  pinMode(FAN_PIN, OUTPUT);
+  pinMode(RESET_CONFIGURATION_PIN, INPUT_PULLUP);
   analogReadResolution(12);
   initTemperature();
   initLedC();
@@ -718,6 +676,7 @@ void loop() {
     updateFilteredValues();
     updateOutputs();
   }
-  
-  checkTemperatureOrReset();
+
+  checkTemperature();
+  checkReset();
 }
