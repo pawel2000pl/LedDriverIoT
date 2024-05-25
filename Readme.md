@@ -38,14 +38,14 @@ When multiplexer:
 
  * when A1 is disconnected:
    - max 4 thermistors: reading from A0 and connect them to multiplexer to channels 0, 1, 2, 3
-   - max 4 potentiomters: reading from and connect them to multiplexer to channels 4, 5, 6, 7
+   - max 4 potentiomters: reading from A0 and connect them to multiplexer to channels 4, 5, 6, 7
 
  * when A1 is grounded:
    - no thermistors
-   - max 4 potentiomters: reading from and connect them to multiplexer to channels 0, 1, 2, 3
+   - max 4 potentiomters: reading from A0 and connect them to multiplexer to channels 0, 1, 2, 3
 
  * when A1 is connected to high:
-   - max 4 thermistors: reading from and connect them to multiplexer to channels 0, 1, 2, 3
+   - max 4 thermistors: reading from A0 and connect them to multiplexer to channels 0, 1, 2, 3
    - no potentiomters
 
  * fan connected to D2 (A2)
