@@ -136,8 +136,10 @@ void detectHardware() {
     POTENTIOMETER_HARDWARE_ACTIONS[3].enabled = false;
     for (unsigned i=0;i<4;i++)
       THERMISTOR_HARDWARE_ACTIONS[i].enabled = false;
-
+    for (unsigned i=0;i<3;i++)
+      pinMode(ANALOG_SELECT[i], INPUT);
   }
+
 
   pinMode(FAN_PIN, OUTPUT);
   digitalWrite(FAN_PIN, LOW);

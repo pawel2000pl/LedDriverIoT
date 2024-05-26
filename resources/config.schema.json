@@ -157,7 +157,12 @@
             },
             "knobActivateDelta": "fraction",
             "enbleWhiteKnob": "boolean",
-            "invertOutputs": "boolean"
+            "invertOutputs": "boolean",
+            "knobsNoisesReduction": {
+                "type": "float",
+                "min_value": 0,
+                "max_value": 1000
+            }
         }
     },
     "color-values": {

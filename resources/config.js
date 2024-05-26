@@ -47,6 +47,7 @@ function dumpConfig() {
                 "down": Number($id('high-bias-input').value)
             },
             "knobActivateDelta": Number($id('knob-activate-input').value),
+            "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
             "enbleWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
         }
@@ -90,6 +91,7 @@ function fillConfig(config) {
     $id('high-bias-input').value = config.hardware.bias.down;
 
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
+    $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
 }
