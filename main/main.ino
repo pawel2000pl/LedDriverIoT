@@ -461,7 +461,7 @@ void checkKnobs() {
   ColorChannels values;
   float reduction = exp(-abs(configuration["hardware"]["knobsNoisesReduction"].as<float>()));
   for (int i=0;i<4;i++)
-    knobsAmortisation[i] = POTENTIOMETER_HARDWARE_ACTIONS[i].read() * (1.f-reduction) + reduction * knobsAmortisation[i];
+    knobsAmortisation[i] = reduction * POTENTIOMETER_HARDWARE_ACTIONS[i].read() + (1.f-reduction) * knobsAmortisation[i];
   setFromKnobs(knobsAmortisation);
 }
 

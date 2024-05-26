@@ -211,6 +211,6 @@
         "knobActivateDelta": 0.01,
         "enbleWhiteKnob": true,
         "invertOutputs": false,
-        "knobsNoisesReduction": 0.105
+        "knobsNoisesReduction": 2.4
     }
 }
