@@ -162,6 +162,11 @@
                 "type": "float",
                 "min_value": 0,
                 "max_value": 1000
+            },
+            "gateLoadingTime": {
+                "type": "float",
+                "min_value": 0,
+                "max_value": 32
             }
         }
     },

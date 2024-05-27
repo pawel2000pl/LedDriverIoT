@@ -48,6 +48,7 @@ function dumpConfig() {
             },
             "knobActivateDelta": Number($id('knob-activate-input').value),
             "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
+            "gateLoadingTime": Number($id('gate-loading-time').value),
             "enbleWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
         }
@@ -92,6 +93,7 @@ function fillConfig(config) {
 
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
     $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
+    $id('gate-loading-time').value = config.hardware.gateLoadingTime;
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
 }

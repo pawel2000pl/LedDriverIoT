@@ -209,6 +209,7 @@
             "down": 0.001
         },
         "knobActivateDelta": 0.01,
+        "gateLoadingTime": 0.6,
         "enbleWhiteKnob": true,
         "invertOutputs": false,
         "knobsNoisesReduction": 2.4

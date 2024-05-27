@@ -1,5 +1,4 @@
 #include <hal/ledc_types.h>
-#include <driver/ledc.h>
 
 #define LEDC_TIMER              LEDC_TIMER_0
 #define LEDC_MODE               LEDC_LOW_SPEED_MODE
@@ -9,5 +8,6 @@
 
 
 void initLedC(void);
+float addGateLoadingTime(float value, float loadingTime);
 void setLedC(int gpio, unsigned channel, float value, bool invert=0);
 

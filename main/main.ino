@@ -401,8 +401,9 @@ void updateOutputs() {
     outputValues[i] = selectedChannel <= 4 ? filteredValues[selectedChannel] : 0;
   }
   bool invert = configuration["hardware"]["invertOutputs"].as<bool>();
+  float gateLoadingTime = configuration["hardware"]["gateLoadingTime"].as<float>();
   for (int i=0;i<4;i++) 
-    setLedC(LED_GPIO_OUTPUTS[i], i, outputValues[i], invert);
+    setLedC(LED_GPIO_OUTPUTS[i], i, addGateLoadingTime(outputValues[i], gateLoadingTime), invert);
 }
 
 

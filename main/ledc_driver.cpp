@@ -1,5 +1,6 @@
 #include "ledc_driver.h"
 #include <Arduino.h>
+#include <driver/ledc.h>
 
 void initLedC(void) {
   ledc_timer_config_t ledc_timer = {
@@ -19,9 +20,14 @@ struct ChannelCache {
     int hpoint = 9;
 };
 
+float addGateLoadingTime(float value, float loadingTime) {
+    if (value == 0)
+        return 0;
+    float offset = loadingTime * float(LEDC_FREQUENCY) * 1e-6;
+    return value / (1.f - offset) + offset;
+}
 
 ChannelCache cache[4];
-
 
 void setLedC(int gpio, unsigned channel, float value, bool invert) {
   value = constrain(value, 0, 1);
