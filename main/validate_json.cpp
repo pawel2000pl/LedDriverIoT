@@ -115,7 +115,3 @@ String validateJson(const JsonVariant object, const JsonVariantConst& schema, co
 
   return "";
 }
-
-String validateJson(JsonVariant object, const JsonVariantConst& schema, const JsonVariantConst& defaults) {
-  return validateJson(object, schema, schema["main"], ".", defaults);
-}

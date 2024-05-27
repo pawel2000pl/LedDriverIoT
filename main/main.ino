@@ -81,7 +81,7 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
 
 
 String assertConfiguration() {
-  return validateJson(configuration, configSchema, defaultConfiguration); 
+  return validateJson(configuration, configSchema, configSchema["main"], ".", defaultConfiguration); 
 }
 
 
@@ -280,7 +280,7 @@ void customValidator() {
     delete testJson;
     return;
   }
-  const String assertMessage = testJson->containsKey("type") ? validateJson((*testJson)["data"], configSchema, configSchema[(*testJson)["type"].as<String>()]) : validateJson((*testJson)["data"], (*testJson)["schema"]);
+  const String assertMessage = testJson->containsKey("type") ? validateJson((*testJson)["data"], configSchema, configSchema[(*testJson)["type"].as<String>()]) : validateJson((*testJson)["data"], (*testJson)["schema"], (*testJson)["schema"]["main"]);
   delete testJson;
   if (assertMessage != "") {
     sendError(assertMessage, 422);
@@ -402,7 +402,7 @@ void updateOutputs() {
   }
   bool invert = configuration["hardware"]["invertOutputs"].as<bool>();
   for (int i=0;i<4;i++) 
-    setLedC(LED_GPIO_OUTPUTS[i], i, invert ? 1.f - outputValues[i] : outputValues[i]);
+    setLedC(LED_GPIO_OUTPUTS[i], i, outputValues[i], invert);
 }
 
 
@@ -485,8 +485,10 @@ void setColors() {
   if (err != DeserializationError::Ok) 
     return sendError("Deserialization error");
   String assertMessage = validateJson(data, configSchema, configSchema["color-values"]);
-  if (assertMessage != "")
+  if (assertMessage != "") {
     sendError(assertMessage, 422);
+    return;
+  }
   colorValues.red = data["red"];
   colorValues.green = data["green"];
   colorValues.blue = data["blue"];
@@ -520,8 +522,10 @@ void setColorsAuto() {
   if (err != DeserializationError::Ok) 
     return sendError("Deserialization error");
   String assertMessage = validateJson(data, configSchema, configSchema["color-channels"]);
-  if (assertMessage != "")
+  if (assertMessage != "") {
     sendError(assertMessage, 422);
+    return;
+  }
   ColorChannels channels = setColorAuto(
     configuration, configuration["channels"]["webMode"], 
     data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()
