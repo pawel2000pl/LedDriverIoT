@@ -32,7 +32,6 @@ async function getColors() {
     return await response.json();
 }
 
-
 const colorPromise = getColors();
 
 
@@ -46,9 +45,14 @@ configPromise.then(()=>{
         [1, 1, 1], 
         12, 
         ()=>{modified = true;}, 
-        [0, 0, 0]);            
+        [0, 0, 0]
+    );            
 
-    const white = createWhiteKnob(colorKnob, config.hardware.enbleWhiteKnob, ()=>{modified = true;});
+    const white = createWhiteKnob(
+        colorKnob, 
+        config.hardware.enbleWhiteKnob, 
+        ()=>{modified = true;}
+    );
 
     var updateFunction = ()=>{};
     updateFunction = ()=>{

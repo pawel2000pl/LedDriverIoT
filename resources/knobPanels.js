@@ -4,7 +4,15 @@ function screenIsLandscape() {
     return screen.orientation.type.search("landscape") >= 0;
 }
 
-function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
+
+function defaultResizeFunction(clientWidth, clientHeight) {
+    if (screenIsLandscape())
+        return clientWidth / 8 - 1;
+    return Math.max(clientWidth / 5 - 1, clientHeight / (config.hardware.enbleWhiteKnob ? 10 : 8) - 1);
+}
+
+
+function createTriColorPanel(parent, converter, ranges=[1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults=[0, 0, 0], resizeFunction=defaultResizeFunction) {
     
     const mainDiv = document.createElement('div'); 
     mainDiv.className = 'knob-div';
@@ -12,8 +20,7 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
     const knobs = [null, null, null];
 
     const resize = ()=>{
-        const clientWidth = parent.clientWidth;
-        const ray = screenIsLandscape() ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
+        const ray = resizeFunction(parent.clientWidth, parent.clientHeight);
         for (let i=0;i<3;i++)
             knobs[i].setSize(ray, ray / 4, ray / 3);
     };
@@ -63,15 +70,14 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
 }
 
 
-function createWhiteKnob(parent, visible=true, changeEvent=()=>{}) {     
+function createWhiteKnob(parent, visible=true, changeEvent=()=>{}, resizeFunction=defaultResizeFunction) {     
     const wDiv = document.createElement('div');
     if (!visible) wDiv.style.display = 'none';
     wDiv.className = 'knob-div';
     const whiteKnob = new Knob();
     whiteKnob.onChangeValue = changeEvent;
     const resize = ()=>{
-        const clientWidth = parent.clientWidth;
-        const ray = screenIsLandscape() ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
+        const ray = resizeFunction(parent.clientWidth, parent.clientHeight);
         whiteKnob.setSize(ray, ray / 4, ray / 3);
     };
     resize();
