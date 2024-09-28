@@ -9,7 +9,7 @@
 #include <functional>
 #include <list>
 #include <vector>
-#include <driver/temp_sensor.h>
+#include <driver/temperature_sensor.h>
 
 #include "json.h"
 #include "resources.h"
@@ -634,19 +634,23 @@ float readTemperature(float x) {
 }
 
 
+temperature_sensor_handle_t temp_handle = NULL;
+
 void initTemperature() {
-  temp_sensor_config_t tsens;
-  tsens.clk_div = 1;
-  tsens.dac_offset = TSENS_DAC_L1;
-  temp_sensor_set_config(tsens);
+  temperature_sensor_config_t temp_sensor = {
+      .range_min = 20,
+      .range_max = 100,
+      .clk_src = TEMPERATURE_SENSOR_CLK_SRC_DEFAULT
+  };
+  temperature_sensor_install(&temp_sensor, &temp_handle);
 }
 
 
 void checkTemperature() {
   float tsens_out;
-  temp_sensor_start();
-  temp_sensor_read_celsius(&tsens_out);
-  temp_sensor_stop();
+  temperature_sensor_enable(temp_handle);
+  temperature_sensor_get_celsius(temp_handle, &tsens_out);
+  temperature_sensor_disable(temp_handle);
   float temp_max = tsens_out;
 
   for (unsigned i=0;i<4;i++) {

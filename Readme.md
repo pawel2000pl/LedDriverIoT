@@ -55,3 +55,8 @@ When no multiplexer:
  * connect together pins D4, D5, D6
  * max 3 potentiomters connected to A0, A1, A2
  * fan connected to D4
+
+## How to use docker container
+```
+docker build -t led_driver . && docker run -it -p 8000:8000 led_driver
+```
