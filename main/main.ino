@@ -586,6 +586,7 @@ void simpleMode() {
 
 
 void configureServer() {
+  server.enableDelay(false);
   server.on("/", HTTP_GET, [&server](){server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
   server.on("/config.json", HTTP_GET, sendConfiguration);
   server.on("/reset_configuration", HTTP_GET, [&server](){resetConfiguration(); sendOk();});
@@ -680,24 +681,36 @@ void setup() {
   configureServer();
 }
 
+unsigned loopNumber = 0;
 
 void loop() {
-  server.handleClient();
+
+  checkKnobs();
+
+  unsigned long long int ts = 0;
+  unsigned i = 0;
+  do {
+    unsigned long long int t = millis();
+    server.handleClient();
+    ts = millis() - t;
+    if (outputRequiresUpdate) {
+      updateFilteredValues();
+      updateOutputs();
+    }
+  } while (ts > 1 && i++ < 100);
 
   for (auto fun: taskQueue) 
     fun();
   taskQueue.clear();
 
-  if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP)
-    autoConnectWifi(); 
 
-  checkKnobs();
+  checkReset();
 
-  if (outputRequiresUpdate) {
-    updateFilteredValues();
-    updateOutputs();
+  if (loopNumber++ & 127 == 0) {
+    if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP)
+      autoConnectWifi(); 
+
+    checkTemperature();
   }
 
-  checkTemperature();
-  checkReset();
 }
