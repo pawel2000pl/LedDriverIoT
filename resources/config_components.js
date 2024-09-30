@@ -1,5 +1,7 @@
 "use strict";
 
+var wifiWasModified = false;
+
 function uuidv4() {
     return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
         (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
@@ -34,19 +36,24 @@ function wifi_selector_factory(ssid="") {
     text1.textContent = 'SSID: ';
     const ssid_input = $new('input');
     ssid_input.value = ssid;
+    ssid_input.onchange = ()=>{wifiWasModified = true;};
     const text2 = $new('span');
     text2.textContent = 'Password: ';
     const password_input = $new('input');
     password_input.type = 'password';
+    password_input.onchange = ()=>{wifiWasModified = true;};
     const hiddenInput = $new('input');
     hiddenInput.type = 'checkbox';
     hiddenInput.id = uuidv4();
+    hiddenInput.onchange = ()=>{wifiWasModified = true;};
     const hiddenLabel = $new('label');
     hiddenLabel.htmlFor = hiddenInput.id;
     hiddenLabel.textContent = 'Network is hidden ';
     const connectBtn = $new('button');
     connectBtn.textContent = 'Connect';
     connectBtn.onclick = ()=>{
+        if (wifiWasModified && !confirm('Wifi settings have not beed save. Do you really want to continue?'))
+            return;
         fetch('/connect_to', {
             method: 'POST',
             headers: {"Content-Type": "application/json"},
@@ -79,6 +86,10 @@ function wifi_selector_factory(ssid="") {
     return div;
 };
 
+$id('save-settings-btn').addEventListener('click', ()=>{wifiWasModified = false;});
+$id('revert-settings-btn').addEventListener('click', ()=>{wifiWasModified = false;});
+$id('default-settings-btn').addEventListener('click', ()=>{wifiWasModified = false;});
+$id('import-settings-btn').addEventListener('click', ()=>{wifiWasModified = false;});
 
 Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
     componentList(element, wifi_selector_factory);
@@ -97,7 +108,10 @@ async function getNetworks() {
         ssidTd.textContent = element;
         const button = document.createElement('button');
         button.textContent = 'Add to list';
-        button.onclick = ()=>$id('sta-priority-list').addElement(element);
+        button.onclick = ()=>{
+            wifiWasModified = true;
+            $id('sta-priority-list').addElement(element);
+        }
         buttonTr.appendChild(button);
         entryTr.appendChild(ssidTd);
         entryTr.appendChild(buttonTr);

@@ -103,16 +103,16 @@ function fillConfig(config) {
     favorites = config.favorites;
 }
 
-$id('save-settings-btn').onclick = ()=>{config = dumpConfig(); saveConfig();};
-$id('revert-settings-btn').onclick = ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));};
-$id('default-settings-btn').onclick = async ()=>{
+$id('save-settings-btn').addEventListener('click', ()=>{config = dumpConfig(); saveConfig();});
+$id('revert-settings-btn').addEventListener('click', ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));});
+$id('default-settings-btn').addEventListener('click', async ()=>{
     if (confirm("All settings "+"(wifi credentials, filters, etc)"+" will be reverted to default values."+" "+"Are you sure you want to continue?")) {
         await refreshConfig(true);
         await saveConfig();
     }
-};
-$id('export-settings-btn').onclick = exportConfigToJSON;
-$id('import-settings-btn').onclick = async ()=>{
+});
+$id('export-settings-btn').addEventListener('click', exportConfigToJSON);
+$id('import-settings-btn').addEventListener('click', async ()=>{
     try {
         const newConfig = await importConfigFromFile();
         if (newConfig === null) return;
@@ -123,7 +123,7 @@ $id('import-settings-btn').onclick = async ()=>{
         fillConfig(config);
         alert('Error ocurred.'+' Invalid configuration file.');
     }
-};
+});
 
 function refreshNetworks() {
     fetch('/refresh_networks');
