@@ -6,7 +6,8 @@
             "wifi": "wifi-settings",
             "channels": "channels-settings",
             "filters": "filters-settings",
-            "hardware": "hardware-settings"
+            "hardware": "hardware-settings",
+            "favorites": "favorites-settings"
         }
     },
     "ip-address": {
@@ -40,7 +41,6 @@
                 }
             }
         }
-
     },
     "wifi-ssid": { 
         "type": "string",
@@ -183,5 +183,10 @@
         "type": "array",
         "length": 4,
         "item": "fraction"
+    },
+    "favorites-settings": {
+        "type": "array",
+        "max_length": 64,
+        "item": "color-values"
     }
 }

@@ -1,5 +1,7 @@
 "use strict";
 
+var favorites = [];
+
 function dumpConfig() {
     return {
         "wifi": {
@@ -51,7 +53,8 @@ function dumpConfig() {
             "gateLoadingTime": Number($id('gate-loading-time').value),
             "enbleWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
-        }
+        },
+        "favorites": favorites
     };
 }
 
@@ -96,6 +99,8 @@ function fillConfig(config) {
     $id('gate-loading-time').value = config.hardware.gateLoadingTime;
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
+
+    favorites = config.favorites;
 }
 
 $id('save-settings-btn').onclick = ()=>{config = dumpConfig(); saveConfig();};

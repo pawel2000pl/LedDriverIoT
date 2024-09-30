@@ -144,3 +144,15 @@ function rgbToRgb(r, g, b) {
     return [r, g, b];
 }
 
+
+const converters = {
+    hsv: hsvToRgb,
+    hsl: hslToRgb,
+    rgb: rgbToRgb
+};
+
+const convertersInverted = {
+    hsv: rgbToHsv,
+    hsl: rgbToHsl,
+    rgb: rgbToRgb
+};

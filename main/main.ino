@@ -500,9 +500,21 @@ void setColors() {
 }
 
 
+float getServerFloatArg(const String& name, float defaultValue=0) {
+  if (server.hasArg(name)) {
+      return server.arg(name).toFloat();
+  }
+  return defaultValue;
+}
+
+
 void sendColorsAuto() {
-  ColorChannels channels = getColorAuto(configuration, configuration["channels"]["webMode"], 
-    colorValues.red, colorValues.green, colorValues.blue, colorValues.white
+  ColorChannels channels = getColorAuto(configuration, 
+    server.hasArg("colorspace") ? server.arg("colorspace") : configuration["channels"]["webMode"], 
+    getServerFloatArg("red", colorValues.red),
+    getServerFloatArg("green", colorValues.green),
+    getServerFloatArg("blue", colorValues.blue),
+    getServerFloatArg("white", colorValues.white)
   );
   StaticJsonDocument<256> data;
   data.add(channels[0]);
@@ -539,6 +551,41 @@ void setColorsAuto() {
 int floatFilter15(float x) { 
   return (int)round(x * 15.f); 
 };
+
+void renderFavoriteColor() {
+  uint8_t* decompressed_buffer = new uint8_t[favorite_color_template_html_decompressed_size+1];
+  char* render_buffer = new char[favorite_color_template_html_decompressed_size+256];
+  size_t decompressed_size = fastlz_decompress(favorite_color_template_html_data, favorite_color_template_html_size, decompressed_buffer, favorite_color_template_html_decompressed_size);
+  if (decompressed_size == 0) {
+      delete [] render_buffer;
+      delete [] decompressed_buffer;
+      sendError("Decompression error");
+  }
+  decompressed_buffer[decompressed_size] = 0;
+
+  float r = getServerFloatArg("red", colorValues.red);
+  float g = getServerFloatArg("green", colorValues.green);
+  float b = getServerFloatArg("blue", colorValues.blue);
+  float w = getServerFloatArg("white", colorValues.white);
+  knobMode = false;
+  updateColorValues(r, g, b, w);
+
+  const auto& channelsMode = configuration["channels"]["webMode"];
+  ColorChannels filteredChannels = getColorAuto(configuration, channelsMode, 
+    colorValues.red, colorValues.green, colorValues.blue, colorValues.white
+  );
+
+  if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
+  if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
+
+  sprintf(
+    render_buffer, (const char*)decompressed_buffer,
+    (int)floor(255*r), (int)floor(255*g), (int)floor(255*b)
+  );
+  server.send(200, "text/html", (const char*)render_buffer);
+  delete [] render_buffer;
+  delete [] decompressed_buffer;
+}
 
 void simpleMode() {
   if (server.method() == HTTP_POST) {
@@ -608,6 +655,7 @@ void configureServer() {
   server.on("/simple.html", HTTP_POST, simpleMode);
   server.on("/update", HTTP_POST, updateEnd, update);
   server.on("/version_info.json", HTTP_GET, getVersionInfo);
+  server.on("/favorite_color.html", HTTP_GET, renderFavoriteColor);
   server.begin();
 }
 

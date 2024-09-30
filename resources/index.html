@@ -7,9 +7,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     
-    <body>
-        <p class="configure-button" onclick="window.location = '/config.html';">Configure</p>        
-        <div id="color-knob"></div>
+    <body></body>
+        <p class="upper-menu">
+            <button class="main-page-button" onclick="window.location = '/favorites.html';">Favorites</button>
+            <button class="main-page-button configure-button" onclick="window.location = '/config.html';">Configure</button>            
+        </p>
+        <div id="color-knob" class="hide-with-favorites"></div>
         
         <noscript>
             <p>
@@ -18,6 +21,11 @@
                 <a href="/simple.html">Click here to move to simple interface.</a>
             </p>
         </noscript>
+        
+        <script>
+            const $id = (id)=>document.getElementById(id);
+            const $new = (...args)=>document.createElement(...args);
+        </script>
         
         <script src="/knob.js"></script>
         <script src="/conversions.js"></script>

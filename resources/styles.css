@@ -141,7 +141,7 @@ simple-chart canvas {
     text-align: center;
 }
 
-.configure-button {
+.main-page-button {
     text-align: center;
     cursor: pointer;
     margin: 0px 0px 8px 0px;
@@ -175,23 +175,37 @@ simple-chart canvas {
     flex-direction: row;
 }
 
-.action-buttons div {
-    margin: 4px;
+.action-buttons div, .small-action-buttons div, .button, .small-button, button {
     display: inline-block;
     text-align: center;
     width: 20vw;  
     padding: 5px;  
+    margin: 4px;
     font-weight: bolder;
     cursor: pointer;
     border: 1.5px solid darkgray;
+    background-color: inherit;
 }
 
-.action-buttons div:hover {
+.small-action-buttons div, .small-button, button {
+    width: auto;  
+    padding: 2px;  
+    margin: 2px;
+}
+
+.action-buttons div:hover, .small-action-buttons div:hover, button:hover {
     border: 1.5px solid gray;
     background-color: whitesmoke;
     @media (prefers-color-scheme: dark) { 
         background-color: #333839;
     }
+}
+
+.color-bar {
+    display: inline-block; 
+    width: 1.5em;
+    height: 1.5em;  
+    margin-bottom: -0.4em;
 }
 
 
@@ -202,7 +216,12 @@ simple-chart canvas {
     }
 }
 
-#color-knob {
+#color-knob, #favorites-div {
     width: 100%;
     height: calc(100% - 2em);
+}
+
+.upper-menu {
+    text-align: center;  
+    margin: 0px;
 }

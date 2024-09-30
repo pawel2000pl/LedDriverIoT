@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+
+<html>
+
+    <head>
+        <link rel="stylesheet" href="/styles.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    
+    <body></body>
+        <h1 class="name-header show-with-favorites">Favorites</h1>
+        <p class="upper-menu">            
+            <button class="main-page-button" onclick="window.location = '/index.html';">Main page</button>
+        </p>
+        <div id="favorites-div"></div>
+        
+        
+        <script>
+            const $id = (id)=>document.getElementById(id);
+            const $new = (...args)=>document.createElement(...args);
+        </script>
+        
+        <script src="/conversions.js"></script>
+        <script src="/config_fetcher.js"></script>
+        <script src="/component_list.js"></script>
+        <script src="/favorites.js"></script>
+        
+    </body>
+
+</html>
+

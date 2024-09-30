@@ -27,6 +27,7 @@ RUN cp -r /app/doc /var/www/doc
 RUN cp /app/License.txt /var/www/doc/license.txt
 RUN cp /app/License.txt /var/www/build/license.txt
 RUN cp /app/doc/index.html /var/www/index.html
+RUN cp /app/resources/favicon.svg /var/www/favicon.svg
 
 WORKDIR /var/www/build
 RUN find -type f -not -name "*.md5" -and -not -name "*.size" -exec bash -c "md5sum {} | head -c 32 > {}.md5" \;

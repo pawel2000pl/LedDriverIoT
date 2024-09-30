@@ -60,13 +60,15 @@ function createTriColorPanel(parent, converter, ranges=[1, 1, 1], gradientParts=
     }
     
     parent.appendChild(mainDiv);  
-    return {
+    const functions = {
         set: function(channels) {
             for (let i=0;i<3;i++)
                 knobs[i].value = channels[i];
         },
         get: ()=>knobs.map((knob)=>knob.value)
     };
+    mainDiv.state = functions;
+    return functions;
 }
 
 
@@ -88,10 +90,12 @@ function createWhiteKnob(parent, visible=true, changeEvent=()=>{}, resizeFunctio
     wDiv.appendChild(whiteKnob);
     parent.appendChild(wDiv);     
 
-    return {
+    const functions = {
         set: (value)=>{
             whiteKnob.value = value;
         },
         get: ()=>whiteKnob.value
     };
+    wDiv.state = functions;
+    return functions;
 }

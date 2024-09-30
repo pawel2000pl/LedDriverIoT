@@ -213,5 +213,6 @@
         "enbleWhiteKnob": true,
         "invertOutputs": false,
         "knobsNoisesReduction": 2.4
-    }
+    },
+    "favorites": []
 }

@@ -15,41 +15,25 @@ fastlz_decompress = lib.fastlz_decompress
 fastlz_decompress.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int]
 fastlz_decompress.restype = ctypes.c_int
 
+
 def compress_data(data: bytes, level: int = 2) -> bytes:
-    # Sprawdzenie długości danych
     if len(data) < 16:
         raise ValueError("Input buffer size must be at least 16 bytes.")
-    
-    # Utworzenie bufora wynikowego - minimalna wielkość 5% większa niż bufor wejściowy
     output_buffer_size = int(len(data) * 1.05)
     if output_buffer_size < 66:
         output_buffer_size = 66
     output_buffer = ctypes.create_string_buffer(output_buffer_size)
-    
-    # Kompresja danych
     result_size = fastlz_compress_level(level, data, len(data), output_buffer)
-    
-    # Sprawdzenie czy kompresja się powiodła
     if result_size <= 0:
         raise ValueError("Compression failed.")
-    
-    # Zwrócenie skompresowanych danych jako bytes
     return ctypes.string_at(output_buffer, result_size)
 
 
-
 def decompress_data(compressed_data: bytes, max_decompressed_size: int = 65536) -> bytes:
-    # Utworzenie bufora dla danych zdekompresowanych
     output_buffer = ctypes.create_string_buffer(max_decompressed_size)
-
-    # Dekompresja danych
     decompressed_size = fastlz_decompress(compressed_data, len(compressed_data), output_buffer, max_decompressed_size)
-
-    # Sprawdzenie czy dekompresja się powiodła
     if decompressed_size == 0:
-        raise ValueError("Dekompresja nie powiodła się.")
-    
-    # Zwrócenie zdekompresowanych danych jako bytes
+        raise ValueError("Decompression failed.")
     return ctypes.string_at(output_buffer, decompressed_size)
 
 
@@ -93,8 +77,8 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         else:
             content = re.sub('/\\*(.|\n)*?\\*/', ' ', content)
             content = re.sub('\\/\\/[^"\'\\n]*\n', ' ', content)
-            content = re.sub('^[\\s]*', ' ', content)
-            content = re.sub('[\\s]*$', ' ', content)
+            content = re.sub('^[\\s]*', '', content)
+            content = re.sub('[\\s]*$', '', content)
             content = re.sub('[\\s]+', ' ', content)
             # for operator in operators:
             #     no_escaped = operator if operator[0] != '\\' else operator[1:]

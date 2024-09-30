@@ -1,18 +1,7 @@
 "use strict";
 
-const converters = {
-    hsv: hsvToRgb,
-    hsl: hslToRgb,
-    rgb: rgbToRgb
-};
-
-const convertersInverted = {
-    hsv: rgbToHsv,
-    hsl: rgbToHsl,
-    rgb: rgbToRgb
-};
-
 var prevSendData = '';
+var colorFunctions = {set:()=>{}, get:()=>{return [0,0,0,0]}};
 
 async function setColors(c1, c2, c3, w) {
     const data = JSON.stringify([c1, c2, c3, w]);
@@ -36,7 +25,7 @@ const colorPromise = getColors();
 
 
 configPromise.then(()=>{
-    const colorKnob = document.getElementById('color-knob');
+    const colorKnob = $id('color-knob');
     var modified = false;
     var ready = true;
     const colors = createTriColorPanel(
@@ -53,6 +42,27 @@ configPromise.then(()=>{
         config.hardware.enbleWhiteKnob, 
         ()=>{modified = true;}
     );
+
+    colorFunctions = {
+        set: (c1, c2, c3, w)=>{
+            colors.set([c1, c2, c3]);
+            white.set(w);
+        },
+        setRGB: (r, g, b, w)=>{
+            colors.set(convertersInverted[config.channels.webMode](r, g, b));
+            white.set(w);
+        },
+        get: ()=>{
+            const [c1, c2, c3] = colors.get();
+            const w = white.get();
+            return [c1, c2, c3, w];
+        },
+        getRGB: ()=>{
+            const [r, g, b] = converters[config.channels.webMode](...colors.get());
+            const w = white.get();
+            return [r, g, b, w];
+        }
+    };
 
     var updateFunction = ()=>{};
     updateFunction = ()=>{
@@ -72,3 +82,15 @@ configPromise.then(()=>{
         setInterval(updateFunction, 50);
     });
 });
+
+Array.from(document.getElementsByClassName('show-favorites-button')).forEach((button)=>{
+    button.addEventListener('click', ()=>{
+        Array.from(document.getElementsByClassName('hide-with-favorites')).forEach((element)=>{
+            element.style.display = 'none';
+        });
+        Array.from(document.getElementsByClassName('show-with-favorites')).forEach((element)=>{
+            element.style.display = 'inline';
+        });
+    });
+});
+
