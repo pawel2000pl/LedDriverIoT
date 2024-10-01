@@ -219,6 +219,12 @@ simple-chart canvas {
 #color-knob, #favorites-div {
     width: 100%;
     height: calc(100% - 2em);
+    text-align: center;
+}
+
+#favorites-div table {  
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .upper-menu {

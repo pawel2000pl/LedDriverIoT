@@ -61,6 +61,7 @@ void sendError(String message, int code = 400) {
 
 
 void sendOk() {
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, "{\"status\": \"ok\"}");
 }
 
@@ -74,6 +75,7 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
         return 0;
     }
     decompressed_buffer[decompressed_size] = 0;
+    server.sendHeader("Cache-Control", "max-age=604800");
     server.send(200, content_type, (const char*)decompressed_buffer);
     delete [] decompressed_buffer;
     return 1;
@@ -170,6 +172,7 @@ void sendNetworks() {
   char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
   unsigned size = serializeJson(scannedNetworks, buf, JSON_CONFIG_BUF_SIZE);
   buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, buf);
   delete [] buf;
 }
@@ -255,6 +258,7 @@ void sendConfiguration() {
   char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
   unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
   buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, buf);
   delete [] buf;
 }
@@ -364,10 +368,11 @@ void update() {
 
 
 void updateEnd() {
-  server.sendHeader("Connection", "close");
   if (Update.hasError()) 
     sendError(Update.errorString());
   else {
+    server.sendHeader("Clear-Site-Data", "\"cache\"");
+    server.sendHeader("Connection", "close");
     sendOk();
     taskQueue.push_back([](){ESP.restart();});
   }
@@ -378,6 +383,7 @@ void getVersionInfo() {
   char buf[256];
   unsigned int size = serializeJson(versionInfo, buf, 255);
   buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, buf);
 }
 
@@ -476,6 +482,7 @@ void sendColors() {
   char buf[256];
   int size = serializeJson(data, buf, 255);
   buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, buf);
 }
 
@@ -525,6 +532,7 @@ void sendColorsAuto() {
   char buf[256];
   int size = serializeJson(data, buf, 255);
   buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, buf);
 }
 
@@ -583,6 +591,7 @@ void renderFavoriteColor() {
     render_buffer, (const char*)decompressed_buffer,
     (int)floor(255*r), (int)floor(255*g), (int)floor(255*b)
   );
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, "text/html", (const char*)render_buffer);
   delete [] render_buffer;
   delete [] decompressed_buffer;
@@ -627,6 +636,7 @@ void simpleMode() {
     channelsInCurrentColorspace[3],
     floatFilter15(filteredChannels[3])
   );
+  server.sendHeader("Cache-Control", "no-cache");
   server.send(200, "text/html", (const char*)render_buffer);
   delete [] render_buffer;
   delete [] decompressed_buffer;
@@ -635,7 +645,7 @@ void simpleMode() {
 
 void configureServer() {
   server.enableDelay(false);
-  server.on("/", HTTP_GET, [&server](){server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
+  server.on("/", HTTP_GET, [&server](){server.sendHeader("Cache-Control", "max-age=604800"); server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
   server.on("/config.json", HTTP_GET, sendConfiguration);
   server.on("/reset_configuration", HTTP_GET, [&server](){resetConfiguration(); sendOk();});
   server.on("/favicon.ico", HTTP_GET, [&server](){sendDecompressedData(server, resource_favicon_svg.mime_type, resource_favicon_svg.data, resource_favicon_svg.size, resource_favicon_svg.decompressed_size);});

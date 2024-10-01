@@ -111,7 +111,7 @@ async function getNetworks() {
         button.onclick = ()=>{
             wifiWasModified = true;
             $id('sta-priority-list').addElement(element);
-        }
+        };
         buttonTr.appendChild(button);
         entryTr.appendChild(ssidTd);
         entryTr.appendChild(buttonTr);
