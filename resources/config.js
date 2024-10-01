@@ -45,8 +45,8 @@ function dumpConfig() {
             "potentionemterConfiguration": $id('input-table').getValues(),
             "transistorConfiguration": $id('output-table').getValues(),
             "bias": {
-                "up": Number($id('low-bias-input').value),
-                "down": Number($id('high-bias-input').value)
+                "down": Number($id('low-bias-input').value),
+                "up": Number($id('high-bias-input').value)
             },
             "knobActivateDelta": Number($id('knob-activate-input').value),
             "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
@@ -92,8 +92,8 @@ function fillConfig(config) {
     $id('input-table').setValues(config.hardware.potentionemterConfiguration);
     $id('output-table').setValues(config.hardware.transistorConfiguration);
 
-    $id('low-bias-input').value = config.hardware.bias.up;
-    $id('high-bias-input').value = config.hardware.bias.down;
+    $id('low-bias-input').value = config.hardware.bias.down;
+    $id('high-bias-input').value = config.hardware.bias.up;
 
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
     $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;

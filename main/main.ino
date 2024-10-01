@@ -716,7 +716,7 @@ void checkTemperature() {
   for (unsigned i=0;i<4;i++) {
     const auto& actions = THERMISTOR_HARDWARE_ACTIONS[i];
     if (!actions.enabled) continue;
-    float T = readTemperature(actions.read());
+    float T = readTemperature(actions.read()/2);
     temp_max = max(temp_max, T);
   }
 
