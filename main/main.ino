@@ -195,6 +195,7 @@ bool connectToNetwork(String ssid, String password) {
   Serial.print("Connecting to ");
   Serial.println(ssid);
   unsigned long long int timeout_time = millis() + CONNECTION_TIMEOUT;
+  WiFi.setHostname(configuration["wifi"]["hostname"].as<JsonString>().c_str());
   WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
         delay(10);
@@ -207,7 +208,9 @@ void openAccessPoint() {
   Serial.println("Switching to AP-mode");
   if (WiFi.status() == WL_CONNECTED)
     WiFi.disconnect();
-  const auto& apConfig = configuration["wifi"]["access_point"];
+  const auto& wifiConfig = configuration["wifi"];
+  const auto& apConfig = wifiConfig["access_point"];
+  WiFi.softAPsetHostname(wifiConfig["hostname"].as<JsonString>().c_str());
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(str2ip(apConfig["address"].as<String>()), str2ip(apConfig["gateway"].as<String>()), str2ip(apConfig["subnet"].as<String>()));
   WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>(), 1, apConfig["hidden"].as<bool>(), 16);
@@ -237,8 +240,8 @@ void autoConnectWifi() {
   const auto& staPriority = wifiConfig["sta_priority"];
   const auto& apConfig = wifiConfig["access_point"];
 
-  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
   WiFi.setHostname(wifiConfig["hostname"].as<JsonString>().c_str());
+  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
 
   for (int i=0;i<staPriority.size();i++) {
     WiFi.mode(WIFI_STA);

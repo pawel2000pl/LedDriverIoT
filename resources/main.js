@@ -75,12 +75,14 @@ configPromise.then(()=>{
         }
     };
 
-    colorPromise.then((values)=>{
-        colors.set(values);
-        white.set(values[3]);
+    const onColorResponse = (values)=>{
+        colorFunctions.set(...values);
         modified = false;
         setInterval(updateFunction, 50);
-    });
+    };
+    colorPromise.then(onColorResponse);
+    window.addEventListener('pageshow', ()=>{getColors().then(onColorResponse);});
+    document.addEventListener('visibilitychange', ()=>{getColors().then(onColorResponse);});
 });
 
 Array.from(document.getElementsByClassName('show-favorites-button')).forEach((button)=>{
