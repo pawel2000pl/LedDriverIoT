@@ -155,6 +155,11 @@
                     "down": "fraction"
                 }
             },
+            "frequency": {
+                "type": "integer",
+                "min_value": 0,
+                "max_value": 10
+            },
             "knobActivateDelta": "fraction",
             "enbleWhiteKnob": "boolean",
             "invertOutputs": "boolean",

@@ -392,6 +392,7 @@ bool outputRequiresUpdate = true;
 
 void updateOutputs() {
   const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
+  checkNewFrequency(configuration["hardware"]["frequency"]);
   char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '0', 0};
   int idx;
   for (idx=0;key[idx]!='0';idx++);
