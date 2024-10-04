@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2024-10-03T13:41:54.782Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.5.3 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="u0bl1_evBz6H-daD8d8_" version="24.5.3" type="device">
+<mxfile host="Electron" modified="2024-10-04T21:20:13.135Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.5.3 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="CWWfkd52lRuIo7NG5PIB" version="24.5.3" type="device">
   <diagram name="Strona-1" id="0Ev7IAlZrVk7Ra4cTtEh">
     <mxGraphModel dx="2261" dy="1995" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -429,7 +429,7 @@
         <mxCell id="t8IScohJZR8uxR-3xso5-136" value="-" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=23;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
           <mxGeometry x="240" y="-510" width="60" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="t8IScohJZR8uxR-3xso5-137" value="Source&lt;div style=&quot;font-size: 16px;&quot;&gt;6V - 18V&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
+        <mxCell id="t8IScohJZR8uxR-3xso5-137" value="Source&lt;div style=&quot;font-size: 16px;&quot;&gt;6V - 30V&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=16;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
           <mxGeometry x="280" y="-480" width="70" height="30" as="geometry" />
         </mxCell>
         <mxCell id="t8IScohJZR8uxR-3xso5-139" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;endArrow=none;entryX=-0.003;entryY=0.549;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0;exitY=0.8;exitDx=0;exitDy=0;" parent="1" source="t8IScohJZR8uxR-3xso5-138" target="t8IScohJZR8uxR-3xso5-1" edge="1">
@@ -808,7 +808,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="T0uPV10-7S4Bv8Srjdre-16" value="When using only tree potentiometers and no additional temperature sensors, multiplexer is not required.&lt;div&gt;In case of lack thermistors, temperature os readed from CPU.&amp;nbsp;&lt;/div&gt;&lt;div&gt;But it is useless if there is no fan.&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
+        <mxCell id="T0uPV10-7S4Bv8Srjdre-16" value="When using only tree potentiometers and no additional temperature sensors, multiplexer is not required.&lt;div&gt;In case of lack thermistors, temperature is readed from CPU.&amp;nbsp;&lt;/div&gt;&lt;div&gt;But it is useless if there is no fan.&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
           <mxGeometry x="80" y="401" width="360" height="30" as="geometry" />
         </mxCell>
         <mxCell id="T0uPV10-7S4Bv8Srjdre-20" value="" style="endArrow=oval;html=1;rounded=0;strokeColor=default;align=center;verticalAlign=middle;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;edgeStyle=none;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" target="ZwjoCgOnHBytHs47Mx4c-18" edge="1">
@@ -1036,6 +1036,12 @@
         </mxCell>
         <mxCell id="5xjaWSJQkVltcLWWzSKZ-10" value="Resistors in series with potentiometers can be replaces&amp;nbsp;&lt;div&gt;with one with the&amp;nbsp;equivalent resistance&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
           <mxGeometry x="100" y="440" width="300" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="E7v2-QRYvuSQK1o5H7og-1" value="Example application of ESP32C3 in RGBW Led controller&lt;div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-size: 14px; font-weight: 400; background-color: initial;&quot;&gt;Paweł Bielecki 2024&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px; font-weight: 400;&quot;&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;pbielecki2000@gmail.com&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;https://github.com/pawel2000pl/LedDriverIoT&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="-250" y="-510" width="480" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="E7v2-QRYvuSQK1o5H7og-2" value="&lt;div&gt;&lt;div style=&quot;text-align: left; font-size: 14px;&quot;&gt;&lt;br style=&quot;font-size: 14px;&quot;&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="986.72" y="-440" width="20" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

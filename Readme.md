@@ -24,6 +24,11 @@ Project was designed for XIAO ESP32C3.
 ![image](doc/gui_bricks.png)
 
 
+### Favorites
+
+![image](doc/favorites.png)
+
+
 ### Confguration
 
 ![image](doc/gui_config.png)
@@ -60,3 +65,11 @@ When no multiplexer:
 ```
 docker build -t led_driver . && docker run -it -p 8000:8000 led_driver
 ```
+then open http://0.0.0.0:8000 in your browser and download a binary file.
+
+You can aslo run a script which builds the image, runs the container, downloads this file automatically and removes the container:
+```
+./compile_with_docker.sh
+```
+
+The file `main.ino.bin` can be uploaded on `Configuration` page in `Update` tab.
