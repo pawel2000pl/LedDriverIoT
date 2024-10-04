@@ -90,6 +90,7 @@ async function refreshConfig(defaults = false) {
             const response = await fetch('/default_config.json');
             config = await response.json();
         }
+        return config;
     } catch {
         return alert('Error occured. Please refresh page or restart device.');
     }

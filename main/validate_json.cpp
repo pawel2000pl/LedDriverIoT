@@ -7,7 +7,7 @@
 #endif
 
 #include <regex.h>
-#include "json.h"
+#include <ArduinoJson.h>
 #include "validate_json.h"
 
 bool validateRange(const JsonVariantConst& object, const JsonVariantConst& schema) {

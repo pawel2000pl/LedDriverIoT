@@ -7,7 +7,7 @@ async function setColors(c1, c2, c3, w) {
     const data = JSON.stringify([c1, c2, c3, w]);
     if (data === prevSendData) return;
     prevSendData = data;
-    const response = await fetch('/filtered_color.json', {
+    const response = await fetch('/color.json', {
         method: 'POST',
         headers: {"Content-Type": "application/json"},
         body: data
@@ -17,7 +17,7 @@ async function setColors(c1, c2, c3, w) {
 
 
 async function getColors() {
-    const response = await fetch('/filtered_color.json');
+    const response = await fetch('/color.json');
     return await response.json();
 }
 
@@ -82,7 +82,10 @@ configPromise.then(()=>{
     };
     colorPromise.then(onColorResponse);
     window.addEventListener('pageshow', ()=>{getColors().then(onColorResponse);});
-    document.addEventListener('visibilitychange', ()=>{getColors().then(onColorResponse);});
+    document.addEventListener('visibilitychange', ()=>{
+        if (!document.hidden) 
+            getColors().then(onColorResponse);
+    });
 });
 
 Array.from(document.getElementsByClassName('show-favorites-button')).forEach((button)=>{

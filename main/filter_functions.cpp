@@ -1,8 +1,4 @@
-#include <math.h>
-#include <functional>
-#include <array>
-#include "json.h"
-#include "functions.h"
+#include "filter_functions.h"
 
 FloatFunction normalizeFunction(FloatFunction fun, float min_x, float max_x) {
   const float fmin = fun(min_x);
@@ -24,7 +20,7 @@ FloatFunction symFunction(FloatFunction fun) {
   return [=](float x) { return 1-fun(1-x); };
 }
 
-FloatFunction filterFunctions[] = {
+const std::vector<FloatFunction> filterFunctions = {
   [](float x) {return x; },
   [](float x) {return x*x; },
   [](float x) {return sqrt(x); },
@@ -35,26 +31,25 @@ FloatFunction filterFunctions[] = {
   symFunction([](float x) {return sqrt(x); }),
   normalizeFunction(symFunction([](float x) { return exp(M_PI*(x-1)); }))
 };
+const std::vector<FloatFunction>* filterFunctionsPtr = &filterFunctions;
+const unsigned filterFunctionsCount = filterFunctions.size();
 
-FloatFunction mixFilterFunctions(const JsonArrayConst& filters) {
-  std::array<float, 9> values;
-  for (int i=0;i<9;i++)
-    values[i] = filters[i].as<float>();
+FloatFunction mixFilterFunctions(std::vector<float> filters) {
+  while (filters.size() < filterFunctionsCount) filters.push_back(0.f);
   return constrainFunction(normalizeFunction([=](float x) { 
     float sum = 0;
-    for (int i=0;i<9;i++)
-      if (values[i] != 0)
-        sum += values[i] * filterFunctions[i](x);
+    for (int i=0;i<filterFunctionsCount;i++)
+      if (filters[i] != 0)
+        sum += filters[i] * filterFunctionsPtr->at(i)(x);
     return sum;
   }));
 }
 
-FloatFunction createInverseFunction(FloatFunction originalFunction) {
+FloatFunction createInverseFunction(FloatFunction originalFunction, float epsilon) {
     const bool minus = originalFunction(0) > originalFunction(1);    
     return [=](float y) {
         float left = 0;
         float right = 1;
-        const float epsilon = 1e-6;
         if (minus) y = -y;
         while (right - left > epsilon) {
             const float mid = (left + right) / 2;
@@ -69,3 +64,13 @@ FloatFunction createInverseFunction(FloatFunction originalFunction) {
     };
 }
 
+FloatFunction periodizeFunction(FloatFunction originalFunction, unsigned count) {
+  float fraq = 1.f / count;
+  return [=](float x) {
+    unsigned i = floor(x * count);
+    float ifraq = i * fraq;
+    float xf = (x - ifraq) * count;
+    float rp = (i & 1) ? 1.f - originalFunction(1.f - xf) : originalFunction(xf);
+    return rp * fraq + ifraq;
+  };
+}

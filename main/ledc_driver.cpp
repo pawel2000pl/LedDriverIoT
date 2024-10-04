@@ -1,6 +1,7 @@
 #include "ledc_driver.h"
 #include <Arduino.h>
 #include <driver/ledc.h>
+#include "constrain.h"
 
 const unsigned PWM_FREQUENCES[] = {
   1000,
@@ -61,9 +62,9 @@ float addGateLoadingTime(float value, float loadingTime) {
 ChannelCache cache[4];
 
 void setLedC(int gpio, unsigned channel, float value, bool invert) {
-  value = constrain(value, 0, 1);
-  uint32_t duty = constrain(round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
-  int hpoint = constrain(round((1.f - value) * (LEDC_PERIOD / 2 - 1)), 0, LEDC_PERIOD / 2 - 1);
+  value = constrain<float>(value, 0, 1);
+  uint32_t duty = constrain<uint32_t>(round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
+  int hpoint = constrain<int>(round((1.f - value) * (LEDC_PERIOD / 2 - 1)), 0, LEDC_PERIOD / 2 - 1);
   if (cache[channel].initialized && cache[channel].duty == duty && cache[channel].hpoint == hpoint)
     return;
   cache[channel].hpoint = hpoint;

@@ -1,6 +1,5 @@
 "use strict";
 
-var favorites = [];
 
 function dumpConfig() {
     return {
@@ -54,8 +53,7 @@ function dumpConfig() {
             "frequency": Number($id('frequency-selector').value),
             "enbleWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
-        },
-        "favorites": favorites
+        }
     };
 }
 
@@ -101,8 +99,6 @@ function fillConfig(config) {
     $id('frequency-selector').value = config.hardware.frequency;
     $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
-
-    favorites = config.favorites;
 }
 
 $id('save-settings-btn').addEventListener('click', ()=>{config = dumpConfig(); saveConfig();});

@@ -1,5 +1,5 @@
 #include <esp32-hal-gpio.h>
-#include "configuration.h"
+#include "hardware_configuration.h"
 
 const int ANALOG_READ_MAIN = A0;
 const int THERIMSTOR_CHECKER = A1;

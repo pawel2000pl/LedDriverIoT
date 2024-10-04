@@ -205,7 +205,8 @@ simple-chart canvas {
     display: inline-block; 
     width: 1.5em;
     height: 1.5em;  
-    margin-bottom: -0.4em;
+    margin-bottom: -0.4em;  
+    border: 0.5px solid #a9a9a947;
 }
 
 

@@ -78,8 +78,35 @@ void hsvToRgb(float h, float s, float v, float& r, float& g, float& b) {
     }
 }
 
+void hslToHsv(float h, float s_l, float l, float& h_out, float& s_v_out, float& v_out) {
+    h_out = h;
+    float v = l + s_l * min(l, 1 - l);
+    s_v_out = (v == 0) ? 0 : 2 * (1 - l / v);
+    v_out = v;
+}
+
+void hsvToHsl(float h, float s_v, float v, float& h_out, float & s_l_out, float& l_out) {
+    h_out = h;
+    float l = v * (1 - s_v / 2);
+    float m = min(l, 1 - l);
+    s_l_out = (m == 0) ? 0 : (v - l) / m;
+    l_out = l;
+}
+
 void rgbToRgb(float r, float g, float b, float& outR, float& outG, float& outB) {
     outR = r;
     outG = g;
     outB = b;
+}
+
+void hslToHsl(float h, float s, float l, float& outH, float& outS, float& outL) {
+    outH = h;
+    outS = s;
+    outL = l;
+}
+
+void hsvToHsv(float h, float s, float v, float& outH, float& outS, float& outV) {
+    outH = h;
+    outS = s;
+    outV = v;
 }

@@ -10,21 +10,19 @@
 #include <list>
 #include <vector>
 #include <driver/temperature_sensor.h>
+#include <ArduinoJson.h>
 
-#include "json.h"
+#include "constrain.h"
 #include "resources.h"
 #include "conversions.h"
 #include "validate_json.h"
-#include "functions.h"
+#include "filter_functions.h"
 #include "fastlz.h"
-#include "color_endpoints.h"
 #include "ledc_driver.h"
-#include "configuration.h"
+#include "hardware_configuration.h"
+#include "light_pipeline.h"
 
 #define CONNECTION_TIMEOUT 15000
-#define CONFIGURATION_FILENAME "/configuration.json"
-#define JSON_CONFIG_BUF_SIZE (16*1024)
-#define MAX_STRING_LENGTH 64
 
 #define FAN_TURN_ON_TEMP 70
 #define FAN_TURN_OFF_TEMP 50
@@ -32,22 +30,25 @@
 #define THERMISTOR_R0 47000
 #define THERMISTOR_IN_SERIES_RESISTOR 47000
 #define THERMISTOR_T0 (25.0f + 273.15f)
+#define RESET_CONFIGURATION_PIN (D3)
 
+#define CONFIGURATION_FILENAME "/configuration.json"
+#define FAVORITES_FILENAME "/favorites.json"
+#define JSON_CONFIG_BUF_SIZE (16*1024)
+#define JSON_FAVORITES_BUF_SIZE (64*64)
 
-const int RESET_CONFIGURATION_PIN = D3;
-const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
-
+using FavoriteJsonDoc = StaticJsonDocument<JSON_FAVORITES_BUF_SIZE>;
 
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
+StaticJsonDocument<JSON_FAVORITES_BUF_SIZE> defaultFavorites;
 StaticJsonDocument<4096> scannedNetworks;
 StaticJsonDocument<1024> versionInfo;
+
 std::list<std::function<void()>> taskQueue;
 
 WebServer server(80);
-
-void updateFilteredValues();
 
 void sendError(String message, int code = 400) {
   StaticJsonDocument<1024> messageData;
@@ -95,6 +96,14 @@ void loadDefautltConfiguration() {
 }
 
 
+void loadDefautltFavorites() {
+  uint8_t decompressed_buffer[default_favorites_json_decompressed_size+1];
+  size_t decompressed_size = fastlz_decompress(default_favorites_json_data, default_favorites_json_size, decompressed_buffer, default_favorites_json_decompressed_size);
+  decompressed_buffer[decompressed_size] = 0;
+  deserializeJson(defaultFavorites, String((const char*)decompressed_buffer));
+}
+
+
 void loadVersionInfo() {
   uint8_t decompressed_buffer[version_json_decompressed_size+1];
   size_t decompressed_size = fastlz_decompress(version_json_data, version_json_size, decompressed_buffer, version_json_decompressed_size);
@@ -113,8 +122,8 @@ void loadConfiguration() {
     DeserializationError err = deserializeJson(configuration, buf);
     if (err != DeserializationError::Ok || assertConfiguration().length())
       configuration = defaultConfiguration;
+    pipeline::updateConfiguration(configuration);
   }
-  taskQueue.push_back(updateFilteredValues);
 }
 
 
@@ -391,49 +400,34 @@ void getVersionInfo() {
 }
 
 
-RGBW colorValues = {0,0,0,0};
-RGBW filteredValues = {0,0,0,0};
-ColorChannels lastKnobValues = {0,0,0,0};
-ColorChannels outputValues = {0,0,0,0};
 bool knobMode = true;
-bool outputRequiresUpdate = true;
+ColorChannels lastKnobValues = {0,0,0,0};
 
-
-void updateOutputs() {
-  const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
-  checkNewFrequency(configuration["hardware"]["frequency"]);
-  char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '0', 0};
-  int idx;
-  for (idx=0;key[idx]!='0';idx++);
+void setFromKnobs(const ColorChannels& values) {
+  const auto& bias = configuration["hardware"]["bias"];
+  float biasUp = bias["up"].as<float>();
+  float biasDown = bias["down"].as<float>();
+  const auto applyBias = [=](float x) { return constrain<float>((x - biasDown) / (1.f - biasUp - biasDown), 0, 1); };
+  const float fixedValues[] = {applyBias(values[0]), applyBias(values[1]), applyBias(values[2]), applyBias(values[3]), 0, 1};
+  const String knobColorspace = configuration["channels"]["knobMode"];
+  const char* colorspaces[] = {"hsv", "hsl", "rgb"};
+  const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
+  const char** channelsInCurrentColorspace = channels[0];
+  for (int i=0;i<3;i++)
+    if (knobColorspace == colorspaces[i])
+      channelsInCurrentColorspace = channels[i];
+  const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
+  ColorChannels outputChannels;
   for (int i=0;i<4;i++) {
-    key[idx] = '0' + i;
-    unsigned selectedChannel = (unsigned)transistorConfiguration[(const char*)key].as<int>();
-    outputValues[i] = selectedChannel <= 4 ? filteredValues[selectedChannel] : 0;
+    unsigned selectedPotentiometer = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<int>();
+    outputChannels[i] = selectedPotentiometer < 6 ? fixedValues[selectedPotentiometer] : 0;
   }
-  bool invert = configuration["hardware"]["invertOutputs"].as<bool>();
-  float gateLoadingTime = configuration["hardware"]["gateLoadingTime"].as<float>();
-  for (int i=0;i<4;i++) 
-    setLedC(LED_GPIO_OUTPUTS[i], i, addGateLoadingTime(outputValues[i], gateLoadingTime), invert);
+  pipeline::setAuto(knobColorspace, outputChannels);
+  pipeline::writeOutput();
 }
 
 
-void updateFilteredValues() {
-  filteredValues = (RGBW)somethingColorCustom(
-      configuration, rgbToRgb, "globalOutputFilters", "outputFilters", NULL,
-      false, false,
-      "red", "green", "blue",
-      colorValues.red, colorValues.green, colorValues.blue, colorValues.white
-    );
-}
-
-
-void updateColorValues(float r, float g, float b, float w) {
-  colorValues = RGBW(r, g, b, w);
-  outputRequiresUpdate = true;
-}
-
-
-void setFromKnobs(const ColorChannels values) {
+void checkIfKnobsMoved(const ColorChannels& values) {
   if (!knobMode) {
     float epsilon = configuration["hardware"]["knobActivateDelta"].as<float>();
     if (epsilon >= 1) return;
@@ -444,28 +438,9 @@ void setFromKnobs(const ColorChannels values) {
   }
   for (int i=0;i<4;i++)
     lastKnobValues[i] = values[i];
-
-  const auto& bias = configuration["hardware"]["bias"];
-  float biasUp = bias["up"].as<float>();
-  float biasDown = bias["down"].as<float>();
-  const auto applyBias = [biasUp, biasDown](float x) { return constrain((x - biasDown) / (1.f - biasUp - biasDown), 0, 1); };
-  const float fixedValues[] = {applyBias(values[0]), applyBias(values[1]), applyBias(values[2]), applyBias(values[3]), 0, 1};
-  const String knobColorspace = configuration["channels"]["knobMode"];
-  const char* colorspaces[] = {"hsv", "hsl", "rgb"};
-  const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
-  const char** channelsInCurrentColorspace = channels[0];
-  for (int i=0;i<3;i++)
-    if (knobColorspace == colorspaces[i])
-      channelsInCurrentColorspace = channels[i];
-  const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
-  float outputChannels[4];
-  for (int i=0;i<4;i++) {
-    unsigned selectedPotentiometer = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<int>();
-    outputChannels[i] = selectedPotentiometer < 6 ? fixedValues[selectedPotentiometer] : 0;
-  }
-  ColorChannels filteredChannels = setColorAuto(configuration, knobColorspace, outputChannels[0], outputChannels[1], outputChannels[2], outputChannels[3]);
-  updateColorValues(filteredChannels[0], filteredChannels[1], filteredChannels[2], filteredChannels[3]);
+  setFromKnobs(values);
 }
+
 
 ColorChannels knobsAmortisation = {0,0,0,0};
 void checkKnobs() {
@@ -473,17 +448,110 @@ void checkKnobs() {
   float reduction = exp(-abs(configuration["hardware"]["knobsNoisesReduction"].as<float>()));
   for (int i=0;i<4;i++)
     knobsAmortisation[i] = reduction * POTENTIOMETER_HARDWARE_ACTIONS[i].read() + (1.f-reduction) * knobsAmortisation[i];
-  setFromKnobs(knobsAmortisation);
+  checkIfKnobsMoved(knobsAmortisation);
 }
 
-void sendColors() {
-  StaticJsonDocument<256> data;
-  data["red"] = colorValues.red;
-  data["green"] = colorValues.green;
-  data["blue"] = colorValues.blue;
-  data["white"] = colorValues.white;
+
+void sendFavourites() {
+  DynamicJsonDocument favoritesDoc(JSON_FAVORITES_BUF_SIZE);
+  JsonArray favorites;
+
+  File favoritesFile = SPIFFS.open(FAVORITES_FILENAME, "r");
+  if (favoritesFile) {
+    String buf = favoritesFile.readString();
+    favoritesFile.close();
+    DeserializationError err = deserializeJson(favoritesDoc, buf);
+    if (err != DeserializationError::Ok || validateJson(favoritesDoc, configSchema, configSchema["favorites-list"]).length())
+      favorites = defaultFavorites.as<JsonArray>();
+    else
+      favorites = favoritesDoc.as<JsonArray>();
+  } else favorites = defaultFavorites.as<JsonArray>();
+
+
+  String colorspace = configuration["channels"]["webMode"];
+  DynamicJsonDocument response(JSON_FAVORITES_BUF_SIZE);
+  JsonArray reponseArray = response.to<JsonArray>();
+  unsigned size = favorites.size();
+  for (unsigned i=0;i<size;i++) {
+    JsonObject item = reponseArray.createNestedObject();
+    String code = favorites[i].as<String>();
+    item["code"] = code;
+    ColorChannels channels = pipeline::favoriteColorPreview(colorspace, code);
+    JsonArray colorJson = item.createNestedArray("color");
+    colorJson.add(channels[0]);
+    colorJson.add(channels[1]);
+    colorJson.add(channels[2]);
+    colorJson.add(channels[3]);
+  }
+
+  char* buf = new char[JSON_FAVORITES_BUF_SIZE];
+  size = serializeJson(response, buf, JSON_FAVORITES_BUF_SIZE-1);
+  buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
+  server.send(200, default_config_json_mime_type, buf);
+  delete [] buf;
+}
+
+
+void dumpFavorite(bool useWhite=false) {
+  String dumped = pipeline::dumpFavoriteColor(useWhite);
+  ColorChannels channels = pipeline::getAuto(configuration["channels"]["webMode"]);
   char buf[256];
-  int size = serializeJson(data, buf, 255);
+  int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%f, %f, %f, %f]}", 
+    dumped.c_str(),
+    channels[0],
+    channels[1],
+    channels[2],
+    channels[3]
+  );
+  buf[size] = 0;
+  server.sendHeader("Cache-Control", "no-cache");
+  server.send(200, default_config_json_mime_type, buf);
+}
+
+
+void saveFavorites() {
+  DynamicJsonDocument data(JSON_FAVORITES_BUF_SIZE);
+  String rawData = server.arg("plain");
+  DeserializationError err = deserializeJson(data, rawData);
+  if (err != DeserializationError::Ok) 
+    return sendError("Deserialization error");
+  String assertMessage = validateJson(data, configSchema, configSchema["favorites-list"]);
+  if (assertMessage != "") {
+    sendError(assertMessage, 422);
+    return;
+  }
+  char* buf = new char[JSON_FAVORITES_BUF_SIZE+1];
+  unsigned size = serializeJson(data, buf, JSON_FAVORITES_BUF_SIZE);
+  buf[size] = 0;
+  File favoritesFile = SPIFFS.open(FAVORITES_FILENAME, "w");
+  favoritesFile.println(buf);
+  favoritesFile.close();
+  delete [] buf;
+  server.sendHeader("Cache-Control", "no-cache");
+  sendOk();
+}
+
+
+void applyFavorite() {
+  String code = server.hasArg("code") ? server.arg("code") : "000000000";
+  knobMode = false;
+  pipeline::applyFavoriteColor(code);
+  pipeline::writeOutput();
+  server.sendHeader("Cache-Control", "no-cache");
+  sendOk();
+}
+
+
+void sendColors() {
+  ColorChannels channels = pipeline::getAuto(configuration["channels"]["webMode"]);
+  char buf[256];
+  int size = sprintf(buf, "[%f, %f, %f, %f]", 
+    channels[0],
+    channels[1],
+    channels[2],
+    channels[3]
+  );
   buf[size] = 0;
   server.sendHeader("Cache-Control", "no-cache");
   server.send(200, default_config_json_mime_type, buf);
@@ -496,73 +564,22 @@ void setColors() {
   DeserializationError err = deserializeJson(data, rawData);
   if (err != DeserializationError::Ok) 
     return sendError("Deserialization error");
-  String assertMessage = validateJson(data, configSchema, configSchema["color-values"]);
-  if (assertMessage != "") {
-    sendError(assertMessage, 422);
-    return;
-  }
-  colorValues.red = data["red"];
-  colorValues.green = data["green"];
-  colorValues.blue = data["blue"];
-  colorValues.white = data["white"];
-  knobMode = false;
-  outputRequiresUpdate = true;
-  sendColors();
-}
-
-
-float getServerFloatArg(const String& name, float defaultValue=0) {
-  if (server.hasArg(name)) {
-      return server.arg(name).toFloat();
-  }
-  return defaultValue;
-}
-
-
-void sendColorsAuto() {
-  ColorChannels channels = getColorAuto(configuration, 
-    server.hasArg("colorspace") ? server.arg("colorspace") : configuration["channels"]["webMode"], 
-    getServerFloatArg("red", colorValues.red),
-    getServerFloatArg("green", colorValues.green),
-    getServerFloatArg("blue", colorValues.blue),
-    getServerFloatArg("white", colorValues.white)
-  );
-  StaticJsonDocument<256> data;
-  data.add(channels[0]);
-  data.add(channels[1]);
-  data.add(channels[2]);
-  data.add(channels[3]);
-  char buf[256];
-  int size = serializeJson(data, buf, 255);
-  buf[size] = 0;
-  server.sendHeader("Cache-Control", "no-cache");
-  server.send(200, default_config_json_mime_type, buf);
-}
-
-
-void setColorsAuto() {
-  StaticJsonDocument<256> data;
-  String rawData = server.arg("plain");
-  DeserializationError err = deserializeJson(data, rawData);
-  if (err != DeserializationError::Ok) 
-    return sendError("Deserialization error");
   String assertMessage = validateJson(data, configSchema, configSchema["color-channels"]);
   if (assertMessage != "") {
     sendError(assertMessage, 422);
     return;
   }
-  ColorChannels channels = setColorAuto(
-    configuration, configuration["channels"]["webMode"], 
-    data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()
-  );
+  pipeline::setAuto(configuration["channels"]["webMode"], {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+  pipeline::writeOutput();
   knobMode = false;
-  updateColorValues(channels[0], channels[1], channels[2], channels[3]);
   sendOk();   
 }
+
 
 int floatFilter15(float x) { 
   return (int)round(x * 15.f); 
 };
+
 
 void renderFavoriteColor() {
   uint8_t* decompressed_buffer = new uint8_t[favorite_color_template_html_decompressed_size+1];
@@ -575,18 +592,16 @@ void renderFavoriteColor() {
   }
   decompressed_buffer[decompressed_size] = 0;
 
-  float r = getServerFloatArg("red", colorValues.red);
-  float g = getServerFloatArg("green", colorValues.green);
-  float b = getServerFloatArg("blue", colorValues.blue);
-  float w = getServerFloatArg("white", colorValues.white);
+  String code = server.hasArg("code") ? server.arg("code") : "000000000";
+  pipeline::applyFavoriteColor(code);
+  pipeline::writeOutput();
   knobMode = false;
-  updateColorValues(r, g, b, w);
 
   const auto& channelsMode = configuration["channels"]["webMode"];
-  ColorChannels filteredChannels = getColorAuto(configuration, channelsMode, 
-    colorValues.red, colorValues.green, colorValues.blue, colorValues.white
-  );
+  ColorChannels filteredChannels = pipeline::getAuto(channelsMode);
 
+  float r, g, b;
+  if (channelsMode == "rgb") rgbToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
   if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
   if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
 
@@ -600,13 +615,14 @@ void renderFavoriteColor() {
   delete [] decompressed_buffer;
 }
 
+
 void simpleMode() {
   if (server.method() == HTTP_POST) {
-    auto fun = [](String value) { return constrain((double)atoi(value.c_str())/15.f, 0, 1);};    
-    ColorChannels channels = setColorAuto(configuration, configuration["channels"]["webMode"], 
-      fun(server.arg("ch0")), fun(server.arg("ch1")), fun(server.arg("ch2")), fun(server.arg("ch3")));
+    auto fun = [](String value) { return constrain<float>((float)atoi(value.c_str())/15.f, 0, 1);};    
+    ColorChannels channels = {fun(server.arg("ch0")), fun(server.arg("ch1")), fun(server.arg("ch2")), fun(server.arg("ch3"))};
     knobMode = false;
-    updateColorValues(channels[0], channels[1], channels[2], channels[3]);
+    pipeline::setAuto(configuration["channels"]["webMode"], channels);
+    pipeline::writeOutput();
   }
   uint8_t* decompressed_buffer = new uint8_t[simple_template_html_decompressed_size+1];
   char* render_buffer = new char[simple_template_html_decompressed_size+256];
@@ -624,9 +640,7 @@ void simpleMode() {
   for (int i=0;i<3;i++)
     if (destColorspace == colorspaces[i])
       channelsInCurrentColorspace = channels[i];
-  ColorChannels filteredChannels = getColorAuto(configuration, configuration["channels"]["webMode"], 
-    colorValues.red, colorValues.green, colorValues.blue, colorValues.white
-  );
+  ColorChannels filteredChannels = pipeline::getAuto(configuration["channels"]["webMode"]);
   sprintf(
     render_buffer, (const char*)decompressed_buffer, 
     channelsInCurrentColorspace[0],
@@ -656,22 +670,25 @@ void configureServer() {
     server.on(resources[i]->name, HTTP_GET, [i, &server](){sendDecompressedData(server, resources[i]->mime_type, resources[i]->data, resources[i]->size, resources[i]->decompressed_size);});  
   server.on("/config.json", HTTP_POST, [](){recvConfiguration(true);});
   server.on("/assert_config", HTTP_POST, [](){recvConfiguration(false);});
-  server.on("/color.json", HTTP_GET, sendColors);
-  server.on("/color.json", HTTP_POST, setColors);
   server.on("/assert_json", HTTP_POST, customValidator);
   server.on("/networks.json", HTTP_GET, sendNetworks);
   server.on("/connect_to", HTTP_POST, connectToNetworkEndpoint);
   server.on("/refresh_networks", HTTP_GET, autoScanWifiEndpoint);
   server.on("/open_access_point", HTTP_GET, openAccessPointEndpoint);
-  server.on("/filtered_color.json", HTTP_GET, sendColorsAuto);
-  server.on("/filtered_color.json", HTTP_POST, setColorsAuto);
+  server.on("/color.json", HTTP_GET, sendColors);
+  server.on("/color.json", HTTP_POST, setColors);
   server.on("/simple.html", HTTP_GET, simpleMode);
   server.on("/simple.html", HTTP_POST, simpleMode);
   server.on("/update", HTTP_POST, updateEnd, update);
   server.on("/version_info.json", HTTP_GET, getVersionInfo);
   server.on("/favorite_color.html", HTTP_GET, renderFavoriteColor);
+  server.on("/get_favorites", HTTP_GET, sendFavourites);
+  server.on("/new_favorite", HTTP_GET, [](){dumpFavorite(server.hasArg("white") && server.arg("white") != "0");});
+  server.on("/save_favorites", HTTP_POST, saveFavorites);
+  server.on("/apply_favorite", HTTP_GET, applyFavorite);
   server.begin();
 }
+
 
 unsigned long long int reset_timer = 0;
 bool fanStatus = false;
@@ -738,6 +755,7 @@ void setup() {
   loadVersionInfo();
   loadConfigSchema();
   loadDefautltConfiguration();
+  loadDefautltFavorites();
   loadConfiguration();
   autoConnectWifi(); 
   configureServer();
@@ -755,10 +773,6 @@ void loop() {
     unsigned long long int t = millis();
     server.handleClient();
     ts = millis() - t;
-    if (outputRequiresUpdate) {
-      updateFilteredValues();
-      updateOutputs();
-    }
   } while (ts > 1 && i++ < 100);
 
   for (auto fun: taskQueue) 

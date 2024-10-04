@@ -1,13 +1,14 @@
-// Created to omit "ADC2 is no longer supported"
+#pragma once
 
 #include <Arduino.h>
 #include <vector>
 #include <array>
 
+#include <ArduinoJson.h>
+
 #define ANALOG_READ_MAX 4095
 #define RELAXATION_DELAY 30
 #define RELAXATION_PULL_DELAY 5000
-
 
 struct InputHardwareAction {
   bool enabled;

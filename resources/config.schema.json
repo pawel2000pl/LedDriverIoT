@@ -6,8 +6,7 @@
             "wifi": "wifi-settings",
             "channels": "channels-settings",
             "filters": "filters-settings",
-            "hardware": "hardware-settings",
-            "favorites": "favorites-settings"
+            "hardware": "hardware-settings"
         }
     },
     "ip-address": {
@@ -48,7 +47,7 @@
     },
     "wifi-password": {
         "type": "string",
-        "regexp": ".{0,63}"
+        "regexp": "^(.{8,63})?$"
     },
     "wifi-entry": {
         "type": "object",
@@ -175,23 +174,18 @@
             }
         }
     },
-    "color-values": {
-        "type": "object",
-        "fields": {
-            "red": "fraction",
-            "green": "fraction",
-            "blue": "fraction",
-            "white": "fraction"
-        }
-    },
     "color-channels": {
         "type": "array",
         "length": 4,
         "item": "fraction"
     },
-    "favorites-settings": {
+    "favorite-color": {
+        "type": "string",
+        "regexp": "^[01][0-9A-F]{8}$"
+    },
+    "favorites-list": {
         "type": "array",
         "max_length": 64,
-        "item": "color-values"
+        "item": "favorite-color"
     }
 }
