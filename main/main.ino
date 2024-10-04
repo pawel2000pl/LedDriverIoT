@@ -379,13 +379,18 @@ void update() {
 }
 
 
+void invalidateCache() {
+  server.sendHeader("Clear-Site-Data", "\"cache\"");
+  server.sendHeader("Connection", "close");
+  sendOk();
+}
+
+
 void updateEnd() {
   if (Update.hasError()) 
     sendError(Update.errorString());
   else {
-    server.sendHeader("Clear-Site-Data", "\"cache\"");
-    server.sendHeader("Connection", "close");
-    sendOk();
+    invalidateCache();
     taskQueue.push_back([](){ESP.restart();});
   }
 }
@@ -686,6 +691,7 @@ void configureServer() {
   server.on("/new_favorite", HTTP_GET, [](){dumpFavorite(server.hasArg("white") && server.arg("white") != "0");});
   server.on("/save_favorites", HTTP_POST, saveFavorites);
   server.on("/apply_favorite", HTTP_GET, applyFavorite);
+  server.on("/invalidate_cache", HTTP_GET, invalidateCache);
   server.begin();
 }
 
