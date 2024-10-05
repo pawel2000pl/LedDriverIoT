@@ -97,6 +97,7 @@ Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
 
 
 async function getNetworks() {
+    await refreshNetworks();
     const response = await fetch("/networks.json");
     const data = await response.json();
     const listTable = $id('networks-list');

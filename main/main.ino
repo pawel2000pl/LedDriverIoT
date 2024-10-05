@@ -1,14 +1,10 @@
 #include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiAP.h>
 #include <WebServer.h>
-#include <ESPmDNS.h>
 #include <FS.h>
 #include <SPIFFS.h>
 #include <Update.h>
 #include <functional>
 #include <list>
-#include <vector>
 #include <driver/temperature_sensor.h>
 #include <ArduinoJson.h>
 
@@ -16,14 +12,12 @@
 #include "resources.h"
 #include "conversions.h"
 #include "validate_json.h"
-#include "filter_functions.h"
 #include "fastlz.h"
 #include "ledc_driver.h"
 #include "hardware_configuration.h"
 #include "light_pipeline.h"
 #include "knobs.h"
-
-#define CONNECTION_TIMEOUT 15000
+#include "wifi.h"
 
 #define FAN_TURN_ON_TEMP 70
 #define FAN_TURN_OFF_TEMP 50
@@ -44,7 +38,6 @@ StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
 StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
 StaticJsonDocument<JSON_FAVORITES_BUF_SIZE> defaultFavorites;
-StaticJsonDocument<4096> scannedNetworks;
 StaticJsonDocument<1024> versionInfo;
 
 std::list<std::function<void()>> taskQueue;
@@ -125,6 +118,7 @@ void loadConfiguration() {
 			configuration = defaultConfiguration;
 		knobs::updateConfiguration(configuration);
 		pipeline::updateConfiguration(configuration);
+		wifi::updateConfiguration(configuration);
 	}
 }
 
@@ -151,120 +145,6 @@ void saveConfiguration() {
 	configFile.println(buf);
 	configFile.close();
 	delete [] buf;
-}
-
-IPAddress str2ip(const String& str) {
-	uint8_t numbers[4] = {0, 0, 0, 0};
-	int j = 0;
-	for (int i=0;i<4;i++) {
-		while (1) {
-			char currChar = str[j++];
-			if (currChar < '0' || currChar > '9') break;
-			numbers[i] = numbers[i] * 10 + (currChar - '0');
-		}
-	}
-	return IPAddress(numbers[0], numbers[1], numbers[2], numbers[3]);
-}
-
-
-void scanNetworks() {
-	delay(100);
-	Serial.println("Scanning networks");
-	int n = WiFi.scanNetworks();
-	scannedNetworks.clear();
-	for (int i=0;i<n;i++)
-		scannedNetworks.add(WiFi.SSID(i));
-	WiFi.scanDelete();
-	delay(100);
-}
-
-
-void sendNetworks() {
-	char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
-	unsigned size = serializeJson(scannedNetworks, buf, JSON_CONFIG_BUF_SIZE);
-	buf[size] = 0;
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
-	delete [] buf;
-}
-
-
-void configureMDNS() {
-	MDNS.end();
-	MDNS.begin(configuration["wifi"]["hostname"].as<JsonString>().c_str());
-	MDNS.addService("http", "tcp", 80);
-}
-
-
-bool connectToNetwork(String ssid, String password) {
-	WiFi.mode(WIFI_STA);
-	if (WiFi.status() == WL_CONNECTED)
-		WiFi.disconnect();
-	else if (WiFi.getMode() == WIFI_AP)
-		WiFi.softAPdisconnect();
-	delay(100);
-	Serial.print("Connecting to ");
-	Serial.println(ssid);
-	unsigned long long int timeout_time = millis() + CONNECTION_TIMEOUT;
-	WiFi.setHostname(configuration["wifi"]["hostname"].as<JsonString>().c_str());
-	WiFi.begin(ssid, password);
-		while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
-				delay(10);
-	configureMDNS();
-	return WiFi.status() == WL_CONNECTED;
-}
-
-
-void openAccessPoint() {
-	Serial.println("Switching to AP-mode");
-	if (WiFi.status() == WL_CONNECTED)
-		WiFi.disconnect();
-	const auto& wifiConfig = configuration["wifi"];
-	const auto& apConfig = wifiConfig["access_point"];
-	WiFi.softAPsetHostname(wifiConfig["hostname"].as<JsonString>().c_str());
-	WiFi.mode(WIFI_AP);
-	WiFi.softAPConfig(str2ip(apConfig["address"].as<String>()), str2ip(apConfig["gateway"].as<String>()), str2ip(apConfig["subnet"].as<String>()));
-	WiFi.softAP(apConfig["ssid"].as<String>(), apConfig["password"].as<String>(), 1, apConfig["hidden"].as<bool>(), 16);
-	configureMDNS();
-}
-
-
-bool networkIsInScanned(String name) {
-	const JsonArrayConst& list = scannedNetworks.as<JsonArrayConst>();
-	int size = list.size();
-	for (int i=0;i<size;i++)
-		if (list[i].as<String>() == name)
-			return true;
-	return false;
-}
-
-
-void autoConnectWifi() {
-	if (WiFi.status() == WL_CONNECTED) {
-		WiFi.mode(WIFI_STA);
-		WiFi.disconnect();
-	}
-
-	scanNetworks();
-
-	const auto& wifiConfig = configuration["wifi"];
-	const auto& staPriority = wifiConfig["sta_priority"];
-	const auto& apConfig = wifiConfig["access_point"];
-
-	WiFi.setHostname(wifiConfig["hostname"].as<JsonString>().c_str());
-	WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
-
-	for (int i=0;i<staPriority.size();i++) {
-		WiFi.mode(WIFI_STA);
-		const auto& entry = staPriority[i];
-		String ssid = staPriority[i]["ssid"].as<String>();
-		if (entry["hidden"].as<bool>() || networkIsInScanned(ssid)) {
-			if (connectToNetwork(ssid, staPriority[i]["password"].as<String>()))
-				return;
-		}
-	}
-	if (apConfig["enabled"])
-			openAccessPoint();
 }
 
 
@@ -324,19 +204,19 @@ void connectToNetworkEndpoint() {
 	sendOk();
 	const String ssid = data["ssid"].as<String>();
 	const String password = data["password"].as<String>();
-	taskQueue.push_back([ssid, password](){connectToNetwork(ssid, password);});
+	taskQueue.push_back([ssid, password](){wifi::connectToNetwork(ssid, password);});
 }
 
 
 void autoScanWifiEndpoint() {
 	sendOk(); 
-	taskQueue.push_back(autoConnectWifi);
+	taskQueue.push_back(wifi::scanNetworks);
 }
 
 
 void openAccessPointEndpoint() {
 	sendOk(); 
-	taskQueue.push_back(openAccessPoint);
+	taskQueue.push_back(wifi::openAccessPoint);
 }
 
 
@@ -404,6 +284,22 @@ void getVersionInfo() {
 	buf[size] = 0;
 	server.sendHeader("Cache-Control", "no-cache");
 	server.send(200, default_config_json_mime_type, buf);
+}
+
+
+void sendNetworks() {
+	unsigned lengthSum = 0;
+	const auto& scannedNetworks = wifi::getScannedNetworks();
+	for (auto s : scannedNetworks) lengthSum += s.length();
+	unsigned bufSize = lengthSum + scannedNetworks.size() + 32;
+	DynamicJsonDocument networkList(bufSize);
+	char* buf = new char[bufSize+1];
+	for (auto s : scannedNetworks) networkList.add(s);
+	unsigned size = serializeJson(networkList, buf, bufSize);
+	buf[size] = 0;
+	server.sendHeader("Cache-Control", "no-cache");
+	server.send(200, default_config_json_mime_type, buf);
+	delete [] buf;
 }
 
 
@@ -712,11 +608,11 @@ void setup() {
 	loadDefautltConfiguration();
 	loadDefautltFavorites();
 	loadConfiguration();
-	autoConnectWifi(); 
+	wifi::fastInit(false);
 	configureServer();
 }
 
-unsigned loopNumber = 0;
+unsigned loopNumber = 1;
 
 void loop() {
 
@@ -735,11 +631,8 @@ void loop() {
 	taskQueue.clear();
 
 	checkReset();
-
-	if (loopNumber++ & 127 == 0) {
-		if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP)
-			autoConnectWifi(); 
-
+	if ((loopNumber++ & 255) == 0) {
+		wifi::checkConnection();
 		checkTemperature();
 	}
 

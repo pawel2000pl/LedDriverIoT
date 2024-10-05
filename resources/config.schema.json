@@ -62,8 +62,11 @@
         "regexp": "^(.{8,63})?$"
     },
     "channels-settings": {
-        "webMode": "channel-setting",
-        "knobMode": "channel-setting"
+        "type": "object",
+        "fields": {
+            "webMode": "channel-setting",
+            "knobMode": "channel-setting"
+        }
     },
     "channel-setting": {
         "type": "string",

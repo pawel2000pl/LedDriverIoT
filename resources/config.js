@@ -124,7 +124,7 @@ $id('import-settings-btn').addEventListener('click', async ()=>{
 });
 
 function refreshNetworks() {
-    fetch('/refresh_networks');
+    return fetch('/refresh_networks');
 }
 
 function openAccessPoint() {

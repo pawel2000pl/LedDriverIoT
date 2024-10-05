@@ -7,7 +7,6 @@
 #endif
 
 #include <regex.h>
-#include <ArduinoJson.h>
 #include "validate_json.h"
 
 bool validateRange(const JsonVariantConst& object, const JsonVariantConst& schema) {
@@ -52,7 +51,7 @@ String validateJson(const JsonVariant object, const JsonVariantConst& schema, co
 
   if (type == "object") {
     if (!object.is<JsonObject>()) return "Invalid type: " + path + " expected: object";
-    const auto& fields = objectSchema["fields"].as<JsonObjectConst>();
+    const auto& fields = (objectSchema.containsKey("fields") ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
     for (const JsonPairConst& keyValue: fields) {
       const auto& key = keyValue.key();
       if (!object.containsKey(key)) {
