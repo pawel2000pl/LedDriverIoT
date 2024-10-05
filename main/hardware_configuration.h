@@ -11,12 +11,12 @@
 #define RELAXATION_PULL_DELAY 5000
 
 struct InputHardwareAction {
-  bool enabled;
-  int read_pin;
-  std::vector<int> hz_pins;
-  std::vector<int> low_pins;
-  std::vector<int> high_pins;
-  float read() const;
+	bool enabled;
+	int read_pin;
+	std::vector<int> hz_pins;
+	std::vector<int> low_pins;
+	std::vector<int> high_pins;
+	float read() const;
 };
 
 
