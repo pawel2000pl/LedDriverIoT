@@ -27,6 +27,7 @@ unsigned length(const unsigned* ptr) {
 const unsigned PWM_FREQUENCES_COUNT = length(PWM_FREQUENCES);
 unsigned current_pwm_frequency = PWM_FREQUENCES_COUNT - 1;
 
+
 void initLedC(void) {
   ledc_timer_config_t ledc_timer = {
     .speed_mode       = LEDC_MODE,
@@ -39,6 +40,7 @@ void initLedC(void) {
   ledc_timer_config(&ledc_timer);
 }
 
+
 void checkNewFrequency(unsigned number) {
   if (number >= 0 && number < PWM_FREQUENCES_COUNT && number != current_pwm_frequency) {
     current_pwm_frequency = number;
@@ -46,11 +48,13 @@ void checkNewFrequency(unsigned number) {
   }
 }
 
+
 struct ChannelCache {
     bool initialized = false;
     uint32_t duty = 0;
     int hpoint = 9;
 };
+
 
 float addGateLoadingTime(float value, float loadingTime) {
     if (value == 0)
@@ -58,6 +62,7 @@ float addGateLoadingTime(float value, float loadingTime) {
     float offset = loadingTime * float(PWM_FREQUENCES[current_pwm_frequency]) * 1e-6;
     return value / (1.f - offset) + offset;
 }
+
 
 ChannelCache cache[4];
 

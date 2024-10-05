@@ -1,0 +1,38 @@
+<p>
+    <p>
+        Inputs and outputs
+    </p>
+    <p>
+        The first table allows you to set the input signal sources for individual channels. The potentiometers (knobs) are marked with the symbols P1, P2, P3, and P4. Some versions of the device may have fewer potentiometers. Setting the signal source to a non-existent potentiometer will set its value to zero. Additionally, two virtual sources have been defined: CH - sets the maximum value (one), CL - sets the minimum value (zero). One source can be assigned to multiple channels, but each channel can have only one source.
+    </p>
+    <p>
+        The second table allows you to assign output signals to the corresponding outputs. Some LED strips have a different color order in their connectors, and this functionality allows you to adjust the controller for any strip. LED controllers that do not have an option to control a white channel only have three outputs. In this case, the fourth output is inactive, and its setting does not affect the device's operation.
+    </p>
+    <p>
+        Knobs settings
+    </p>
+    <p>
+        Low bias: If the potentiometer (knob) in its extreme minimum position does not set the input signal to zero, you should increase this value. Conversely, if the input signal does not change, despite partially turning the potentiometer (knob) from the extreme maximum position, you should decrease this value.
+    </p>
+    <p>
+        High bias: If the potentiometer (knob) in its extreme maximum position does not set the input signal to one, you should increase this value. Conversely, if the input signal does not change, despite partially turning the potentiometer (knob) from the extreme maximum position, you should decrease this value.
+    </p>
+    <p>
+        Switch from wifi to knobs after changing them for: The controller has the ability to be adjusted separately via the web panel and using knobs. When changing through the web panel, the position of the knobs remains unchanged. Moving them then causes a sudden color change from the setting made by the panel to that set physically on the knobs. This setting determines how much the position of the knobs must change to trigger the switch. It is not recommended to set this value to zero due to noise (inaccuracies) in the potentiometer position readings, which may prevent the use of the web panel. The value should be as small as possible but large enough to prevent the controller from switching automatically.
+    </p>
+    <p>
+        Potentiometers noise reduction: Readings from the potentiometers are often subject to changes due to ambient noise and measurement inaccuracies. This can cause frequent changes in channel values, noticeable as flickering of the LED strip. To prevent this flickering, you should increase the value of this setting. However, setting too high a value will cause delays in color changes.
+    </p>
+    <p>
+        Output frequency: The LED strip is not powered by a constant current. The brightness is regulated by rapidly turning it on and off. The higher the frequency of these actions, the lower the chance of perceiving flickering LEDs and the better the experience of using the lighting. Unfortunately, due to the inductance and capacitance of the LED strip, the signal at the end of the strip may have a lower voltage. LEDs are nonlinear devices, and even a slight change in voltage can significantly affect their brightness. For this reason, setting a high frequency may cause the end of the LED strip to have a different shade than the beginning. If the LED strip has different shades at its ends, you should decrease the frequency. If flickering is noticeable, you should increase the frequency.
+    </p>
+    <p>
+        Gate loading time: The value of this setting defines the minimum time for turning on the signal to the transistor gate. This prevents LED flickering at very low brightness of a given channel (color). If the LED strip flickers at low brightness or with slight color saturation decrease, you should increase this value. If the LED strip turns off too early, even though it could still dim, you should increase this value.
+    </p>
+    <p>
+        Enable white channel: If the controller is equipped with a fourth output for the white LED strip, this option should be enabled. It activates the ability to change this channel in the interface.
+    </p>
+    <p>
+        Invert outputs: Some controllers are built with an inverting amplifier, which (as the name suggests) inverts the values of the output signals - the maximum value becomes the minimum and the minimum value becomes the maximum. If the LED strip lights up in reverse to how it should, you should enable this option.
+    </p>
+</p>
