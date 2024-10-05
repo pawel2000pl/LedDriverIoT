@@ -108,6 +108,13 @@ void loadVersionInfo() {
 }
 
 
+void updateModules() {
+	knobs::updateConfiguration(configuration);
+	pipeline::updateConfiguration(configuration);
+	wifi::updateConfiguration(configuration);
+}
+
+
 void loadConfiguration() {
 	File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
 	if (configFile) {
@@ -116,9 +123,7 @@ void loadConfiguration() {
 		DeserializationError err = deserializeJson(configuration, buf);
 		if (err != DeserializationError::Ok || assertConfiguration().length())
 			configuration = defaultConfiguration;
-		knobs::updateConfiguration(configuration);
-		pipeline::updateConfiguration(configuration);
-		wifi::updateConfiguration(configuration);
+		updateModules();
 	}
 }
 
@@ -173,7 +178,6 @@ void customValidator() {
 	StaticJsonDocument<2*JSON_CONFIG_BUF_SIZE> *testJson = new StaticJsonDocument<2*JSON_CONFIG_BUF_SIZE>();
 	DeserializationError err = deserializeJson(*testJson, rawData);
 	if (err != DeserializationError::Ok) {
-		loadConfiguration();
 		sendDeserializationError(err);
 		delete testJson;
 		return;
@@ -238,6 +242,7 @@ void recvConfiguration(bool save=true) {
 		saveConfiguration();
 	else
 		loadConfiguration();
+	updateModules();
 	sendOk();
 }
 

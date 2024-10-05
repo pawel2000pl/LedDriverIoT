@@ -12,7 +12,6 @@ namespace pipeline {
     float value = 0;
     float white = 0;
 
-    unsigned long int outputFrequency = 32000;
     bool invertOutputs = 0;
     float gateLoadingTime = 0;
     std::array<unsigned, 4> transistorConnections;
@@ -87,10 +86,11 @@ namespace pipeline {
         filters::invertedInputWhite = createInverseFunction(filters::inputWhite);
         filters::invertedGlobalInput = createInverseFunction(filters::globalInput);
 
-        const auto hardwareConfiguration = configuration["hardware"];
-        outputFrequency = hardwareConfiguration["frequency"].as<unsigned long>();
+        const auto& hardwareConfiguration = configuration["hardware"];
+        unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
         gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<float>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
+        checkNewFrequency(outputFrequency);
 
         const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
@@ -116,7 +116,6 @@ namespace pipeline {
         ColorChannels outputValues;
         for (int i=0;i<4;i++)
             outputValues[i] = filteredValues[transistorConnections[i]];
-        checkNewFrequency(outputFrequency);
         for (int i=0;i<4;i++) 
             setLedC(
                 LED_GPIO_OUTPUTS[i], 

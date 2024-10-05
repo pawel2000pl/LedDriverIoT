@@ -44,7 +44,7 @@ void initLedC(void) {
 void checkNewFrequency(unsigned number) {
   if (number >= 0 && number < PWM_FREQUENCES_COUNT && number != current_pwm_frequency) {
     current_pwm_frequency = number;
-    initLedC();
+    ledc_set_freq(LEDC_MODE, LEDC_TIMER, PWM_FREQUENCES[current_pwm_frequency]);
   }
 }
 
