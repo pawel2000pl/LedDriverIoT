@@ -138,6 +138,7 @@ void loadConfigSchema() {
 
 void resetConfiguration() {
 	SPIFFS.remove(CONFIGURATION_FILENAME);
+	SPIFFS.remove(FAVORITES_FILENAME);
 	loadConfiguration();
 }
 

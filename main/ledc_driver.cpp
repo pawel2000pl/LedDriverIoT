@@ -3,29 +3,8 @@
 #include <driver/ledc.h>
 #include "constrain.h"
 
-const unsigned PWM_FREQUENCES[] = {
-	1000,
-	1600,
-	2000,
-	2400,
-	4000,
-	6000,
-	8000,
-	12000,
-	16000,
-	24000,
-	32000,
-	0
-};
 
-unsigned length(const unsigned* ptr) {
-	unsigned i = 0;
-	while (*(ptr++)) i++;
-	return i;
-}
-
-const unsigned PWM_FREQUENCES_COUNT = length(PWM_FREQUENCES);
-unsigned current_pwm_frequency = PWM_FREQUENCES_COUNT - 1;
+unsigned current_pwm_frequency = 32000;
 
 
 void initLedC(void) {
@@ -33,7 +12,7 @@ void initLedC(void) {
 		.speed_mode       = LEDC_MODE,
 		.duty_resolution  = LEDC_DUTY_RES,
 		.timer_num        = LEDC_TIMER,
-		.freq_hz          = PWM_FREQUENCES[current_pwm_frequency],  
+		.freq_hz          = current_pwm_frequency,  
 		.clk_cfg          = LEDC_AUTO_CLK
 	};
 	// screw errors, it works fine
@@ -41,10 +20,10 @@ void initLedC(void) {
 }
 
 
-void checkNewFrequency(unsigned number) {
-	if (number >= 0 && number < PWM_FREQUENCES_COUNT && number != current_pwm_frequency) {
-		current_pwm_frequency = number;
-		ledc_set_freq(LEDC_MODE, LEDC_TIMER, PWM_FREQUENCES[current_pwm_frequency]);
+void checkNewFrequency(unsigned freq) {
+	if (freq >= 1000 && freq <= 32000 && freq != current_pwm_frequency) {
+		current_pwm_frequency = freq;
+		ledc_set_freq(LEDC_MODE, LEDC_TIMER, current_pwm_frequency);
 	}
 }
 
@@ -59,7 +38,7 @@ struct ChannelCache {
 float addGateLoadingTime(float value, float loadingTime) {
 		if (value == 0)
 				return 0;
-		float offset = loadingTime * float(PWM_FREQUENCES[current_pwm_frequency]) * 1e-6;
+		float offset = loadingTime * float(current_pwm_frequency) * 1e-6;
 		return value / (1.f - offset) + offset;
 }
 

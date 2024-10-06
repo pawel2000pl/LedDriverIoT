@@ -208,7 +208,7 @@
             "up": 0.146,
             "down": 0.002
         },
-        "frequency": 2,
+        "frequency": 32000,
         "knobActivateDelta": 0.01,
         "gateLoadingTime": 0.6,
         "enbleWhiteKnob": true,

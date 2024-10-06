@@ -5,10 +5,8 @@
 #define LEDC_DUTY_RES           LEDC_TIMER_11_BIT
 #define LEDC_PERIOD             (2048)
 
-extern const unsigned PWM_FREQUENCES[];
-
 void initLedC(void);
-void checkNewFrequency(unsigned number);
+void checkNewFrequency(unsigned freq);
 float addGateLoadingTime(float value, float loadingTime);
 void setLedC(int gpio, unsigned channel, float value, bool invert=0);
 

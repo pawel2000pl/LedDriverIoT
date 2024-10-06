@@ -94,7 +94,7 @@ namespace wifi {
 
     unsigned bestApChannel() {
         float minValue = 0;
-        unsigned minChannel = 0;
+        unsigned minChannel = AP_CHANNELS[0];
         for (auto channel : AP_CHANNELS)
             if (occupedChannels[channel] < minValue) {
                 minValue = occupedChannels[channel];

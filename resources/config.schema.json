@@ -159,8 +159,8 @@
             },
             "frequency": {
                 "type": "integer",
-                "min_value": 0,
-                "max_value": 10
+                "min_value": 1000,
+                "max_value": 32000
             },
             "knobActivateDelta": "fraction",
             "enbleWhiteKnob": "boolean",
