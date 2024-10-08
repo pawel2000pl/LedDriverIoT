@@ -14,6 +14,7 @@ namespace pipeline {
 
     bool invertOutputs = 0;
     float gateLoadingTime = 0;
+    ColorChannels scalling = {1.0f, 1.0f, 1.0f, 1.0f};
     std::array<unsigned, 4> transistorConnections;
 
     namespace filters {
@@ -92,6 +93,12 @@ namespace pipeline {
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
         checkNewFrequency(outputFrequency);
 
+        const auto& scallingJson = configuration["hardware"]["scalling"];
+        scalling[0] = scallingJson["red"].as<float>();
+        scalling[1] = scallingJson["green"].as<float>();
+        scalling[2] = scallingJson["blue"].as<float>();
+        scalling[3] = scallingJson["white"].as<float>();
+
         const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
         int idx;
@@ -101,7 +108,10 @@ namespace pipeline {
             unsigned selectedChannel = (unsigned)transistorConfiguration[(const char*)key].as<int>();
             transistorConnections[i] = selectedChannel <= 4 ? selectedChannel : 5;
         }
+
+        writeOutput();
     }
+    
 
     void writeOutput() {
         float r, g, b;
@@ -115,7 +125,7 @@ namespace pipeline {
         };
         ColorChannels outputValues;
         for (int i=0;i<4;i++)
-            outputValues[i] = filteredValues[transistorConnections[i]];
+            outputValues[i] = filteredValues[transistorConnections[i]] * scalling[i];
         for (int i=0;i<4;i++) 
             setLedC(
                 LED_GPIO_OUTPUTS[i], 

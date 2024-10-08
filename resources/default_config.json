@@ -208,6 +208,12 @@
             "up": 0.146,
             "down": 0.002
         },
+        "scalling": {
+            "red": 1.0,
+            "green": 1.0,
+            "blue": 1.0,
+            "white": 1.0
+        },
         "frequency": 32000,
         "knobActivateDelta": 0.01,
         "gateLoadingTime": 0.6,

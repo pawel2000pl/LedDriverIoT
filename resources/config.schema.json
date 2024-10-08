@@ -157,6 +157,15 @@
                     "down": "fraction"
                 }
             },
+            "scalling": {
+                "type": "object",
+                "fields": {
+                    "red": "fraction",
+                    "green": "fraction",
+                    "blue": "fraction",
+                    "white": "fraction"
+                }
+            },
             "frequency": {
                 "type": "integer",
                 "min_value": 1000,

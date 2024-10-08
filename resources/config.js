@@ -47,6 +47,12 @@ function dumpConfig() {
                 "down": Number($id('low-bias-input').value),
                 "up": Number($id('high-bias-input').value)
             },
+            "scalling": {
+                "red": Number($id('red-scalling-factor').value),
+                "green": Number($id('green-scalling-factor').value),
+                "blue": Number($id('blue-scalling-factor').value),
+                "white": Number($id('white-scalling-factor').value)
+            },
             "knobActivateDelta": Number($id('knob-activate-input').value),
             "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
             "gateLoadingTime": Number($id('gate-loading-time').value),
@@ -92,6 +98,11 @@ function fillConfig(config) {
 
     $id('low-bias-input').value = config.hardware.bias.down;
     $id('high-bias-input').value = config.hardware.bias.up;
+
+    $id('red-scalling-factor').value = config.hardware.scalling.red;
+    $id('green-scalling-factor').value = config.hardware.scalling.green;
+    $id('blue-scalling-factor').value = config.hardware.scalling.blue;
+    $id('white-scalling-factor').value = config.hardware.scalling.white;
 
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
     $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
