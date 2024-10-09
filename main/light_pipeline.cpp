@@ -132,15 +132,18 @@ namespace pipeline {
         ColorChannels periods, phases;
         for (int i=0;i<4;i++)
             periods[i] = addGateLoadingTime(outputValues[i], gateLoadingTime);
-        if (phaseMode) {
+        if (phaseMode == 0)
+            phases = {0, 0, 0, 0};
+        if (phaseMode == 1) {
+            for (int i=0;i<4;i++)
+                phases[i] = (1.f - outputValues[i]) / 2;
+        }
+        if (phaseMode == 2) {
             float sum = 0;
             for (int i=0;i<4;i++) {
                 phases[i] = sum;
                 sum += fmod(sum + outputValues[i], 1.f);
             }
-        } else {
-            for (int i=0;i<4;i++)
-                phases[i] = (1.f - outputValues[i]) / 2;
         }
         for (int i=0;i<4;i++) 
             setLedC(
