@@ -138,11 +138,15 @@ namespace pipeline {
             for (int i=0;i<4;i++)
                 phases[i] = (1.f - outputValues[i]) / 2;
         }
-        if (phaseMode == 2) {
+        if (phaseMode == 2 || phaseMode == 3) {
+            float k = 0;
+            float end = phaseMode == 2 ? 3 : 4;
+            for (int i=0;i<end;i++) k += outputValues[i];
+            k = k == 0 ? 0 : 1.f / k;
             float sum = 0;
             for (int i=0;i<4;i++) {
                 phases[i] = sum;
-                sum += fmod(sum + outputValues[i], 1.f);
+                sum += fmod(sum + outputValues[i] * k, 1.f);
             }
         }
         for (int i=0;i<4;i++) 
