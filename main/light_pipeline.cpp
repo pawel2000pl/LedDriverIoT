@@ -1,3 +1,4 @@
+#include <cmath>
 #include "light_pipeline.h"
 #include "conversions.h"
 #include "ledc_driver.h"
@@ -13,6 +14,7 @@ namespace pipeline {
     float white = 0;
 
     bool invertOutputs = 0;
+    int phaseMode = 0;
     float gateLoadingTime = 0;
     ColorChannels scalling = {1.0f, 1.0f, 1.0f, 1.0f};
     std::array<unsigned, 4> transistorConnections;
@@ -88,9 +90,10 @@ namespace pipeline {
         filters::invertedGlobalInput = createInverseFunction(filters::globalInput);
 
         const auto& hardwareConfiguration = configuration["hardware"];
-        unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
+        phaseMode = hardwareConfiguration["phaseMode"].as<int>();
         gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<float>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
+        unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
         checkNewFrequency(outputFrequency);
 
         const auto& scallingJson = configuration["hardware"]["scalling"];
@@ -126,11 +129,25 @@ namespace pipeline {
         ColorChannels outputValues;
         for (int i=0;i<4;i++)
             outputValues[i] = filteredValues[transistorConnections[i]] * scalling[i];
+        ColorChannels periods, phases;
+        for (int i=0;i<4;i++)
+            periods[i] = addGateLoadingTime(outputValues[i], gateLoadingTime);
+        if (phaseMode) {
+            float sum = 0;
+            for (int i=0;i<4;i++) {
+                phases[i] = sum;
+                sum += fmod(sum + outputValues[i], 1.f);
+            }
+        } else {
+            for (int i=0;i<4;i++)
+                phases[i] = (1.f - outputValues[i]) / 2;
+        }
         for (int i=0;i<4;i++) 
             setLedC(
                 LED_GPIO_OUTPUTS[i], 
                 i, 
-                addGateLoadingTime(outputValues[i], gateLoadingTime), 
+                periods[i], 
+                phases[i],
                 invertOutputs
             );
     }

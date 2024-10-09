@@ -214,6 +214,7 @@
             "blue": 1.0,
             "white": 1.0
         },
+        "phaseMode": 0,
         "frequency": 32000,
         "knobActivateDelta": 0.01,
         "gateLoadingTime": 0.6,

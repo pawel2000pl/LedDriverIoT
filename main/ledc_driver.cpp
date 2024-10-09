@@ -32,6 +32,7 @@ struct ChannelCache {
 		bool initialized = false;
 		uint32_t duty = 0;
 		int hpoint = 9;
+		bool invert = false;
 };
 
 
@@ -45,14 +46,14 @@ float addGateLoadingTime(float value, float loadingTime) {
 
 ChannelCache cache[4];
 
-void setLedC(int gpio, unsigned channel, float value, bool invert) {
-	value = constrain<float>(value, 0, 1);
+void setLedC(int gpio, unsigned channel, float value, float phase, bool invert) {
 	uint32_t duty = constrain<uint32_t>(round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
-	int hpoint = constrain<int>(round((1.f - value) * (LEDC_PERIOD / 2 - 1)), 0, LEDC_PERIOD / 2 - 1);
-	if (cache[channel].initialized && cache[channel].duty == duty && cache[channel].hpoint == hpoint)
+	int hpoint = constrain<int>(round(phase * (LEDC_PERIOD - 1)), 0, LEDC_PERIOD-1);
+	if (cache[channel].initialized && cache[channel].duty == duty && cache[channel].hpoint == hpoint && cache[channel].invert == invert)
 		return;
 	cache[channel].hpoint = hpoint;
 	cache[channel].duty = duty;
+	cache[channel].invert = invert;
 	cache[channel].initialized = true;
 	ledc_channel_config_t ledc_channel = {
 		.gpio_num       = gpio,

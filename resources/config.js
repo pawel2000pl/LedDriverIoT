@@ -53,6 +53,7 @@ function dumpConfig() {
                 "blue": Number($id('blue-scalling-factor').value),
                 "white": Number($id('white-scalling-factor').value)
             },
+            "phaseMode": Number($id('phase-mode').value),
             "knobActivateDelta": Number($id('knob-activate-input').value),
             "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
             "gateLoadingTime": Number($id('gate-loading-time').value),
@@ -104,6 +105,7 @@ function fillConfig(config) {
     $id('blue-scalling-factor').value = config.hardware.scalling.blue;
     $id('white-scalling-factor').value = config.hardware.scalling.white;
 
+    $id('phase-mode').value = config.hardware.phaseMode;
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
     $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
     $id('gate-loading-time').value = config.hardware.gateLoadingTime;
