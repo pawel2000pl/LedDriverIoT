@@ -2,8 +2,9 @@
 #include <functional>
 #include <array>
 #include "hardware_configuration.h"
-#include "light_pipeline.h"
+#include "inputs.h"
 #include "constrain.h"
+#include "outputs.h"
 
 namespace knobs {
 
@@ -50,8 +51,8 @@ namespace knobs {
         ColorChannels outputChannels;
         for (int i=0;i<4;i++)
             outputChannels[i] = potentionemterMapping[i] < 6 ? fixedValues[potentionemterMapping[i]] : 0;
-        pipeline::setAuto(knobColorspace, outputChannels);
-        pipeline::writeOutput();
+        inputs::setAuto(knobColorspace, outputChannels);
+        outputs::writeOutput();
     }
 
 

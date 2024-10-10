@@ -15,7 +15,8 @@
 #include "fastlz.h"
 #include "ledc_driver.h"
 #include "hardware_configuration.h"
-#include "light_pipeline.h"
+#include "inputs.h"
+#include "outputs.h"
 #include "knobs.h"
 #include "wifi.h"
 
@@ -110,7 +111,8 @@ void loadVersionInfo() {
 
 void updateModules() {
 	knobs::updateConfiguration(configuration);
-	pipeline::updateConfiguration(configuration);
+	inputs::updateConfiguration(configuration);
+	outputs::updateConfiguration(configuration);
 	wifi::updateConfiguration(configuration);
 }
 
@@ -332,7 +334,7 @@ void sendFavourites() {
 		JsonObject item = reponseArray.createNestedObject();
 		String code = favorites[i].as<String>();
 		item["code"] = code;
-		ColorChannels channels = pipeline::favoriteColorPreview(colorspace, code);
+		ColorChannels channels = inputs::favoriteColorPreview(colorspace, code);
 		JsonArray colorJson = item.createNestedArray("color");
 		colorJson.add(channels[0]);
 		colorJson.add(channels[1]);
@@ -350,8 +352,8 @@ void sendFavourites() {
 
 
 void dumpFavorite(bool useWhite=false) {
-	String dumped = pipeline::dumpFavoriteColor(useWhite);
-	ColorChannels channels = pipeline::getAuto(configuration["channels"]["webMode"]);
+	String dumped = inputs::dumpFavoriteColor(useWhite);
+	ColorChannels channels = inputs::getAuto(configuration["channels"]["webMode"]);
 	char buf[256];
 	int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%f, %f, %f, %f]}", 
 		dumped.c_str(),
@@ -392,15 +394,15 @@ void saveFavorites() {
 void applyFavorite() {
 	String code = server.hasArg("code") ? server.arg("code") : "000000000";
 	knobs::turnOff();
-	pipeline::applyFavoriteColor(code);
-	pipeline::writeOutput();
+	inputs::applyFavoriteColor(code);
+	outputs::writeOutput();
 	server.sendHeader("Cache-Control", "no-cache");
 	sendOk();
 }
 
 
 void sendColors() {
-	ColorChannels channels = pipeline::getAuto(configuration["channels"]["webMode"]);
+	ColorChannels channels = inputs::getAuto(configuration["channels"]["webMode"]);
 	char buf[256];
 	int size = sprintf(buf, "[%f, %f, %f, %f]", 
 		channels[0],
@@ -425,8 +427,8 @@ void setColors() {
 		sendError(assertMessage, 422);
 		return;
 	}
-	pipeline::setAuto(configuration["channels"]["webMode"], {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
-	pipeline::writeOutput();
+	inputs::setAuto(configuration["channels"]["webMode"], {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+	outputs::writeOutput();
 	knobs::turnOff();
 	sendOk();   
 }
@@ -449,12 +451,12 @@ void renderFavoriteColor() {
 	decompressed_buffer[decompressed_size] = 0;
 
 	String code = server.hasArg("code") ? server.arg("code") : "000000000";
-	pipeline::applyFavoriteColor(code);
-	pipeline::writeOutput();
+	inputs::applyFavoriteColor(code);
+	outputs::writeOutput();
 	knobs::turnOff();
 
 	const auto& channelsMode = configuration["channels"]["webMode"];
-	ColorChannels filteredChannels = pipeline::getAuto(channelsMode);
+	ColorChannels filteredChannels = inputs::getAuto(channelsMode);
 
 	float r, g, b;
 	if (channelsMode == "rgb") rgbToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
@@ -477,8 +479,8 @@ void simpleMode() {
 		auto fun = [](String value) { return constrain<float>((float)atoi(value.c_str())/15.f, 0, 1);};    
 		ColorChannels channels = {fun(server.arg("ch0")), fun(server.arg("ch1")), fun(server.arg("ch2")), fun(server.arg("ch3"))};
 		knobs::turnOff();
-		pipeline::setAuto(configuration["channels"]["webMode"], channels);
-		pipeline::writeOutput();
+		inputs::setAuto(configuration["channels"]["webMode"], channels);
+		outputs::writeOutput();
 	}
 	uint8_t* decompressed_buffer = new uint8_t[simple_template_html_decompressed_size+1];
 	char* render_buffer = new char[simple_template_html_decompressed_size+256];
@@ -496,7 +498,7 @@ void simpleMode() {
 	for (int i=0;i<3;i++)
 		if (destColorspace == colorspaces[i])
 			channelsInCurrentColorspace = channels[i];
-	ColorChannels filteredChannels = pipeline::getAuto(configuration["channels"]["webMode"]);
+	ColorChannels filteredChannels = inputs::getAuto(configuration["channels"]["webMode"]);
 	sprintf(
 		render_buffer, (const char*)decompressed_buffer, 
 		channelsInCurrentColorspace[0],

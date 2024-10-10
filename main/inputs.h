@@ -4,20 +4,17 @@
 
 using ColorChannels = std::array<float, 4>;
 
-namespace pipeline {
+namespace inputs {
 
     void updateConfiguration(const JsonVariantConst& configuration);
-    void writeOutput();
     void setRGBW(float r, float g, float b, float w);
     void setHSVW(float h, float s, float v, float w);
     void setHSLW(float h, float s, float l, float w);
-    void setRaw(const ColorChannels& color);
     void setAuto(const String& colorspace, const ColorChannels& color);
 
     ColorChannels getRGBW();
     ColorChannels getHSVW();
     ColorChannels getHSLW();
-    ColorChannels getRaw();
     ColorChannels getAuto(const String& colorspace);
 
     String dumpFavoriteColor(const bool useWhite);
