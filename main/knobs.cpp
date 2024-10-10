@@ -17,6 +17,7 @@ namespace knobs {
     float reduction = 0.1;
     ColorChannels knobsAmortisation = {0,0,0,0};
     
+    const float analogResolution = 1.44f / (float)ANALOG_READ_MAX;
     const char* colorspaces[] = {"hsv", "hsl", "rgb"};
     const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
         
@@ -54,17 +55,25 @@ namespace knobs {
     }
 
 
-    void checkIfKnobsMoved(const ColorChannels& values) {
-        if (!knobMode) {
-            if (epsilon >= 1) return;
-            for (int i=0;i<4;i++)
-            if (abs(values[i] - lastKnobValues[i]) > epsilon)
-                knobMode = true;
-            if (!knobMode) return;
+    float maxAbsDifference(const ColorChannels& a, const ColorChannels& b) {
+        float result = 0;
+        for (int i=0;i<4;i++) {
+            float test = abs(a[i] - b[i]);
+            if (test > result)
+                result = test;
         }
-        for (int i=0;i<4;i++)
-            lastKnobValues[i] = values[i];
-        setFromKnobs(values);
+        return result;
+    }
+
+
+    void checkIfKnobsMoved(const ColorChannels& values) {
+        float md = maxAbsDifference(values, lastKnobValues);
+        if (md > epsilon || (knobMode && md > analogResolution)) {
+            knobMode = true;
+            for (int i=0;i<4;i++)
+                lastKnobValues[i] = values[i];
+            setFromKnobs(values);
+        }
     }
 
 

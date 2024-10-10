@@ -114,42 +114,64 @@ namespace pipeline {
 
         writeOutput();
     }
+
+
+    ColorChannels getPeriods(const ColorChannels& values) {
+        ColorChannels periods;
+        for (int i=0;i<4;i++)
+            periods[i] = addGateLoadingTime(values[i], gateLoadingTime);
+        return periods;
+    }
     
+
+    ColorChannels getPhases(const ColorChannels& values) {
+        ColorChannels phases = {0, 0, 0, 0};
+        float k = 1e-4;
+        switch (phaseMode) {
+            case 1: 
+                for (int i=0;i<4;i++)
+                    phases[i] = (1.f - values[i]) / 2;
+                break;
+            case 3: 
+                k += values[3];
+            case 2:
+                for (int i=0;i<3;i++)
+                    k += values[i];
+                k = 1.f / k;
+                float sum = 0;
+                for (int i=0;i<4;i++) 
+                    if (values[i] != 0) {
+                        phases[i] = sum;
+                        sum += fmod(sum + values[i] * k, 1.f);
+                    }
+                break;
+        }
+        return phases;
+    }
+
+
+    ColorChannels switchToTransistors(const ColorChannels& values) {
+        ColorChannels results;
+        for (int i=0;i<4;i++) {
+            unsigned tc = transistorConnections[i];
+            results[i] = tc < 4 ? values[tc] : 0;
+        }
+        return results;
+    }
+
 
     void writeOutput() {
         float r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b);        
-        float filteredValues[5] = {
-            filters::outputRed(filters::globalOutput(r)),
-            filters::outputGreen(filters::globalOutput(g)),
-            filters::outputBlue(filters::globalOutput(b)),
-            filters::outputWhite(filters::globalOutput(white)),
-            0.f
+        ColorChannels filteredValues = {
+            filters::outputRed(filters::globalOutput(r)) * scalling[0],
+            filters::outputGreen(filters::globalOutput(g)) * scalling[1],
+            filters::outputBlue(filters::globalOutput(b)) * scalling[2],
+            filters::outputWhite(filters::globalOutput(white)) * scalling[3]
         };
-        ColorChannels outputValues;
+        ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
+        ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
-            outputValues[i] = filteredValues[transistorConnections[i]] * scalling[i];
-        ColorChannels periods, phases;
-        for (int i=0;i<4;i++)
-            periods[i] = addGateLoadingTime(outputValues[i], gateLoadingTime);
-        if (phaseMode == 0)
-            phases = {0, 0, 0, 0};
-        if (phaseMode == 1) {
-            for (int i=0;i<4;i++)
-                phases[i] = (1.f - outputValues[i]) / 2;
-        }
-        if (phaseMode == 2 || phaseMode == 3) {
-            float k = 0;
-            float end = phaseMode == 2 ? 3 : 4;
-            for (int i=0;i<end;i++) k += outputValues[i];
-            k = k == 0 ? 0 : 1.f / k;
-            float sum = 0;
-            for (int i=0;i<4;i++) {
-                phases[i] = sum;
-                sum += fmod(sum + outputValues[i] * k, 1.f);
-            }
-        }
-        for (int i=0;i<4;i++) 
             setLedC(
                 LED_GPIO_OUTPUTS[i], 
                 i, 
