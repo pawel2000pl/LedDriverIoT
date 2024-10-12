@@ -17,7 +17,6 @@ namespace wifi {
     };
 
     std::vector<String> scannedNetworks;
-    std::vector<WiFiConfigEntry> wifiConfiguration;
     std::vector<WiFiConfigEntry> staPriority;
     WiFiConfigEntry apConfig;
     int apChannel = 1;
@@ -171,6 +170,8 @@ namespace wifi {
 
 
     void autoConnectWifi() {
+        if (staPriority.size() == 0 && apEnabled == false)
+            return; //nothing here to do
         fastInit(true);
         if (autoSta()) return;
         if (apEnabled) openAccessPoint();

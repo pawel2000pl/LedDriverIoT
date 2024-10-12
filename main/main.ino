@@ -32,6 +32,7 @@
 #define FAVORITES_FILENAME "/favorites.json"
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 #define JSON_FAVORITES_BUF_SIZE (64*64)
+#define RARE_CHECKS_INTERVAL (15000)
 
 using FavoriteJsonDoc = StaticJsonDocument<JSON_FAVORITES_BUF_SIZE>;
 
@@ -620,7 +621,7 @@ void setup() {
 	configureServer();
 }
 
-unsigned loopNumber = 1;
+unsigned long long int rereChecksTime = 0;
 
 void loop() {
 
@@ -639,9 +640,11 @@ void loop() {
 	taskQueue.clear();
 
 	checkReset();
-	if ((loopNumber++ & 255) == 0) {
+	
+	if (rereChecksTime == 0 || millis() - rereChecksTime > RARE_CHECKS_INTERVAL) {
 		wifi::checkConnection();
 		checkTemperature();
+		rereChecksTime = millis();
 	}
 
 }
