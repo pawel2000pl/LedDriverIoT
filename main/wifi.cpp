@@ -143,13 +143,11 @@ namespace wifi {
     }
 
 
-    void fastInit(bool scan) {
+    void fastInit() {
         if (WiFi.status() == WL_CONNECTED) {
             WiFi.mode(WIFI_STA);
             WiFi.disconnect();
         }
-
-        if (scan) scanNetworks();
 
         WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
         WiFi.setHostname(hostname.c_str());
@@ -172,15 +170,19 @@ namespace wifi {
     void autoConnectWifi() {
         if (staPriority.size() == 0 && apEnabled == false)
             return; //nothing here to do
-        fastInit(true);
+        scanNetworks();
         if (autoSta()) return;
         if (apEnabled) openAccessPoint();
     }
 
 
+    bool connected() {
+        return WiFi.status() == WL_CONNECTED || WiFi.getMode() == WIFI_AP;
+    }
+
+
     void checkConnection() {
-		if (WiFi.status() != WL_CONNECTED && WiFi.getMode() != WIFI_AP)
-			autoConnectWifi(); 
+		if (!connected()) autoConnectWifi(); 
     }
 
 }

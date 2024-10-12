@@ -9,6 +9,14 @@ const int FAN_PIN_MAIN = D2;
 const int FAN_PIN_ALT = D4;
 
 
+float avgAnalog(int pin, unsigned count) {
+	unsigned long sum = 0;
+	for (unsigned i=0;i<count;i++)
+		sum += analogRead(pin);
+	return (float)sum / (float)count;
+}
+
+
 float InputHardwareAction::read() const {
 		if (!enabled) return 0.f;
 		for (auto& pin : hz_pins)
@@ -23,7 +31,7 @@ float InputHardwareAction::read() const {
 		}
 		pinMode(read_pin, INPUT);
 		delayMicroseconds(RELAXATION_DELAY);
-		return (float)analogRead(read_pin) / float(ANALOG_READ_MAX);
+		return avgAnalog(read_pin, 5) / float(ANALOG_READ_MAX);
 }
 
 

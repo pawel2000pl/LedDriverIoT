@@ -63,6 +63,16 @@ void sendOk() {
 }
 
 
+
+void sendCacheControlHeader() {
+    int minAge = 432000; 
+    int maxAge = 604800; 
+    int randomAge = random(minAge, maxAge + 1);
+    String headerValue = "max-age=" + String(randomAge);
+    server.sendHeader("Cache-Control", headerValue);
+}
+
+
 int sendDecompressedData(WebServer& server, const char* content_type, const void* compressed_buffer, size_t compressed_size, size_t max_decompressed_size) {
 		uint8_t* decompressed_buffer = new uint8_t[max_decompressed_size+1];
 		size_t decompressed_size = fastlz_decompress(compressed_buffer, compressed_size, decompressed_buffer, max_decompressed_size);
@@ -72,7 +82,7 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
 				return 0;
 		}
 		decompressed_buffer[decompressed_size] = 0;
-		server.sendHeader("Cache-Control", "max-age=604800");
+		sendCacheControlHeader();
 		server.send(200, content_type, (const char*)decompressed_buffer);
 		delete [] decompressed_buffer;
 		return 1;
@@ -521,7 +531,7 @@ void simpleMode() {
 
 void configureServer() {
 	server.enableDelay(false);
-	server.on("/", HTTP_GET, [&server](){server.sendHeader("Cache-Control", "max-age=604800"); server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
+	server.on("/", HTTP_GET, [&server](){sendCacheControlHeader(); server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
 	server.on("/config.json", HTTP_GET, sendConfiguration);
 	server.on("/reset_configuration", HTTP_GET, [&server](){resetConfiguration(); sendOk();});
 	server.on("/favicon.ico", HTTP_GET, [&server](){sendDecompressedData(server, resource_favicon_svg.mime_type, resource_favicon_svg.data, resource_favicon_svg.size, resource_favicon_svg.decompressed_size);});
@@ -607,6 +617,7 @@ void checkTemperature() {
 
 void setup() {
 	Serial.begin(115200);  
+	randomSeed(29615);
 	detectHardware();
 	pinMode(RESET_CONFIGURATION_PIN, INPUT_PULLUP);
 	initTemperature();
@@ -617,23 +628,25 @@ void setup() {
 	loadDefautltConfiguration();
 	loadDefautltFavorites();
 	loadConfiguration();
-	wifi::fastInit(false);
+	wifi::fastInit();
 	configureServer();
+	knobs::check(true);
+	knobs::attachTimer();
 }
 
-unsigned long long int rereChecksTime = 0;
+unsigned long long int rareChecksTime = 0;
 
 void loop() {
 
-	knobs::check();
-
-	unsigned long long int ts = 0;
-	unsigned i = 0;
-	do {
-		unsigned long long int t = millis();
-		server.handleClient();
-		ts = millis() - t;
-	} while (ts > 1 && i++ < 100);
+	if (wifi::connected()) {
+		unsigned long long int ts = 0;
+		unsigned i = 0;
+		do {
+			unsigned long long int t = millis();
+			server.handleClient();
+			ts = millis() - t;
+		} while (ts > 1 && i++ < 100);
+	}
 
 	for (auto fun: taskQueue) 
 		fun();
@@ -641,10 +654,10 @@ void loop() {
 
 	checkReset();
 	
-	if (rereChecksTime == 0 || millis() - rereChecksTime > RARE_CHECKS_INTERVAL) {
+	if (rareChecksTime == 0 || millis() - rareChecksTime > RARE_CHECKS_INTERVAL) {
 		wifi::checkConnection();
 		checkTemperature();
-		rereChecksTime = millis();
+		rareChecksTime = millis();
 	}
 
 }

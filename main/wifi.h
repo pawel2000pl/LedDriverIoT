@@ -13,8 +13,9 @@ namespace wifi {
     void updateConfiguration(const JsonVariant& configuration);
     void scanNetworks();
     bool connectToNetwork(String ssid, String password);
-    void fastInit(bool scan);
+    void fastInit();
     bool autoSta();
+    bool connected();
     void openAccessPoint();
     void autoConnectWifi();
     void checkConnection();

@@ -22,6 +22,7 @@ namespace knobs {
     const char* colorspaces[] = {"hsv", "hsl", "rgb"};
     const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
         
+    hw_timer_t * timer = NULL;
 
     void turnOff() {
         knobMode = false;
@@ -67,9 +68,9 @@ namespace knobs {
     }
 
 
-    void checkIfKnobsMoved(const ColorChannels& values) {
+    void checkIfKnobsMoved(const ColorChannels& values, bool force) {
         float md = maxAbsDifference(values, lastKnobValues);
-        if (md > epsilon || (knobMode && md > analogResolution)) {
+        if (md > epsilon || (knobMode && md > analogResolution) || force) {
             knobMode = true;
             for (int i=0;i<4;i++)
                 lastKnobValues[i] = values[i];
@@ -78,11 +79,26 @@ namespace knobs {
     }
 
 
-    void check() {
+    void check(bool force) {
         ColorChannels values;
+        float cReduction = force ? 1.f : reduction;
+        float opReductionc = 1.f - cReduction;
         for (int i=0;i<4;i++)
-            knobsAmortisation[i] = reduction * POTENTIOMETER_HARDWARE_ACTIONS[i].read() + (1.f-reduction) * knobsAmortisation[i];
-        checkIfKnobsMoved(knobsAmortisation);
+            knobsAmortisation[i] = cReduction * POTENTIOMETER_HARDWARE_ACTIONS[i].read() + opReductionc * knobsAmortisation[i];
+        checkIfKnobsMoved(knobsAmortisation, force);
+    }
+
+
+    void ARDUINO_ISR_ATTR timerCheck() {
+        check(false);
+    }
+
+
+    void attachTimer() {
+        if (timer) return;
+        timer = timerBegin(1000000);
+        timerAttachInterrupt(timer, &timerCheck);
+        timerAlarm(timer, 10000, true, 0);
     }
 
 }

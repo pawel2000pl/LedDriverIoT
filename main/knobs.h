@@ -7,6 +7,7 @@ namespace knobs {
     
     void updateConfiguration(const JsonVariantConst& configuration);
     void turnOff();
-    void check();
+    void check(bool force=false);
+    void attachTimer();
 
 }
