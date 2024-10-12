@@ -51,8 +51,11 @@
                         <p>Currently scanned networks</p>
                         <table id="networks-list"></table>
                         <p>
-                            <button onclick="getNetworks()">Refresh list</button>                            
-                        </p>
+                            <button onclick="getNetworks()">Refresh list</button>    
+                        </p> 
+                        <p>
+                            Warning: scanning (refreshing) networks might turn off access point for a while.
+                        </p>                       
                     </p>
                     <h3>Access point</h3>
                     <p> 
@@ -62,7 +65,8 @@
                         <p>
                             <div><span>SSID:</span><input id="ap-ssid"></div>
                             <div><span>Password:</span><input id="ap-password" type="password"></div>    
-                            <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>                        
+                            <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>
+                            <div>Channel (set 0 for auto):<input id="ap-channel" type="number" min="0" max="13" value="1"></div>
                         </p>
                         <p>
                             <div><span>IP Address:</span><input id="ap-address"></div>

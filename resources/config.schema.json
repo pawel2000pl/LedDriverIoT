@@ -34,6 +34,11 @@
                     "hidden": "boolean",
                     "ssid": "wifi-ssid",
                     "password": "ap-password",
+                    "channel": {
+                        "type": "integer",
+                        "min_value": 0,
+                        "max_value": 13
+                    },
                     "address": "ip-address",
                     "gateway": "ip-address",
                     "subnet": "ip-address"

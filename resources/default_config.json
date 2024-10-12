@@ -3,13 +3,8 @@
         "hostname": "led-driver",
         "sta_priority": [
             {
-                "ssid": "router0",
-                "password": "password0",
-                "hidden": false
-            },
-            {
-                "ssid": "router1",
-                "password": "password1",
+                "ssid": "LedDriver",
+                "password": "ledDriver",
                 "hidden": false
             }
         ],
@@ -18,6 +13,7 @@
             "hidden": false,
             "ssid": "LedDriver",
             "password": "passwordLed",
+            "channel": 0,
             "address": "192.168.1.1",
             "gateway": "192.168.1.254",
             "subnet": "255.255.255.0"

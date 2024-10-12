@@ -96,8 +96,9 @@ Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
 });
 
 
-async function getNetworks() {
-    await refreshNetworks();
+async function getNetworks(rescan=true) {
+    if (rescan)
+        await refreshNetworks();
     const response = await fetch("/networks.json");
     const data = await response.json();
     const listTable = $id('networks-list');
@@ -186,4 +187,4 @@ createRadioTable(
 );
 
 configPromise.then(()=>fillConfig(config));
-configPromise.then(getNetworks);
+configPromise.then(()=>getNetworks(false));

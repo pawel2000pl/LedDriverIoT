@@ -20,6 +20,7 @@ namespace wifi {
     std::vector<WiFiConfigEntry> wifiConfiguration;
     std::vector<WiFiConfigEntry> staPriority;
     WiFiConfigEntry apConfig;
+    int apChannel = 1;
     IPAddress apAddress, apGateway, apSubnet;
     bool apEnabled = true;
     bool apHidden = false;
@@ -36,6 +37,7 @@ namespace wifi {
         apConfig.ssid = apConfigJson["ssid"].as<String>();
         apConfig.password = apConfigJson["password"].as<String>();
         apConfig.hidden = apConfigJson["hidden"].as<String>();
+        apChannel = apConfigJson["channel"].as<int>();
         apEnabled = apConfigJson["enabled"].as<bool>();
 
         const auto& staPriorityJson = configuration["wifi"]["sta_priority"];
@@ -129,7 +131,7 @@ namespace wifi {
         WiFi.mode(WIFI_AP);
         WiFi.softAPsetHostname(hostname.c_str());
         WiFi.softAPConfig(apAddress, apGateway, apSubnet);
-        WiFi.softAP(apConfig.ssid, apConfig.password, bestApChannel(), apConfig.hidden, 16);
+        WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4);
     }
 
 
