@@ -77,8 +77,8 @@ The file `main.ino.bin` can be uploaded on `Configuration` page in `Update` tab.
 
 ## How to connect first time
 
-* Scan networks and find network with SSID `LedDriver` and connect to them with `ledDriver` password.
+* Scan networks and find network with SSID `LedDriver` and connect to them with `ledDriver` password. Then type in browser `http://192.168.1.1`.
 * If you do not see any network with SSID `LedDriver`, create it on your phone with password `ledDriver` and restart the driver.
 
-Unfortunately, there is no way to predetermine driver's IP address. <br>
+Unfortunately, there is no way to predetermine driver's IP address in network other than its own AccessPoint. <br>
 And **NEVER** use *https* protocol.
