@@ -12,8 +12,8 @@
             "enabled": true,
             "hidden": false,
             "ssid": "LedDriver",
-            "password": "passwordLed",
-            "channel": 0,
+            "password": "ledDriver",
+            "channel": 1,
             "address": "192.168.1.1",
             "gateway": "192.168.1.254",
             "subnet": "255.255.255.0"
@@ -210,12 +210,12 @@
             "blue": 1.0,
             "white": 1.0
         },
-        "phaseMode": 1,
-        "frequency": 32000,
+        "phaseMode": 2,
+        "frequency": 3800,
         "knobActivateDelta": 0.01,
-        "gateLoadingTime": 0.6,
+        "gateLoadingTime": 0.55,
         "enbleWhiteKnob": true,
-        "invertOutputs": false,
-        "knobsNoisesReduction": 2.4
+        "invertOutputs": true,
+        "knobsNoisesReduction": 1.7
     }
 }
