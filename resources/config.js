@@ -116,6 +116,7 @@ function fillConfig(config) {
     $id('invert-outputs').checked = config.hardware.invertOutputs;
 }
 
+
 $id('save-settings-btn').addEventListener('click', ()=>{config = dumpConfig(); saveConfig();});
 $id('revert-settings-btn').addEventListener('click', ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));});
 $id('default-settings-btn').addEventListener('click', async ()=>{
@@ -138,9 +139,11 @@ $id('import-settings-btn').addEventListener('click', async ()=>{
     }
 });
 
+
 function refreshNetworks() {
     return fetch('/refresh_networks');
 }
+
 
 function openAccessPoint() {
     fetch('/open_access_point');

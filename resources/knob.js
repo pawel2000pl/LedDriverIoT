@@ -17,6 +17,7 @@ const array2color = function(c) {
     return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
 };
 
+
 class Knob extends HTMLElement {
         
     constructor(radius=128, knobRadius=20, width=32, angle=5) {
@@ -37,7 +38,6 @@ class Knob extends HTMLElement {
         this.__queues = {createMap: false, drawBackground: false, render: false};
         this.setSize(radius, knobRadius, width, angle);
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__queue(false, true, true);});    
-        //event
         this.onChangeValue = undefined;
         this.__queue(true, true, true);
     }
@@ -255,6 +255,7 @@ class Knob extends HTMLElement {
         this.__queue(false, true, true);
     }
 
+
     get gradient() {
         return this.__gradient;
     }
@@ -281,20 +282,24 @@ class Knob extends HTMLElement {
         this.__queue(false, false, true);
     }
     
+
     get minValue() {
         return this.__minValue;
     }
+
     
     set maxValue(value) {
         this.__maxValue = value;
         this.__constrainValues();
         this.__queue(false, false, true);
     }
+    
 
     get maxValue() {
         return this.__maxValue;
     }
 
 };
+
 
 customElements.define('knob-input', Knob);

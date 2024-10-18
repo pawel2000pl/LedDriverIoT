@@ -98,7 +98,7 @@ namespace knobs {
         if (timer) return;
         timer = timerBegin(1000000);
         timerAttachInterrupt(timer, &timerCheck);
-        timerAlarm(timer, 10000, true, 0);
+        timerAlarm(timer, 16667, true, 0);
     }
 
 }

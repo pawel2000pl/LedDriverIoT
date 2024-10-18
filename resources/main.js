@@ -3,6 +3,7 @@
 var prevSendData = '';
 var colorFunctions = {set:()=>{}, get:()=>{return [0,0,0,0]}};
 
+
 async function setColors(c1, c2, c3, w) {
     const data = JSON.stringify([c1, c2, c3, w]);
     if (data === prevSendData) return;

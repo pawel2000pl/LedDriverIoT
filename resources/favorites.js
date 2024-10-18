@@ -2,6 +2,7 @@
 
 const favoritesDiv = $id('favorites-div');
 
+
 function favoriteColorFactory(paramColor=null, white=false) {
     var getFunction = ()=>{return "000000000";};
     const div = $new('div');
@@ -44,11 +45,13 @@ function favoriteColorFactory(paramColor=null, white=false) {
     return div;
 }
 
+
 const favoritePromise = (async ()=>{
     const response = await fetch('get_favorites');
     const data = await response.json();
     return data;
 })();
+
 
 Promise.all([configPromise, favoritePromise]).then(([config, favorites])=>{
     componentList(favoritesDiv, favoriteColorFactory);

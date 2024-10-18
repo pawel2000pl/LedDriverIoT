@@ -9,8 +9,8 @@
     
     <body></body>
         <p class="upper-menu">
-            <button class="main-page-button" onclick="window.location = '/favorites.html';">Favorites</button>
-            <button class="main-page-button configure-button" onclick="window.location = '/config.html';">Configure</button>            
+            <button class="main-page-button" link="/favorites.html">Favorites</button>
+            <button class="main-page-button configure-button" link="/config.html">Configure</button>            
         </p>
         <div id="color-knob" class="hide-with-favorites"></div>
         
@@ -22,11 +22,8 @@
             </p>
         </noscript>
         
-        <script>
-            const $id = (id)=>document.getElementById(id);
-            const $new = (...args)=>document.createElement(...args);
-        </script>
-        
+
+        <script src="/utils.js"></script>
         <script src="/knob.js"></script>
         <script src="/conversions.js"></script>
         <script src="/knobPanels.js"></script>

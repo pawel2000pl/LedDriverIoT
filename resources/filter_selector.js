@@ -1,3 +1,4 @@
+"use strict";
 
 Array.from(document.getElementsByTagName('filterselector')).forEach((element)=>{
     const k = 0.05;
