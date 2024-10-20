@@ -4,6 +4,7 @@
 #include "ledc_driver.h"
 #include "filter_functions.h"
 #include "conversions.h"
+#include "hardware_configuration.h"
 
 std::vector<float> toFloatVector(const JsonVariantConst& source) {
     std::vector<float> result;
@@ -21,8 +22,6 @@ namespace outputs {
     float saturation = 0;
     float value = 0;
     float white = 0;
-
-    const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
 
     bool invertOutputs = 0;
     int phaseMode = 0;
@@ -120,6 +119,12 @@ namespace outputs {
     }
 
 
+    void write2812(float r, float g, float b) {
+        if (hardware::detectedHardware.ws2812 >= 0)
+            neopixelWrite(hardware::detectedHardware.ws2812,round(255*g),round(255*r),round(255*b));
+    }
+
+
     void writeOutput() {
         float r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b);        
@@ -129,11 +134,12 @@ namespace outputs {
             filters::outputBlue(filters::globalOutput(b)) * scalling[2],
             filters::outputWhite(filters::globalOutput(white)) * scalling[3]
         };
+        write2812(filteredValues[0], filteredValues[1], filteredValues[2]);
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
             setLedC(
-                LED_GPIO_OUTPUTS[i], 
+                hardware::detectedHardware.outputs[i], 
                 i, 
                 periods[i], 
                 phases[i],

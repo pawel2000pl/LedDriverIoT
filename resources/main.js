@@ -101,12 +101,10 @@ Array.from(document.getElementsByClassName('show-favorites-button')).forEach((bu
 });
 
 
-fetch('/version_info.json').then(async (response)=>{
-    const data = await response.json();
-    const fetchedVersion = data.version + " [" + data.date + " " + data.time + "]";
-    if (localStorage.version !== fetchedVersion) {
+fetchVersion().then(async ([version, _])=>{
+    if (localStorage.version !== version) {
         await fetch("/invalidate_cache");
-        localStorage.version = fetchedVersion;
+        localStorage.version = version;
     }
 });
 

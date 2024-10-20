@@ -38,7 +38,7 @@ $id('update-form').addEventListener('submit', function(e) {
 });
 
 
-fetch('/version_info.json').then(async (response)=>{
-    const data = await response.json();
-    $id('version-p').textContent = "Current version: " + data.version + " [" + data.date + " " + data.time + "]";
+fetchVersion().then(([version, hardware])=>{
+    $id('version-span').textContent = "Current version: " + version;
+    $id('hardware-span').textContent = "Hardware: " + hardware;
 });

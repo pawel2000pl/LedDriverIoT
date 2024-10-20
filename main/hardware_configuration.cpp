@@ -1,157 +1,238 @@
 #include <esp32-hal-gpio.h>
 #include "hardware_configuration.h"
 
-const int ANALOG_READ_MAIN = A0;
-const int THERIMSTOR_CHECKER = A1;
-const int ANALOG_READ_SECONDARY[] = {A0, A1, A2};
-const int ANALOG_SELECT[] = {D4, D5, D6};
-const int FAN_PIN_MAIN = D2;
-const int FAN_PIN_ALT = D4;
+namespace hardware {
+
+	const int CLOCK_32_PINS[] = {0, 1};
+	DetectedHardware detectedHardware;
 
 
-float avgAnalog(int pin, unsigned count) {
-	unsigned long sum = 0;
-	for (unsigned i=0;i<count;i++)
-		sum += analogRead(pin);
-	return (float)sum / (float)count;
-}
+	const PinSets XiaoConfiguration = {
+		.analogReadMain = 2,
+		.thermistorChecker = 3,
+		.analogReadSecondary = {2, 3, 4},
+		.analogSelect = {6, 7, 21},
+		.fanPinMain = 4,
+		.fanPinAlt = 6,
+		.outputs = {20, 8, 9, 10},
+		.resetPin = 5,
+		.ws2812 = -1
+	};
 
 
-float InputHardwareAction::read() const {
-		if (!enabled) return 0.f;
-		for (auto& pin : hz_pins)
-				pinMode(pin, INPUT);
-		for (auto& pin : high_pins) {
-				pinMode(pin, OUTPUT);
-				digitalWrite(pin, HIGH);
-		}
-		for (auto& pin : low_pins) {
-				pinMode(pin, OUTPUT);
-				digitalWrite(pin, LOW);
-		}
-		pinMode(read_pin, INPUT);
-		delayMicroseconds(RELAXATION_DELAY);
-		return avgAnalog(read_pin, 5) / float(ANALOG_READ_MAX);
-}
+	const PinSets WaveshareConfiguration = {
+		.analogReadMain = 0,
+		.thermistorChecker = 4,
+		.analogReadSecondary = {0, 1, 2, 3},
+		.analogSelect = {19, 20, 21},
+		.fanPinMain = 18,
+		.fanPinAlt = 18,
+		.outputs = {6, 7, 8, 9},
+		.resetPin = 5,
+		.ws2812 = 10
+	};
 
 
-std::array<InputHardwareAction, 4> POTENTIOMETER_HARDWARE_ACTIONS;
-std::array<InputHardwareAction, 4> THERMISTOR_HARDWARE_ACTIONS;
-int FAN_PIN;
-
-
-bool analogHasPotentiometer(int pin) {
-	pinMode(pin, INPUT_PULLDOWN);
-	delayMicroseconds(RELAXATION_PULL_DELAY);
-	unsigned v1 = analogRead(pin);
-	pinMode(pin, INPUT_PULLUP);
-	delayMicroseconds(RELAXATION_PULL_DELAY);
-	unsigned v2 = analogRead(pin);
-	return (v1 > ANALOG_READ_MAX * 0.3f) || (v2 < ANALOG_READ_MAX * 0.7f);
-}
-
-
-bool multiplexerAvailable() {
-	pinMode(ANALOG_SELECT[0], INPUT_PULLUP);
-	pinMode(ANALOG_SELECT[1], INPUT_PULLDOWN);
-	pinMode(ANALOG_SELECT[2], OUTPUT);
-	digitalWrite(ANALOG_SELECT[2], HIGH);
-	delayMicroseconds(RELAXATION_PULL_DELAY);
-	int v1 = digitalRead(ANALOG_SELECT[0]);
-	int v2 = digitalRead(ANALOG_SELECT[1]);
-	digitalWrite(ANALOG_SELECT[2], LOW);
-	delayMicroseconds(RELAXATION_PULL_DELAY);
-	int v3 = !digitalRead(ANALOG_SELECT[0]);
-	int v4 = !digitalRead(ANALOG_SELECT[1]);
-	return !(v1 && v2 && v3 && v4);
-}
-
-
-void setAnalog(int x) {
-	for (unsigned i=0;i<3;i++) {
-		pinMode(ANALOG_SELECT[i], OUTPUT);
-		digitalWrite(ANALOG_SELECT[i], (x & (1 << i)) ? HIGH : LOW);
+	float avgAnalog(int pin, unsigned count) {
+		unsigned long sum = 0;
+		for (unsigned i=0;i<count;i++)
+			sum += analogRead(pin);
+		return (float)sum / (float)count;
 	}
-	delayMicroseconds(RELAXATION_DELAY);
-}
 
 
-std::vector<int> getAnalogSelectPins(int x, bool value) {
-	std::vector<int> result;
-	result.reserve(4);
-	for (unsigned i=0;i<3;i++) 
-		if (value == !!(x & (1 << i)))
-			result.push_back(ANALOG_SELECT[i]);
-	return result;
-}
+	float InputHardwareAction::read() const {
+			if (!enabled) return 0.f;
+			for (auto& pin : hz_pins)
+					pinMode(pin, INPUT);
+			for (auto& pin : high_pins) {
+					pinMode(pin, OUTPUT);
+					digitalWrite(pin, HIGH);
+			}
+			for (auto& pin : low_pins) {
+					pinMode(pin, OUTPUT);
+					digitalWrite(pin, LOW);
+			}
+			pinMode(read_pin, INPUT);
+			delayMicroseconds(RELAXATION_DELAY);
+			return avgAnalog(read_pin, 5) / float(ANALOG_READ_MAX);
+	}
 
 
-void detectHardware() {
-
-	analogReadResolution(12);
-
-	if (multiplexerAvailable()) {
-		unsigned x = 0;
-		FAN_PIN = FAN_PIN_MAIN;
-		pinMode(THERIMSTOR_CHECKER, INPUT_PULLUP);
+	bool analogHasPotentiometer(int pin) {
+		pinMode(pin, INPUT_PULLDOWN);
 		delayMicroseconds(RELAXATION_PULL_DELAY);
-		bool thermistorsAvailable = digitalRead(THERIMSTOR_CHECKER) == HIGH;
-
-		for (unsigned i=0;i<4;i++) {
-			setAnalog(x);
-			THERMISTOR_HARDWARE_ACTIONS[i] = (InputHardwareAction){
-				.enabled = analogHasPotentiometer(ANALOG_READ_MAIN),
-				.read_pin = ANALOG_READ_MAIN,
-				.hz_pins = {},
-				.low_pins = getAnalogSelectPins(x, false),
-				.high_pins = getAnalogSelectPins(x, true)
-			};
-			if(thermistorsAvailable) x++;
-		}
-
-		pinMode(THERIMSTOR_CHECKER, INPUT_PULLDOWN);
+		unsigned v1 = analogRead(pin);
+		pinMode(pin, INPUT_PULLUP);
 		delayMicroseconds(RELAXATION_PULL_DELAY);
-		bool potentiometersAvailable = digitalRead(THERIMSTOR_CHECKER) == LOW;
+		unsigned v2 = analogRead(pin);
+		return (v1 > ANALOG_READ_MAX * 0.3f) || (v2 < ANALOG_READ_MAX * 0.7f);
+	}
 
-		for (unsigned i=0;i<4;i++) {
-			setAnalog(x);
-			POTENTIOMETER_HARDWARE_ACTIONS[i] = (InputHardwareAction){
-				.enabled = potentiometersAvailable && analogHasPotentiometer(ANALOG_READ_MAIN),
-				.read_pin = ANALOG_READ_MAIN,
-				.hz_pins = {},
-				.low_pins = getAnalogSelectPins(x, false),
-				.high_pins = getAnalogSelectPins(x, true)
-			};
-			if (potentiometersAvailable) x++;
-		}
 
-		pinMode(THERIMSTOR_CHECKER, INPUT);
-		setAnalog(0);
+	bool isWaveshare() {
+		unsigned minValue = (unsigned)(-1);
+		unsigned maxValue = 0;
+		const auto readMinMax = [&]() {
+			unsigned long long int t0 = micros();
+			while (micros() - t0 < 15) {
+				unsigned value = analogRead(CLOCK_32_PINS[1]);
+				if (value < minValue) minValue = value;
+				if (value > maxValue) maxValue = value;
+			}
+		};
+		pinMode(CLOCK_32_PINS[1], INPUT_PULLDOWN);
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pinMode(CLOCK_32_PINS[0], HIGH);
+		readMinMax();
+		pinMode(CLOCK_32_PINS[0], LOW);
+		readMinMax();
 
-	} else {
-		FAN_PIN = FAN_PIN_ALT;
+		pinMode(CLOCK_32_PINS[0], INPUT);
+		pinMode(CLOCK_32_PINS[1], INPUT);
+		return maxValue - minValue < ANALOG_READ_MAX / 16;
+	}
 
+
+	int InputHardwareAction::getPin(int disabledValue) const {
+		return enabled ? read_pin : disabledValue;
+	}
+
+
+	String DetectedHardware::getCode() const {
+		const char charset[] = "0123456789abcdefghijklmnopqrstu#";
+		int numbers[] = {
+			fanPin, resetPin, ws2812,
+			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(), 
+			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(), 
+			outputs[0], outputs[1], outputs[2], outputs[3],
+			-1
+		};
+		char buf[64];
+		int i = -1;
+		while (numbers[++i] >= 0)
+			buf[i] = charset[numbers[i] & 31];
+		buf[i] = 0;
+		return String(buf);
+	}
+
+
+	bool PinSets::multiplexerAvailable() const {
+		pinMode(analogSelect[0], INPUT_PULLUP);
+		pinMode(analogSelect[1], INPUT_PULLDOWN);
+		pinMode(analogSelect[2], OUTPUT);
+		digitalWrite(analogSelect[2], HIGH);
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+		int v1 = digitalRead(analogSelect[0]);
+		int v2 = digitalRead(analogSelect[1]);
+		digitalWrite(analogSelect[2], LOW);
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+		int v3 = !digitalRead(analogSelect[0]);
+		int v4 = !digitalRead(analogSelect[1]);
+		return !(v1 && v2 && v3 && v4);
+	}
+
+
+	void PinSets::setAnalog(int x) const {
 		for (unsigned i=0;i<3;i++) {
-			POTENTIOMETER_HARDWARE_ACTIONS[i] = (InputHardwareAction){
-				.enabled = analogHasPotentiometer(ANALOG_READ_MAIN),
-				.read_pin = ANALOG_READ_SECONDARY[i],
-				.hz_pins = {},
-				.low_pins = {},
-				.high_pins = {}
-			};    
+			pinMode(analogSelect[i], OUTPUT);
+			digitalWrite(analogSelect[i], (x & (1 << i)) ? HIGH : LOW);
 		}
-
-		POTENTIOMETER_HARDWARE_ACTIONS[3].enabled = false;
-		for (unsigned i=0;i<4;i++)
-			THERMISTOR_HARDWARE_ACTIONS[i].enabled = false;
-		for (unsigned i=0;i<3;i++)
-			pinMode(ANALOG_SELECT[i], INPUT);
+		delayMicroseconds(RELAXATION_DELAY);
 	}
 
 
-	pinMode(FAN_PIN, OUTPUT);
-	digitalWrite(FAN_PIN, LOW);
-	delayMicroseconds(RELAXATION_DELAY);
+	std::vector<int> PinSets::getAnalogSelectPins(int x, bool value) const {
+		std::vector<int> result;
+		result.reserve(4);
+		for (unsigned i=0;i<3;i++) 
+			if (value == !!(x & (1 << i)))
+				result.push_back(analogSelect[i]);
+		return result;
+	}
+
+
+	DetectedHardware PinSets::detect() const {
+		DetectedHardware result;
+
+		if (multiplexerAvailable()) {
+			unsigned x = 0;
+			result.fanPin = fanPinMain;
+			pinMode(thermistorChecker, INPUT_PULLUP);
+			delayMicroseconds(RELAXATION_PULL_DELAY);
+			bool thermistorsAvailable = digitalRead(thermistorChecker) == HIGH;
+
+			for (unsigned i=0;i<4;i++) {
+				setAnalog(x);
+				result.thermistors[i] = (InputHardwareAction){
+					.enabled = analogHasPotentiometer(analogReadMain),
+					.read_pin = analogReadMain,
+					.hz_pins = {},
+					.low_pins = getAnalogSelectPins(x, false),
+					.high_pins = getAnalogSelectPins(x, true)
+				};
+				if(thermistorsAvailable) x++;
+			}
+
+			pinMode(thermistorChecker, INPUT_PULLDOWN);
+			delayMicroseconds(RELAXATION_PULL_DELAY);
+			bool potentiometersAvailable = digitalRead(thermistorChecker) == LOW;
+
+			for (unsigned i=0;i<4;i++) {
+				setAnalog(x);
+				result.potentiometers[i] = (InputHardwareAction){
+					.enabled = potentiometersAvailable && analogHasPotentiometer(analogReadMain),
+					.read_pin = analogReadMain,
+					.hz_pins = {},
+					.low_pins = getAnalogSelectPins(x, false),
+					.high_pins = getAnalogSelectPins(x, true)
+				};
+				if (potentiometersAvailable) x++;
+			}
+
+			pinMode(thermistorChecker, INPUT);
+			setAnalog(0);
+
+		} else {
+			result.fanPin = fanPinAlt;
+
+			unsigned analogReadSecondarySize = analogReadSecondary.size();
+			if (analogReadSecondarySize > 4) analogReadSecondarySize = 4;
+			for (unsigned i=0;i<analogReadSecondarySize;i++) {
+				result.potentiometers[i] = (InputHardwareAction){
+					.enabled = analogHasPotentiometer(analogReadMain),
+					.read_pin = analogReadSecondary[i],
+					.hz_pins = {},
+					.low_pins = {},
+					.high_pins = {}
+				};    
+			}
+
+			for (unsigned i=analogReadSecondarySize;i<4;i++)
+				result.potentiometers[i].enabled = false;
+			for (unsigned i=0;i<4;i++)
+				result.thermistors[i].enabled = false;
+			for (unsigned i=0;i<3;i++)
+				pinMode(analogSelect[i], INPUT);
+		}
+
+		result.ws2812 = ws2812;
+		result.resetPin = resetPin;
+		pinMode(result.resetPin, INPUT_PULLUP);
+		pinMode(result.fanPin, OUTPUT);
+		digitalWrite(result.fanPin, LOW);
+		delayMicroseconds(RELAXATION_DELAY);
+
+		for (unsigned i=0;i<4;i++)
+			result.outputs[i] = outputs[i];
+
+		return result;
+	}
+
+
+	void detectHardware() {
+		analogReadResolution(12);
+		detectedHardware = isWaveshare() ? WaveshareConfiguration.detect() : XiaoConfiguration.detect();
+	}
+
 }
-
-
