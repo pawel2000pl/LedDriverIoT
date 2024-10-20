@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2024-10-04T21:20:13.135Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.5.3 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="CWWfkd52lRuIo7NG5PIB" version="24.5.3" type="device">
+<mxfile host="Electron" modified="2024-10-20T20:28:43.701Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.5.3 Chrome/124.0.6367.207 Electron/30.0.6 Safari/537.36" etag="188IHu_BVtsGCPLtr9Z9" version="24.5.3" type="device">
   <diagram name="Strona-1" id="0Ev7IAlZrVk7Ra4cTtEh">
-    <mxGraphModel dx="2261" dy="1995" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1464" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -284,7 +284,9 @@
             <mxPoint x="780" y="410" as="sourcePoint" />
             <mxPoint x="640" y="190" as="targetPoint" />
             <Array as="points">
-              <mxPoint x="680" y="410" />
+              <mxPoint x="700" y="410" />
+              <mxPoint x="700" y="300" />
+              <mxPoint x="700" y="190" />
               <mxPoint x="680" y="190" />
             </Array>
           </mxGeometry>
@@ -1003,11 +1005,13 @@
             <mxPoint x="270" y="-240" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="U66vkYV3O2LM60QapkJo-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.398;entryY=-1.043;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=oval;endFill=1;startArrow=oval;startFill=1;" parent="1" source="IMc7E1lK8ftaR7XzuRuG-5" target="IMc7E1lK8ftaR7XzuRuG-5" edge="1">
+        <mxCell id="U66vkYV3O2LM60QapkJo-1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;endArrow=none;endFill=0;startArrow=oval;startFill=1;entryX=0.999;entryY=0.446;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="IMc7E1lK8ftaR7XzuRuG-5" target="t8IScohJZR8uxR-3xso5-1" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="681" y="470" />
+              <mxPoint x="680" y="470" />
+              <mxPoint x="680" y="211" />
             </Array>
+            <mxPoint x="710" y="420" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="5xjaWSJQkVltcLWWzSKZ-1" value="&lt;span style=&quot;background-color: initial;&quot;&gt;10&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;kOhm&lt;/span&gt;" style="pointerEvents=1;verticalLabelPosition=middle;shadow=0;dashed=0;align=center;html=1;verticalAlign=middle;shape=mxgraph.electrical.resistors.resistor_1;direction=south;spacing=50;spacingRight=0;labelPosition=center;textDirection=vertical-rl;rotation=-90;" parent="1" vertex="1">
@@ -1037,10 +1041,10 @@
         <mxCell id="5xjaWSJQkVltcLWWzSKZ-10" value="Resistors in series with potentiometers can be replaces&amp;nbsp;&lt;div&gt;with one with the&amp;nbsp;equivalent resistance&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontFamily=Helvetica;fontSize=11;fontColor=default;labelBackgroundColor=default;" parent="1" vertex="1">
           <mxGeometry x="100" y="440" width="300" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="E7v2-QRYvuSQK1o5H7og-1" value="Example application of ESP32C3 in RGBW Led controller&lt;div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-size: 14px; font-weight: 400; background-color: initial;&quot;&gt;Paweł Bielecki 2024&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px; font-weight: 400;&quot;&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;pbielecki2000@gmail.com&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;https://github.com/pawel2000pl/LedDriverIoT&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1" vertex="1" parent="1">
+        <mxCell id="E7v2-QRYvuSQK1o5H7og-1" value="Example application of ESP32C3 in RGBW Led controller&lt;div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;font-size: 14px; font-weight: 400; background-color: initial;&quot;&gt;Paweł Bielecki 2024&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px; font-weight: 400;&quot;&gt;&lt;div style=&quot;text-align: left;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;pbielecki2000@gmail.com&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;text-align: left;&quot;&gt;https://github.com/pawel2000pl/LedDriverIoT&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1" parent="1" vertex="1">
           <mxGeometry x="-250" y="-510" width="480" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="E7v2-QRYvuSQK1o5H7og-2" value="&lt;div&gt;&lt;div style=&quot;text-align: left; font-size: 14px;&quot;&gt;&lt;br style=&quot;font-size: 14px;&quot;&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" vertex="1" parent="1">
+        <mxCell id="E7v2-QRYvuSQK1o5H7og-2" value="&lt;div&gt;&lt;div style=&quot;text-align: left; font-size: 14px;&quot;&gt;&lt;br style=&quot;font-size: 14px;&quot;&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;" parent="1" vertex="1">
           <mxGeometry x="986.72" y="-440" width="20" height="30" as="geometry" />
         </mxCell>
       </root>
