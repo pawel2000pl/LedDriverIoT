@@ -35,7 +35,7 @@ namespace wifi {
         apSubnet = str2ip(apConfigJson["subnet"].as<String>());
         apConfig.ssid = apConfigJson["ssid"].as<String>();
         apConfig.password = apConfigJson["password"].as<String>();
-        apConfig.hidden = apConfigJson["hidden"].as<String>();
+        apConfig.hidden = apConfigJson["hidden"].as<bool>();
         apChannel = apConfigJson["channel"].as<int>();
         apEnabled = apConfigJson["enabled"].as<bool>();
 
@@ -49,7 +49,7 @@ namespace wifi {
             WiFiConfigEntry entry;
             entry.ssid = entryJson["ssid"].as<String>();
             entry.password = entryJson["password"].as<String>();
-            entry.hidden = entryJson["hidden"].as<String>();
+            entry.hidden = entryJson["hidden"].as<bool>();
             staPriority.push_back(entry);
         }
 
@@ -106,11 +106,11 @@ namespace wifi {
 
 
     bool connectToNetwork(String ssid, String password) {
-        WiFi.mode(WIFI_STA);
-        if (WiFi.status() == WL_CONNECTED)
+        if (WiFi.getMode() == WIFI_STA && WiFi.status() == WL_CONNECTED)
             WiFi.disconnect();
         else if (WiFi.getMode() == WIFI_AP)
             WiFi.softAPdisconnect();
+        WiFi.mode(WIFI_STA);
         delay(100);
         Serial.print("Connecting to ");
         Serial.println(ssid);
