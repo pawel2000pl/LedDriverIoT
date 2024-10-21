@@ -19,8 +19,7 @@ namespace hardware {
 		.fanPinMain = 4,
 		.fanPinAlt = 6,
 		.outputs = {20, 8, 9, 10},
-		.resetPin = 5,
-		.ws2812 = -1
+		.resetPin = 5
 	};
 
 
@@ -69,7 +68,7 @@ namespace hardware {
 	String DetectedHardware::getCode() const {
 		const char charset[] = "0123456789abcdefghijklmnopqrstu#";
 		int numbers[] = {
-			fanPin, resetPin, ws2812 >= 0 ? ws2812 : 31,
+			fanPin, resetPin,
 			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(), 
 			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(), 
 			outputs[0], outputs[1], outputs[2], outputs[3],
@@ -183,7 +182,6 @@ namespace hardware {
 				pinMode(analogSelect[i], INPUT);
 		}
 
-		result.ws2812 = ws2812;
 		result.resetPin = resetPin;
 		pinMode(result.resetPin, INPUT_PULLUP);
 		pinMode(result.fanPin, OUTPUT);

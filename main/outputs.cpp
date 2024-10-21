@@ -119,15 +119,6 @@ namespace outputs {
     }
 
 
-    void write2812(float r, float g, float b) {
-        if (hardware_configuration.ws2812 >= 0) {
-            noInterrupts();
-            neopixelWrite(hardware_configuration.ws2812,round(255*g),round(255*r),round(255*b));
-            interrupts();
-        }
-    }
-
-
     void writeOutput() {
         float r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b);        
@@ -137,7 +128,6 @@ namespace outputs {
             filters::outputBlue(filters::globalOutput(b)) * scalling[2],
             filters::outputWhite(filters::globalOutput(white)) * scalling[3]
         };
-        write2812(filteredValues[0], filteredValues[1], filteredValues[2]);
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)

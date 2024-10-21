@@ -27,7 +27,6 @@ namespace hardware {
 	struct DetectedHardware {
 		int fanPin;
 		int resetPin;
-		int ws2812;
 		std::array<InputHardwareAction, 4> potentiometers;
 		std::array<InputHardwareAction, 4> thermistors;
 		std::array<int, 4> outputs;
@@ -45,7 +44,6 @@ namespace hardware {
 		int fanPinAlt;
 		std::vector<int> outputs;
 		int resetPin;
-		int ws2812;
 		
 		bool multiplexerAvailable() const;
 		void setAnalog(int x) const;
