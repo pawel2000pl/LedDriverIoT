@@ -1,4 +1,3 @@
-#include <esp32-hal-gpio.h>
 #include "hardware_configuration.h"
 
 const int ANALOG_READ_MAIN = A0;
