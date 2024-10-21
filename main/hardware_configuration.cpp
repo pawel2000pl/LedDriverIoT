@@ -1,13 +1,17 @@
 #include <esp32-hal-gpio.h>
 #include "hardware_configuration.h"
 
-namespace hardware {
 
+namespace hardware {
 	const int CLOCK_32_PINS[] = {0, 1};
 	DetectedHardware detectedHardware;
+}
+
+const hardware::DetectedHardware& hardware_configuration = hardware::detectedHardware;
 
 
-	const PinSets XiaoConfiguration = {
+namespace hardware {
+	const PinSets availableConfiguration = {
 		.analogReadMain = 2,
 		.thermistorChecker = 3,
 		.analogReadSecondary = {2, 3, 4},
@@ -17,19 +21,6 @@ namespace hardware {
 		.outputs = {20, 8, 9, 10},
 		.resetPin = 5,
 		.ws2812 = -1
-	};
-
-
-	const PinSets WaveshareConfiguration = {
-		.analogReadMain = 0,
-		.thermistorChecker = 4,
-		.analogReadSecondary = {0, 1, 2, 3},
-		.analogSelect = {19, 20, 21},
-		.fanPinMain = 18,
-		.fanPinAlt = 18,
-		.outputs = {6, 7, 8, 9},
-		.resetPin = 5,
-		.ws2812 = 10
 	};
 
 
@@ -70,30 +61,6 @@ namespace hardware {
 	}
 
 
-	bool isWaveshare() {
-		unsigned minValue = (unsigned)(-1);
-		unsigned maxValue = 0;
-		const auto readMinMax = [&]() {
-			unsigned long long int t0 = micros();
-			while (micros() - t0 < 15) {
-				unsigned value = analogRead(CLOCK_32_PINS[1]);
-				if (value < minValue) minValue = value;
-				if (value > maxValue) maxValue = value;
-			}
-		};
-		pinMode(CLOCK_32_PINS[1], INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		pinMode(CLOCK_32_PINS[0], HIGH);
-		readMinMax();
-		pinMode(CLOCK_32_PINS[0], LOW);
-		readMinMax();
-
-		pinMode(CLOCK_32_PINS[0], INPUT);
-		pinMode(CLOCK_32_PINS[1], INPUT);
-		return maxValue - minValue < ANALOG_READ_MAX / 16;
-	}
-
-
 	int InputHardwareAction::getPin(int disabledValue) const {
 		return enabled ? read_pin : disabledValue;
 	}
@@ -102,7 +69,7 @@ namespace hardware {
 	String DetectedHardware::getCode() const {
 		const char charset[] = "0123456789abcdefghijklmnopqrstu#";
 		int numbers[] = {
-			fanPin, resetPin, ws2812,
+			fanPin, resetPin, ws2812 >= 0 ? ws2812 : 31,
 			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(), 
 			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(), 
 			outputs[0], outputs[1], outputs[2], outputs[3],
@@ -232,7 +199,7 @@ namespace hardware {
 
 	void detectHardware() {
 		analogReadResolution(12);
-		detectedHardware = isWaveshare() ? WaveshareConfiguration.detect() : XiaoConfiguration.detect();
+		detectedHardware = availableConfiguration.detect();
 	}
 
 }

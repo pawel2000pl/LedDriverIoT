@@ -55,6 +55,8 @@ namespace hardware {
 
 
 	void detectHardware();
-	extern DetectedHardware detectedHardware;
 
 }
+
+
+const extern hardware::DetectedHardware& hardware_configuration;

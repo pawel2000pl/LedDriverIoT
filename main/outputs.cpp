@@ -120,8 +120,11 @@ namespace outputs {
 
 
     void write2812(float r, float g, float b) {
-        if (hardware::detectedHardware.ws2812 >= 0)
-            neopixelWrite(hardware::detectedHardware.ws2812,round(255*g),round(255*r),round(255*b));
+        if (hardware_configuration.ws2812 >= 0) {
+            noInterrupts();
+            neopixelWrite(hardware_configuration.ws2812,round(255*g),round(255*r),round(255*b));
+            interrupts();
+        }
     }
 
 
@@ -139,7 +142,7 @@ namespace outputs {
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
             setLedC(
-                hardware::detectedHardware.outputs[i], 
+                hardware_configuration.outputs[i], 
                 i, 
                 periods[i], 
                 phases[i],
