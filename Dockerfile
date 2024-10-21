@@ -10,6 +10,7 @@ RUN arduino-cli core update-index
 RUN arduino-cli board listall
 RUN arduino-cli core install esp32:esp32
 RUN arduino-cli lib install ArduinoJson
+RUN arduino-cli lib install ESP32DMASPI
 
 RUN mkdir -p /app
 COPY doc /app/doc
