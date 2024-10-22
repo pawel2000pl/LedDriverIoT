@@ -26,7 +26,6 @@
 #define THERMISTOR_R0 47000
 #define THERMISTOR_IN_SERIES_RESISTOR 47000
 #define THERMISTOR_T0 (25.0f + 273.15f)
-#define RESET_CONFIGURATION_PIN (D3)
 
 #define CONFIGURATION_FILENAME "/configuration.json"
 #define FAVORITES_FILENAME "/favorites.json"
@@ -117,6 +116,7 @@ void loadVersionInfo() {
 	deserializeJson(versionInfo, String((const char*)decompressed_buffer));
 	versionInfo["date"] = __DATE__;
 	versionInfo["time"] = __TIME__;
+	versionInfo["hardware"] = hardware_configuration.getCode();
 }
 
 
@@ -565,7 +565,7 @@ bool fanStatus = false;
 uint8_t measureTemperature = 0;
 
 void checkReset() {
-	if (digitalRead(RESET_CONFIGURATION_PIN) == 0) {
+	if (digitalRead(hardware_configuration.resetPin) == 0) {
 		if (reset_timer == 0)
 			reset_timer = millis();
 		else if (millis() - reset_timer >= 10000) {
@@ -604,22 +604,22 @@ void checkTemperature() {
 	float temp_max = tsens_out;
 
 	for (unsigned i=0;i<4;i++) {
-		const auto& actions = THERMISTOR_HARDWARE_ACTIONS[i];
+		const auto& actions = hardware_configuration.thermistors[i];
 		if (!actions.enabled) continue;
 		float T = readTemperature(actions.read()/2);
 		temp_max = max(temp_max, T);
 	}
 
 	fanStatus = ((fanStatus) && (temp_max > FAN_TURN_OFF_TEMP)) || ((!fanStatus) && (temp_max > FAN_TURN_ON_TEMP));
-	digitalWrite(FAN_PIN, fanStatus ? HIGH : LOW);
+	digitalWrite(hardware_configuration.fanPin, fanStatus ? HIGH : LOW);
 }
 
 
 void setup() {
 	Serial.begin(115200);  
+	Serial.println("Initialization");
 	randomSeed(29615);
-	detectHardware();
-	pinMode(RESET_CONFIGURATION_PIN, INPUT_PULLUP);
+	hardware::detectHardware();
 	initTemperature();
 	initLedC();
 	SPIFFS.begin(true);

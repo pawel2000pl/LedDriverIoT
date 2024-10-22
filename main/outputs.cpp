@@ -4,6 +4,7 @@
 #include "ledc_driver.h"
 #include "filter_functions.h"
 #include "conversions.h"
+#include "hardware_configuration.h"
 
 std::vector<float> toFloatVector(const JsonVariantConst& source) {
     std::vector<float> result;
@@ -21,8 +22,6 @@ namespace outputs {
     float saturation = 0;
     float value = 0;
     float white = 0;
-
-    const int LED_GPIO_OUTPUTS[] = {D7, D8, D9, D10};
 
     bool invertOutputs = 0;
     int phaseMode = 0;
@@ -133,7 +132,7 @@ namespace outputs {
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
             setLedC(
-                LED_GPIO_OUTPUTS[i], 
+                hardware_configuration.outputs[i], 
                 i, 
                 periods[i], 
                 phases[i],

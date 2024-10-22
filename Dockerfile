@@ -19,11 +19,12 @@ COPY License.txt /app/License.txt
 COPY compile_resources.py /app/compile_resources.py
 WORKDIR /app
 RUN python3 compile_resources.py
+RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
-RUN arduino-cli compile -b esp32:esp32:XIAO_ESP32C3 --build-property build.partitions=min_spiffs --build-property upload.maximum_size=1966080 ./main.ino
+RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --build-property upload.maximum_size=1966080 --output-dir /tmp/app-build ./main.ino
 
 RUN mkdir -p /var/www/build
-RUN cp /tmp/arduino/sketches/*/main* /var/www/build/
+RUN cp /tmp/app-build/main* /var/www/build/
 RUN cp -r /app/doc /var/www/doc
 RUN cp /app/License.txt /var/www/doc/license.txt
 RUN cp /app/License.txt /var/www/build/license.txt

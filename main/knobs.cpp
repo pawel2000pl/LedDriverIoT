@@ -5,6 +5,7 @@
 #include "inputs.h"
 #include "constrain.h"
 #include "outputs.h"
+#include "hardware_configuration.h"
 
 namespace knobs {
 
@@ -84,7 +85,7 @@ namespace knobs {
         float cReduction = force ? 1.f : reduction;
         float opReductionc = 1.f - cReduction;
         for (int i=0;i<4;i++)
-            knobsAmortisation[i] = cReduction * POTENTIOMETER_HARDWARE_ACTIONS[i].read() + opReductionc * knobsAmortisation[i];
+            knobsAmortisation[i] = cReduction * hardware_configuration.potentiometers[i].read() + opReductionc * knobsAmortisation[i];
         checkIfKnobsMoved(knobsAmortisation, force);
     }
 
