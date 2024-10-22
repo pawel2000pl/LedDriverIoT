@@ -298,7 +298,11 @@
             <details class="menu-details">
                 <summary class="menu-summary prevent-select">Update</summary>
                 <div class="details-div">
-                    <p id="version-p"></p>
+                    <p>
+                        <span id="version-span"></span>
+                        <br>
+                        <span id="hardware-span"></span>
+                    </p>                    
                     <form method="POST" action="#" enctype="multipart/form-data" id="update-form">
                         <input type="file" name="update">
                         <input id="update-btn" type="submit" value="Update">
