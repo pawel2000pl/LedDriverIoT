@@ -1,5 +1,8 @@
 #pragma once
 
+#include <Arduino.h>
+
+// DMA max size is 384kB
 #define MAX_ADDRESSED_BUF_SIZE (65536)
 #define MAX_COLOR_BUF_SIZE (MAX_ADDRESSED_BUF_SIZE / 8)
 #define MAX_ADDRESSED_FREQ (20000000)
@@ -7,5 +10,11 @@
 
 namespace addressed {
 
+    void updateConfiguraion();
+    bool transmissionFinished();
 
+
+    //test
+    String byteToStr(unsigned char x);
+    void test();
 }
