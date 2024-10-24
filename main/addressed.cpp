@@ -108,10 +108,9 @@ namespace addressed {
                 bc += bit ? one_length : zero_length;
             }
         }
-        spi_buf_size = bc >> 3;
-        do {
+        spi_buf_size = (bc + 7) >> 3;
+        while (spi_buf_size & 3) 
             spi_buf[spi_buf_size++] = 0;
-        } while (spi_buf_size & 3);
     }
 
 
