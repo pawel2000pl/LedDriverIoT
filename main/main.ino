@@ -1,24 +1,25 @@
 #include <Arduino.h>
-#include <WebServer.h>
 #include <FS.h>
+#include <list>
 #include <SPIFFS.h>
 #include <Update.h>
 #include <functional>
-#include <list>
-#include <driver/temperature_sensor.h>
+#include <WebServer.h>
 #include <ArduinoJson.h>
+#include <driver/temperature_sensor.h>
 
-#include "constrain.h"
-#include "resources.h"
-#include "conversions.h"
-#include "validate_json.h"
+#include "wifi.h"
+#include "knobs.h"
 #include "fastlz.h"
-#include "ledc_driver.h"
-#include "hardware_configuration.h"
 #include "inputs.h"
 #include "outputs.h"
-#include "knobs.h"
-#include "wifi.h"
+#include "constrain.h"
+#include "resources.h"
+#include "ledc_driver.h"
+#include "conversions.h"
+#include "validate_json.h"
+#include "configuration.h"
+#include "hardware_configuration.h"
 
 #define FAN_TURN_ON_TEMP 70
 #define FAN_TURN_OFF_TEMP 50
@@ -27,23 +28,15 @@
 #define THERMISTOR_IN_SERIES_RESISTOR 47000
 #define THERMISTOR_T0 (25.0f + 273.15f)
 
-#define CONFIGURATION_FILENAME "/configuration.json"
-#define FAVORITES_FILENAME "/favorites.json"
-#define JSON_CONFIG_BUF_SIZE (16*1024)
-#define JSON_FAVORITES_BUF_SIZE (64*64)
 #define RARE_CHECKS_INTERVAL (15000)
 
-using FavoriteJsonDoc = StaticJsonDocument<JSON_FAVORITES_BUF_SIZE>;
-
-StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configuration;
-StaticJsonDocument<JSON_CONFIG_BUF_SIZE> defaultConfiguration;
-StaticJsonDocument<JSON_CONFIG_BUF_SIZE> configSchema;
-StaticJsonDocument<JSON_FAVORITES_BUF_SIZE> defaultFavorites;
-StaticJsonDocument<1024> versionInfo;
 
 std::list<std::function<void()>> taskQueue;
+String webColorSpace;
+bool whiteKnobEnabled;
 
 WebServer server(80);
+
 
 void sendError(String message, int code = 400) {
 	StaticJsonDocument<1024> messageData;
@@ -60,7 +53,6 @@ void sendOk() {
 	server.sendHeader("Cache-Control", "no-cache");
 	server.send(200, default_config_json_mime_type, "{\"status\": \"ok\"}");
 }
-
 
 
 void sendCacheControlHeader() {
@@ -88,92 +80,32 @@ int sendDecompressedData(WebServer& server, const char* content_type, const void
 }
 
 
-String assertConfiguration() {
-	return validateJson(configuration, configSchema, configSchema["main"], ".", defaultConfiguration); 
-}
-
-
-void loadDefautltConfiguration() {
-	uint8_t decompressed_buffer[default_config_json_decompressed_size+1];
-	size_t decompressed_size = fastlz_decompress(default_config_json_data, default_config_json_size, decompressed_buffer, default_config_json_decompressed_size);
-	decompressed_buffer[decompressed_size] = 0;
-	deserializeJson(defaultConfiguration, String((const char*)decompressed_buffer));
-}
-
-
-void loadDefautltFavorites() {
-	uint8_t decompressed_buffer[default_favorites_json_decompressed_size+1];
-	size_t decompressed_size = fastlz_decompress(default_favorites_json_data, default_favorites_json_size, decompressed_buffer, default_favorites_json_decompressed_size);
-	decompressed_buffer[decompressed_size] = 0;
-	deserializeJson(defaultFavorites, String((const char*)decompressed_buffer));
-}
-
-
-void loadVersionInfo() {
-	uint8_t decompressed_buffer[version_json_decompressed_size+1];
-	size_t decompressed_size = fastlz_decompress(version_json_data, version_json_size, decompressed_buffer, version_json_decompressed_size);
-	decompressed_buffer[decompressed_size] = 0;
-	deserializeJson(versionInfo, String((const char*)decompressed_buffer));
-	versionInfo["date"] = __DATE__;
-	versionInfo["time"] = __TIME__;
-	versionInfo["hardware"] = hardware_configuration.getCode();
-}
-
-
-void updateModules() {
+void updateModules(JsonVariant configuration) {
 	knobs::updateConfiguration(configuration);
 	inputs::updateConfiguration(configuration);
 	outputs::updateConfiguration(configuration);
 	wifi::updateConfiguration(configuration);
+	webColorSpace = configuration["channels"]["webMode"].as<String>();
+	whiteKnobEnabled = configuration["hardware"]["enbleWhiteKnob"].as<bool>();
 }
 
 
-void loadConfiguration() {
-	File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
-	if (configFile) {
-		String buf = configFile.readString();
-		configFile.close();
-		DeserializationError err = deserializeJson(configuration, buf);
-		if (err != DeserializationError::Ok || assertConfiguration().length())
-			configuration = defaultConfiguration;
-		updateModules();
-	}
-}
-
-
-void loadConfigSchema() {
-	uint8_t decompressed_buffer[config_schema_json_decompressed_size+1];
-	size_t decompressed_size = fastlz_decompress(config_schema_json_data, config_schema_json_size, decompressed_buffer, config_schema_json_decompressed_size);
-	decompressed_buffer[decompressed_size] = 0;
-	deserializeJson(configSchema, String((const char*)decompressed_buffer));
+void updateModules() {
+	auto configuration = configuration::getConfiguration();
+	updateModules(configuration);
 }
 
 
 void resetConfiguration() {
-	SPIFFS.remove(CONFIGURATION_FILENAME);
-	SPIFFS.remove(FAVORITES_FILENAME);
-	loadConfiguration();
-}
-
-
-void saveConfiguration() {
-	char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
-	unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
-	buf[size] = 0;
-	File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "w");
-	configFile.println(buf);
-	configFile.close();
-	delete [] buf;
+	configuration::resetConfiguration();
+	updateModules();
 }
 
 
 void sendConfiguration() {
-	char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
-	unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
-	buf[size] = 0;
+	String buf = configuration::getConfigurationStr();
 	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
-	delete [] buf;
+	server.send(200, default_config_json_mime_type, buf.c_str());
 }
 
 
@@ -196,6 +128,7 @@ void customValidator() {
 		delete testJson;
 		return;
 	}
+	const auto configSchema = configuration::getConfigSchema();
 	const String assertMessage = testJson->containsKey("type") ? validateJson((*testJson)["data"], configSchema, configSchema[(*testJson)["type"].as<String>()]) : validateJson((*testJson)["data"], (*testJson)["schema"], (*testJson)["schema"]["main"]);
 	delete testJson;
 	if (assertMessage != "") {
@@ -214,7 +147,7 @@ void connectToNetworkEndpoint() {
 		sendDeserializationError(err);
 		return;
 	}
-	const String assertMessage = validateJson(data, configSchema, configSchema["wifi-entry"]);
+	const String assertMessage = configuration::assertJson(data, "wifi-entry");
 	if (assertMessage != "") {
 		sendError(assertMessage, 422);
 		return;
@@ -240,23 +173,21 @@ void openAccessPointEndpoint() {
 
 void recvConfiguration(bool save=true) {
 	String rawData = server.arg("plain");
+	DynamicJsonDocument configuration(JSON_CONFIG_BUF_SIZE);
 	DeserializationError err = deserializeJson(configuration, rawData);
 	if (err != DeserializationError::Ok) {
-		loadConfiguration();
 		sendDeserializationError(err);
 		return;
 	}
-
-	const String assertMessage = assertConfiguration();
+	const String assertMessage = configuration::assertConfiguration(configuration);
 	if (assertMessage != "") {
 		sendError(assertMessage, 422);
 		return;
 	}
-	if (save)
-		saveConfiguration();
-	else
-		loadConfiguration();
-	updateModules();
+	if (save) {
+		configuration::setConfiguration(configuration);
+		updateModules(configuration);
+	}
 	sendOk();
 }
 
@@ -298,8 +229,8 @@ void updateEnd() {
 
 
 void getVersionInfo() {
-	char buf[256];
-	unsigned int size = serializeJson(versionInfo, buf, 255);
+	char buf[JSON_VERSION_INFO_BUF_SIZE];
+	unsigned int size = serializeJson(configuration::getVersionInfo(), buf, JSON_VERSION_INFO_BUF_SIZE-1);
 	buf[size] = 0;
 	server.sendHeader("Cache-Control", "no-cache");
 	server.send(200, default_config_json_mime_type, buf);
@@ -323,21 +254,8 @@ void sendNetworks() {
 
 
 void sendFavourites() {
-	DynamicJsonDocument favoritesDoc(JSON_FAVORITES_BUF_SIZE);
-	JsonArray favorites;
-
-	File favoritesFile = SPIFFS.open(FAVORITES_FILENAME, "r");
-	if (favoritesFile) {
-		String buf = favoritesFile.readString();
-		favoritesFile.close();
-		DeserializationError err = deserializeJson(favoritesDoc, buf);
-		if (err != DeserializationError::Ok || validateJson(favoritesDoc, configSchema, configSchema["favorites-list"]).length())
-			favorites = defaultFavorites.as<JsonArray>();
-		else
-			favorites = favoritesDoc.as<JsonArray>();
-	} else favorites = defaultFavorites.as<JsonArray>();
-
-	String colorspace = configuration["channels"]["webMode"];
+	DynamicJsonDocument favorites = configuration::getFavorites();
+	String colorspace = webColorSpace;
 	DynamicJsonDocument response(JSON_FAVORITES_BUF_SIZE);
 	JsonArray reponseArray = response.to<JsonArray>();
 	unsigned size = favorites.size();
@@ -364,7 +282,7 @@ void sendFavourites() {
 
 void dumpFavorite(bool useWhite=false) {
 	String dumped = inputs::dumpFavoriteColor(useWhite);
-	ColorChannels channels = inputs::getAuto(configuration["channels"]["webMode"]);
+	ColorChannels channels = inputs::getAuto(webColorSpace);
 	char buf[256];
 	int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%f, %f, %f, %f]}", 
 		dumped.c_str(),
@@ -385,18 +303,12 @@ void saveFavorites() {
 	DeserializationError err = deserializeJson(data, rawData);
 	if (err != DeserializationError::Ok) 
 		return sendError("Deserialization error");
-	String assertMessage = validateJson(data, configSchema, configSchema["favorites-list"]);
+	String assertMessage = configuration::assertJson(data, "favorites-list");
 	if (assertMessage != "") {
 		sendError(assertMessage, 422);
 		return;
 	}
-	char* buf = new char[JSON_FAVORITES_BUF_SIZE+1];
-	unsigned size = serializeJson(data, buf, JSON_FAVORITES_BUF_SIZE);
-	buf[size] = 0;
-	File favoritesFile = SPIFFS.open(FAVORITES_FILENAME, "w");
-	favoritesFile.println(buf);
-	favoritesFile.close();
-	delete [] buf;
+	configuration::setFavorites(data);
 	server.sendHeader("Cache-Control", "no-cache");
 	sendOk();
 }
@@ -413,7 +325,7 @@ void applyFavorite() {
 
 
 void sendColors() {
-	ColorChannels channels = inputs::getAuto(configuration["channels"]["webMode"]);
+	ColorChannels channels = inputs::getAuto(webColorSpace);
 	char buf[256];
 	int size = sprintf(buf, "[%f, %f, %f, %f]", 
 		channels[0],
@@ -433,12 +345,12 @@ void setColors() {
 	DeserializationError err = deserializeJson(data, rawData);
 	if (err != DeserializationError::Ok) 
 		return sendError("Deserialization error");
-	String assertMessage = validateJson(data, configSchema, configSchema["color-channels"]);
+	String assertMessage = configuration::assertJson(data, "color-channels");
 	if (assertMessage != "") {
 		sendError(assertMessage, 422);
 		return;
 	}
-	inputs::setAuto(configuration["channels"]["webMode"], {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+	inputs::setAuto(webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
 	outputs::writeOutput();
 	knobs::turnOff();
 	sendOk();   
@@ -466,7 +378,7 @@ void renderFavoriteColor() {
 	outputs::writeOutput();
 	knobs::turnOff();
 
-	const auto& channelsMode = configuration["channels"]["webMode"];
+	const auto& channelsMode = webColorSpace;
 	ColorChannels filteredChannels = inputs::getAuto(channelsMode);
 
 	float r, g, b;
@@ -490,7 +402,7 @@ void simpleMode() {
 		auto fun = [](String value) { return constrain<float>((float)atoi(value.c_str())/15.f, 0, 1);};    
 		ColorChannels channels = {fun(server.arg("ch0")), fun(server.arg("ch1")), fun(server.arg("ch2")), fun(server.arg("ch3"))};
 		knobs::turnOff();
-		inputs::setAuto(configuration["channels"]["webMode"], channels);
+		inputs::setAuto(webColorSpace, channels);
 		outputs::writeOutput();
 	}
 	uint8_t* decompressed_buffer = new uint8_t[simple_template_html_decompressed_size+1];
@@ -505,11 +417,11 @@ void simpleMode() {
 	const char* colorspaces[] = {"hsv", "hsl", "rgb"};
 	const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
 	const char** channelsInCurrentColorspace = channels[0];
-	String destColorspace = configuration["channels"]["webMode"];
+	String destColorspace = webColorSpace;
 	for (int i=0;i<3;i++)
 		if (destColorspace == colorspaces[i])
 			channelsInCurrentColorspace = channels[i];
-	ColorChannels filteredChannels = inputs::getAuto(configuration["channels"]["webMode"]);
+	ColorChannels filteredChannels = inputs::getAuto(webColorSpace);
 	sprintf(
 		render_buffer, (const char*)decompressed_buffer, 
 		channelsInCurrentColorspace[0],
@@ -518,7 +430,7 @@ void simpleMode() {
 		floatFilter15(filteredChannels[1]),
 		channelsInCurrentColorspace[2],
 		floatFilter15(filteredChannels[2]),
-		configuration["hardware"]["enbleWhiteKnob"].as<bool>() ? "" : "style=\"display: none;\"",
+		whiteKnobEnabled ? "" : "style=\"display: none;\"",
 		channelsInCurrentColorspace[3],
 		floatFilter15(filteredChannels[3])
 	);
@@ -620,18 +532,14 @@ void setup() {
 	Serial.println("Initialization");
 	randomSeed(29615);
 	hardware::detectHardware();
+	SPIFFS.begin(true);
+	updateModules();
 	initTemperature();
 	initLedC();
-	SPIFFS.begin(true);
-	loadVersionInfo();
-	loadConfigSchema();
-	loadDefautltConfiguration();
-	loadDefautltFavorites();
-	loadConfiguration();
 	wifi::fastInit();
-	configureServer();
 	knobs::check(true);
 	knobs::attachTimer();
+	configureServer();
 }
 
 unsigned long long int rareChecksTime = 0;
