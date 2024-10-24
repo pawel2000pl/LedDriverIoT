@@ -38,7 +38,8 @@ $id('update-form').addEventListener('submit', function(e) {
 });
 
 
-fetchVersion().then(([version, hardware])=>{
+fetchVersion().then(([version, hardware, resources])=>{
     $id('version-span').textContent = "Current version: " + version;
     $id('hardware-span').textContent = "Hardware: " + hardware;
+    $id('resources-span').textContent = "Resources: " + resources;
 });

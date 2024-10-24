@@ -101,7 +101,8 @@ Array.from(document.getElementsByClassName('show-favorites-button')).forEach((bu
 });
 
 
-fetchVersion().then(async ([version, _])=>{
+fetchVersion().then(async ([version, _, resources])=>{
+    version = version + ' ' + resources;
     if (localStorage.version !== version) {
         await fetch("/invalidate_cache");
         localStorage.version = version;

@@ -56,6 +56,7 @@ namespace configuration {
         versionInfo["date"] = __DATE__;
         versionInfo["time"] = __TIME__;
         versionInfo["hardware"] = hardware_configuration.getCode();
+        versionInfo["resources_sha"] = RESOURCES_SHA1;
         return versionInfo;
     }
 

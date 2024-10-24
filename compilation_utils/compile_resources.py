@@ -5,6 +5,7 @@ import re
 import ctypes
 import mimetypes
 import json
+import hashlib
 
 os.system('gcc --std=c11 -O3 -x c main/fastlz.cpp -fpic -shared -o fastlz.so')
 
@@ -64,6 +65,7 @@ PATH = 'resources/'
 result_header = [info_struct]
 result_content = ['#include "resources.h"', '']
 resource_names = []
+all_srcs = dict()
 max_decompressed_size = 0
 max_compressed_size = 0
 total_compressed = 0
@@ -73,6 +75,7 @@ operators = ['<', '>', '<=', '>=', '=', '==', '===', '\\+', '-', '\\*', ',', ':'
 for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
         with open(PATH+filename) as f: content = f.read()
+        all_srcs[PATH+filename] = content
         orginal_content = content
         if filename.endswith('.json'):
             content = json.dumps(json.loads(content), indent=None)
@@ -124,12 +127,19 @@ print("Max decompressed:", max_decompressed_size)
 print("Max compressed:", max_compressed_size)
 print("Total compressed:", total_compressed)
 
+all_srcs_keys = list(all_srcs)
+all_srcs_keys.sort()
+whole_src = "\n".join([all_srcs[k] for k in all_srcs_keys])
+sha1 = hashlib.sha1()
+sha1.update(whole_src.encode('utf-8'))
 
 result_header.append('extern const struct Resource* resources[];')
 result_header.append('extern const unsigned int resources_count;')
 result_header.append('')
 result_header.append('extern const unsigned int max_resource_compressed_buffer;')
 result_header.append('extern const unsigned int max_resource_decompressed_buffer;')
+result_header.append('')
+result_header.append('#define RESOURCES_SHA1 "'+sha1.hexdigest()+'"')
 result_header.append('')
 
 result_content.append('const struct Resource* resources[] = {'+','.join(['&'+name for name in resource_names])+'};')
