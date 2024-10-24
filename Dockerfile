@@ -12,13 +12,14 @@ RUN arduino-cli core install esp32:esp32
 RUN arduino-cli lib install ArduinoJson
 
 RUN mkdir -p /app
+COPY compilation_utils /app/compilation_utils
 COPY doc /app/doc
 COPY resources /app/resources
 COPY main /app/main
 COPY License.txt /app/License.txt
-COPY compile_resources.py /app/compile_resources.py
 WORKDIR /app
-RUN python3 compile_resources.py
+RUN python3 compilation_utils/validate_json.py /app/resources/default_config.json /app/resources/config.schema.json
+RUN python3 compilation_utils/compile_resources.py
 RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
 RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --build-property upload.maximum_size=1966080 --output-dir /tmp/app-build ./main.ino
@@ -28,7 +29,7 @@ RUN cp /tmp/app-build/main* /var/www/build/
 RUN cp -r /app/doc /var/www/doc
 RUN cp /app/License.txt /var/www/doc/license.txt
 RUN cp /app/License.txt /var/www/build/license.txt
-RUN cp /app/doc/index.html /var/www/index.html
+RUN cp /app/compilation_utils/index.html /var/www/index.html
 RUN cp /app/resources/favicon.svg /var/www/favicon.svg
 
 WORKDIR /var/www/build
