@@ -533,9 +533,9 @@ void setup() {
 	randomSeed(29615);
 	hardware::detectHardware();
 	SPIFFS.begin(true);
-	updateModules();
 	initTemperature();
 	initLedC();
+	updateModules();
 	wifi::fastInit();
 	knobs::check(true);
 	knobs::attachTimer();
