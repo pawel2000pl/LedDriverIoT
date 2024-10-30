@@ -33,6 +33,20 @@ namespace addressed {
     uint64 zero_mask;
     uint32 zero_length;
 
+    struct SignalMasks {
+        uint64 one;
+        uint32 one_length;
+        uint64 zero;
+        uint32 zero_length;
+    };
+
+
+    struct LedConfiguration {
+        unsigned count;
+        unsigned offset; //milliseconds but 1s = 1024ms
+        unsigned animation_freq; //millisecond per led
+    }
+
 
     uint64 createMask(unsigned freq, unsigned th, unsigned tl, unsigned* length_ptr) {
         float freqGHz = (float)freq *1e-9;
@@ -94,20 +108,31 @@ namespace addressed {
 
 
     template<typename MASK_T>
-    void fillSpiBufferTpl() {
+    unsigned putByteToBuffer(unsigned bc, uint8* buf, uint8 byte, const SignalMasks& masks) {
+        for (unsigned i=7;~i;i--) {
+            unsigned bc_bit = bc & 7;
+            bool bit = (byte & (1 << i));
+            MASK_T or_mask = (bit ? masks.one : masks.zero) << bc_bit;
+            MASK_T and_mask = (((MASK_T)1 << bc_bit) - 1);
+            MASK_T* buf_ptr = (MASK_T*)(buf + (bc >> 3)); 
+            *buf_ptr = ((*buf_ptr) & and_mask) | or_mask;
+            bc += bit ? masks.one_length : masks.zero_length;
+        }
+        return bc;
+    }
+
+
+    template<typename MASK_T>
+    unsigned fillSpiBufferTpl(const SignalMasks& masks) {
         unsigned bc = 0;
         uint8* loop_end = color_buf + address_count;
-        for (uint8* color=color_buf;color<loop_end;color++) {
-            for (unsigned i=7;~i;i--) {
-                unsigned bc_bit = bc & 7;
-                bool bit = ((*color) & (1 << i));
-                MASK_T or_mask = (bit ? one_mask : zero_mask) << bc_bit;
-                MASK_T and_mask = (((MASK_T)1 << bc_bit) - 1);
-                MASK_T* spi_ptr = (MASK_T*)(spi_buf + (bc >> 3)); 
-                *spi_ptr = ((*spi_ptr) & and_mask) | or_mask;
-                bc += bit ? one_length : zero_length;
-            }
-        }
+        for (uint8* color=color_buf;color<loop_end;color++)
+            bc = putByteToBuffer<MASK_T>(bc, spi_buf, *color, masks);
+        return bc;
+    }
+
+
+    void finishSpiBuffer(unsigned bc) {
         spi_buf_size = (bc + 7) >> 3;
         while (spi_buf_size & 3) 
             spi_buf[spi_buf_size++] = 0;
@@ -115,10 +140,10 @@ namespace addressed {
 
 
     void fillSpiBuffer() {
-        if (one_length <= 25 && zero_length <= 25)
-            fillSpiBufferTpl<uint32>();
-        else
-            fillSpiBufferTpl<uint64>();
+        SignalMasks masks = (SignalMasks){one_mask, one_length, zero_mask, zero_length};
+        unsigned bc = (masks.one_length <= 25 && masks.zero_length <= 25) ?
+            fillSpiBufferTpl<uint32>(masks) : fillSpiBufferTpl<uint64>(masks);
+        finishSpiBuffer(bc);
     }
 
 
