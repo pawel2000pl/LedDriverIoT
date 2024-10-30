@@ -8,6 +8,11 @@
 #include <ArduinoJson.h>
 #include <driver/temperature_sensor.h>
 
+#include <HTTPSServer.hpp>
+#include <SSLCert.hpp>
+#include <HTTPRequest.hpp>
+#include <HTTPResponse.hpp>
+
 #include "wifi.h"
 #include "knobs.h"
 #include "fastlz.h"
@@ -28,6 +33,7 @@
 #define THERMISTOR_IN_SERIES_RESISTOR 47000
 #define THERMISTOR_T0 (25.0f + 273.15f)
 
+#define RESET_CONF_TIME 10000
 #define RARE_CHECKS_INTERVAL (15000)
 
 
@@ -36,6 +42,9 @@ String webColorSpace;
 bool whiteKnobEnabled;
 
 WebServer server(80);
+
+httpsserver::SSLCert cert;
+httpsserver::HTTPSServer* secureServer;
 
 
 void sendError(String message, int code = 400) {
@@ -442,6 +451,15 @@ void simpleMode() {
 
 
 void configureServer() {
+	httpsserver::createSelfSignedCert(
+		cert,
+		httpsserver::KEYSIZE_2048,
+		"CN=leddriver.local,O=FancyCompany,C=PL",
+		"20190101000000",
+		"29990101000000"
+	);
+	secureServer = new httpsserver::HTTPSServer(&cert);
+
 	server.enableDelay(false);
 	server.on("/", HTTP_GET, [&server](){sendCacheControlHeader(); server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
 	server.on("/config.json", HTTP_GET, sendConfiguration);
@@ -480,8 +498,8 @@ void checkReset() {
 	if (digitalRead(hardware_configuration.resetPin) == 0) {
 		if (reset_timer == 0)
 			reset_timer = millis();
-		else if (millis() - reset_timer >= 10000) {
-			SPIFFS.remove(CONFIGURATION_FILENAME);
+		else if (millis() - reset_timer >= RESET_CONF_TIME) {
+			configuration::resetConfiguration();
 			ESP.restart();
 		}
 	} else 
