@@ -4,14 +4,11 @@
 #include <SPIFFS.h>
 #include <Update.h>
 #include <functional>
-#include <WebServer.h>
 #include <ArduinoJson.h>
 #include <driver/temperature_sensor.h>
-
-#include <HTTPSServer.hpp>
-#include <SSLCert.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
+#include <HTTPMultipartBodyParser.hpp>
 
 #include "wifi.h"
 #include "knobs.h"
@@ -25,6 +22,7 @@
 #include "validate_json.h"
 #include "configuration.h"
 #include "hardware_configuration.h"
+#include "server.h"
 
 #define FAN_TURN_ON_TEMP 70
 #define FAN_TURN_OFF_TEMP 50
@@ -40,53 +38,6 @@
 std::list<std::function<void()>> taskQueue;
 String webColorSpace;
 bool whiteKnobEnabled;
-
-WebServer server(80);
-
-httpsserver::SSLCert cert;
-httpsserver::HTTPSServer* secureServer;
-
-
-void sendError(String message, int code = 400) {
-	StaticJsonDocument<1024> messageData;
-	char buf[1024];
-	messageData["status"] = "error";
-	messageData["message"] = message;
-	unsigned int size = serializeJson(messageData, buf, 1023);
-	buf[size] = 0;
-	server.send(code, default_config_json_mime_type, buf);
-}
-
-
-void sendOk() {
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, "{\"status\": \"ok\"}");
-}
-
-
-void sendCacheControlHeader() {
-    int minAge = 432000; 
-    int maxAge = 604800; 
-    int randomAge = random(minAge, maxAge + 1);
-    String headerValue = "max-age=" + String(randomAge);
-    server.sendHeader("Cache-Control", headerValue);
-}
-
-
-int sendDecompressedData(WebServer& server, const char* content_type, const void* compressed_buffer, size_t compressed_size, size_t max_decompressed_size) {
-		uint8_t* decompressed_buffer = new uint8_t[max_decompressed_size+1];
-		size_t decompressed_size = fastlz_decompress(compressed_buffer, compressed_size, decompressed_buffer, max_decompressed_size);
-		if (decompressed_size == 0) {
-				sendError("Decompression error");
-				delete [] decompressed_buffer;
-				return 0;
-		}
-		decompressed_buffer[decompressed_size] = 0;
-		sendCacheControlHeader();
-		server.send(200, content_type, (const char*)decompressed_buffer);
-		delete [] decompressed_buffer;
-		return 1;
-}
 
 
 void updateModules(JsonVariant configuration) {
@@ -111,97 +62,63 @@ void resetConfiguration() {
 }
 
 
-void sendConfiguration() {
+void sendConfiguration(HTTPRequest* req, HTTPResponse* res) {
 	String buf = configuration::getConfigurationStr();
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf.c_str());
+	res->setHeader("Cache-Control", "no-cache");
+  	res->setHeader("Content-Type", "application/json");
+	res->setStatusCode(200);
+	res->print(buf.c_str());
 }
 
 
-void sendDeserializationError(DeserializationError err) {
-		if (err == DeserializationError::EmptyInput) sendError("Empty input", 400);
-		else if (err == DeserializationError::IncompleteInput) sendError("Incomplete input", 422);
-		else if (err == DeserializationError::InvalidInput) sendError("Invalid input", 422);
-		else if (err == DeserializationError::NoMemory) sendError("Out of memory (configuration too long)", 413);
-		else if (err == DeserializationError::TooDeep) sendError("Configuration too deep (so it must be invalid)", 413);
-		else sendError("Cannot save configuration because no.", 400);
-}
-
-
-void customValidator() {
-	String rawData = server.arg("plain");
-	StaticJsonDocument<2*JSON_CONFIG_BUF_SIZE> *testJson = new StaticJsonDocument<2*JSON_CONFIG_BUF_SIZE>();
-	DeserializationError err = deserializeJson(*testJson, rawData);
-	if (err != DeserializationError::Ok) {
-		sendDeserializationError(err);
-		delete testJson;
-		return;
-	}
+void customValidator(HTTPRequest* req, HTTPResponse* res) {
+	DynamicJsonDocument testJson(JSON_CONFIG_BUF_SIZE);
+	if (!server::readJson(req, res, testJson)) return;
 	const auto configSchema = configuration::getConfigSchema();
-	const String assertMessage = testJson->containsKey("type") ? validateJson((*testJson)["data"], configSchema, configSchema[(*testJson)["type"].as<String>()]) : validateJson((*testJson)["data"], (*testJson)["schema"], (*testJson)["schema"]["main"]);
-	delete testJson;
+	const String assertMessage = 
+		testJson.containsKey("type") ? 
+		validateJson(testJson["data"], configSchema, configSchema[testJson["type"].as<String>()]) : 
+		validateJson(testJson["data"], testJson["schema"], testJson["schema"]["main"]);
 	if (assertMessage != "") {
-		sendError(assertMessage, 422);
+		server::sendError(res, assertMessage, 422);
 		return;
 	}
-	sendOk();
+	server::sendOk(res);
 }
 
 
-void connectToNetworkEndpoint() {
-	String rawData = server.arg("plain");
+void connectToNetworkEndpoint(HTTPRequest* req, HTTPResponse* res) {
 	StaticJsonDocument<768> data;
-	DeserializationError err = deserializeJson(data, rawData);
-	if (err != DeserializationError::Ok) {
-		sendDeserializationError(err);
-		return;
-	}
-	const String assertMessage = configuration::assertJson(data, "wifi-entry");
-	if (assertMessage != "") {
-		sendError(assertMessage, 422);
-		return;
-	}
-	sendOk();
+	if (!server::readJson(req, res, data, "wifi-entry")) return;
+	server::sendOk(res);
 	const String ssid = data["ssid"].as<String>();
 	const String password = data["password"].as<String>();
-	taskQueue.push_back([ssid, password](){wifi::connectToNetwork(ssid, password);});
+	taskQueue.push_back([=](){wifi::connectToNetwork(ssid, password);});
 }
 
 
-void autoScanWifiEndpoint() {
-	sendOk(); 
+void autoScanWifiEndpoint(HTTPRequest* req, HTTPResponse* res) {
+	server::sendOk(res); 
 	taskQueue.push_back(wifi::scanNetworks);
 }
 
 
-void openAccessPointEndpoint() {
-	sendOk(); 
+void openAccessPointEndpoint(HTTPRequest* req, HTTPResponse* res) {
+	server::sendOk(res); 
 	taskQueue.push_back(wifi::openAccessPoint);
 }
 
 
-void recvConfiguration(bool save=true) {
-	String rawData = server.arg("plain");
+void recvConfiguration(HTTPRequest* req, HTTPResponse* res) {
 	DynamicJsonDocument configuration(JSON_CONFIG_BUF_SIZE);
-	DeserializationError err = deserializeJson(configuration, rawData);
-	if (err != DeserializationError::Ok) {
-		sendDeserializationError(err);
-		return;
-	}
-	const String assertMessage = configuration::assertConfiguration(configuration);
-	if (assertMessage != "") {
-		sendError(assertMessage, 422);
-		return;
-	}
-	if (save) {
-		configuration::setConfiguration(configuration);
-		updateModules(configuration);
-	}
-	sendOk();
+	if (!server::readJson(req, res, configuration, "main")) return;
+	configuration::setConfiguration(configuration);
+	updateModules(configuration);
+	server::sendOk(res);
 }
 
-
-void update() {
+/*
+void update(HTTPRequest* req, HTTPResponse* res) {
 	HTTPUpload& upload = server.upload();
 	if (upload.status == UPLOAD_FILE_START) {
 		Serial.printf("Update: %s\n", upload.filename.c_str());
@@ -217,17 +134,6 @@ void update() {
 		Update.end(true);
 		Update.printError(Serial);    
 	}
-}
-
-
-void invalidateCache() {
-	server.sendHeader("Clear-Site-Data", "\"cache\"");
-	server.sendHeader("Connection", "close");
-	sendOk();
-}
-
-
-void updateEnd() {
 	if (Update.hasError()) 
 		sendError(Update.errorString());
 	else {
@@ -235,34 +141,115 @@ void updateEnd() {
 		taskQueue.push_back([](){ESP.restart();});
 	}
 }
+*/
 
 
-void getVersionInfo() {
-	char buf[JSON_VERSION_INFO_BUF_SIZE];
-	unsigned int size = serializeJson(configuration::getVersionInfo(), buf, JSON_VERSION_INFO_BUF_SIZE-1);
-	buf[size] = 0;
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
+void update(HTTPRequest* req, HTTPResponse* res) {
+    // Sprawdzenie typu Content-Type, aby upewnić się, że jest to multipart/form-data
+    std::string contentType = req->getHeader("Content-Type");
+    size_t semicolonPos = contentType.find(";");
+    if (semicolonPos != std::string::npos) {
+        contentType = contentType.substr(0, semicolonPos);
+    }
+
+    if (contentType != "multipart/form-data") {
+        Serial.printf("Unknown POST Content-Type: %s\n", contentType.c_str());
+		server::sendError(res, "Unsupported Content-Type", 415);
+        return;
+    }
+
+    // Tworzenie parsera dla multipart/form-data
+    httpsserver::HTTPMultipartBodyParser* parser = new httpsserver::HTTPMultipartBodyParser(req);
+    bool updateStarted = false;
+    bool updateError = false;
+
+    while (parser->nextField()) {
+        // Odczytanie nazwy pola i nazwy pliku
+        std::string name = parser->getFieldName();
+        std::string filename = parser->getFieldFilename();
+
+        // Jeśli pole nie jest plikiem, przechodzimy dalej
+        if (name != "file") {
+            Serial.println("Skipping unexpected field");
+            continue;
+        }
+
+        Serial.printf("Update: %s\n", filename.c_str());
+
+        // Rozpoczęcie procesu aktualizacji
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+            Update.printError(Serial);
+			server::sendError(res, "Cannot begin upgrading", 500);
+            updateError = true;
+            break;
+        }
+        updateStarted = true;
+
+        // Pobieranie i zapisywanie danych pliku
+        while (!parser->endOfField()) {
+            byte buf[512];
+            size_t readLength = parser->read(buf, sizeof(buf));
+            if (Update.write(buf, readLength) != readLength) {
+                Update.printError(Serial);
+				server::sendError(res, "Error during uploading - probably too large update file", 500);
+                updateError = true;
+                break;
+            }
+        }
+        if (updateError) break;
+    }
+
+    delete parser;
+
+	if (updateError) {
+		if (updateStarted) 
+			Update.abort();
+		return;
+	}
+
+    // Zakończenie aktualizacji
+    if (updateStarted) {
+        if (Update.end(true)) {  // true oznacza, że zakończono z sukcesem
+            Serial.println("Update Finished");
+			server::sendOk(res);
+            invalidateCache(req, res);
+            taskQueue.push_back([]() { ESP.restart(); });
+        } else {
+            Serial.println("Update failed at end");
+            Update.printError(Serial);
+			server::sendError(res, "Update failed", 500);
+        }
+    } else {
+        Serial.println("No update file received");
+		server::sendError(res, "No update file received", 400);
+    }
 }
 
 
-void sendNetworks() {
+void invalidateCache(HTTPRequest* req, HTTPResponse* res) {
+	res->setHeader("Clear-Site-Data", "\"cache\"");
+	res->setHeader("Connection", "close");
+	server::sendOk(res);
+}
+
+
+void getVersionInfo(HTTPRequest* req, HTTPResponse* res) {
+	server::sendJson(res, configuration::getVersionInfo());
+}
+
+
+void sendNetworks(HTTPRequest* req, HTTPResponse* res) {
 	unsigned lengthSum = 0;
 	const auto& scannedNetworks = wifi::getScannedNetworks();
 	for (auto s : scannedNetworks) lengthSum += s.length();
-	unsigned bufSize = lengthSum + scannedNetworks.size() + 32;
+	unsigned bufSize = lengthSum + 64 * scannedNetworks.size() + 32;
 	DynamicJsonDocument networkList(bufSize);
-	char* buf = new char[bufSize+1];
 	for (auto s : scannedNetworks) networkList.add(s);
-	unsigned size = serializeJson(networkList, buf, bufSize);
-	buf[size] = 0;
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
-	delete [] buf;
+	server::sendJson(res, networkList, bufSize);
 }
 
 
-void sendFavourites() {
+void sendFavorites(HTTPRequest* req, HTTPResponse* res) {
 	DynamicJsonDocument favorites = configuration::getFavorites();
 	String colorspace = webColorSpace;
 	DynamicJsonDocument response(JSON_FAVORITES_BUF_SIZE);
@@ -279,17 +266,14 @@ void sendFavourites() {
 		colorJson.add(channels[2]);
 		colorJson.add(channels[3]);
 	}
-
-	char* buf = new char[JSON_FAVORITES_BUF_SIZE];
-	size = serializeJson(response, buf, JSON_FAVORITES_BUF_SIZE-1);
-	buf[size] = 0;
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
-	delete [] buf;
+	server::sendJson(res, response, JSON_FAVORITES_BUF_SIZE);
 }
 
 
-void dumpFavorite(bool useWhite=false) {
+void dumpFavorite(HTTPRequest* req, HTTPResponse* res) {
+	std::string white = "0";
+	req->getParams()->getQueryParameter("white", white);
+	bool useWhite = white != "0";
 	String dumped = inputs::dumpFavoriteColor(useWhite);
 	ColorChannels channels = inputs::getAuto(webColorSpace);
 	char buf[256];
@@ -301,39 +285,31 @@ void dumpFavorite(bool useWhite=false) {
 		channels[3]
 	);
 	buf[size] = 0;
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
+	res->setHeader("Cache-Control", "no-cache");
+	res->setHeader("Content-Type", "application/json");
+	res->println(buf);
 }
 
 
-void saveFavorites() {
+void saveFavorites(HTTPRequest* req, HTTPResponse* res) {
 	DynamicJsonDocument data(JSON_FAVORITES_BUF_SIZE);
-	String rawData = server.arg("plain");
-	DeserializationError err = deserializeJson(data, rawData);
-	if (err != DeserializationError::Ok) 
-		return sendError("Deserialization error");
-	String assertMessage = configuration::assertJson(data, "favorites-list");
-	if (assertMessage != "") {
-		sendError(assertMessage, 422);
-		return;
-	}
+	if (!server::readJson(req, res, data, "favorites-list")) return;
 	configuration::setFavorites(data);
-	server.sendHeader("Cache-Control", "no-cache");
-	sendOk();
+	server::sendOk(res);
 }
 
 
-void applyFavorite() {
-	String code = server.hasArg("code") ? server.arg("code") : "000000000";
+void applyFavorite(HTTPRequest* req, HTTPResponse* res) {
+	std::string code = "000000000";
+	req->getParams()->getQueryParameter("code", code);
 	knobs::turnOff();
-	inputs::applyFavoriteColor(code);
+	inputs::applyFavoriteColor(String(code.c_str()));
 	outputs::writeOutput();
-	server.sendHeader("Cache-Control", "no-cache");
-	sendOk();
+	server::sendOk(res);
 }
 
 
-void sendColors() {
+void sendColors(HTTPRequest* req, HTTPResponse* res) {
 	ColorChannels channels = inputs::getAuto(webColorSpace);
 	char buf[256];
 	int size = sprintf(buf, "[%f, %f, %f, %f]", 
@@ -343,26 +319,19 @@ void sendColors() {
 		channels[3]
 	);
 	buf[size] = 0;
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, default_config_json_mime_type, buf);
+	res->setHeader("Cache-Control", "no-cache");
+	res->setHeader("Content-Type", "application/json");
+	res->println(buf);
 }
 
 
-void setColors() {
+void setColors(HTTPRequest* req, HTTPResponse* res) {
 	StaticJsonDocument<256> data;
-	String rawData = server.arg("plain");
-	DeserializationError err = deserializeJson(data, rawData);
-	if (err != DeserializationError::Ok) 
-		return sendError("Deserialization error");
-	String assertMessage = configuration::assertJson(data, "color-channels");
-	if (assertMessage != "") {
-		sendError(assertMessage, 422);
-		return;
-	}
+	if (!server::readJson(req, res, data, "color-channels")) return;
 	inputs::setAuto(webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
 	outputs::writeOutput();
 	knobs::turnOff();
-	sendOk();   
+	server::sendOk(res);   
 }
 
 
@@ -371,19 +340,11 @@ int floatFilter15(float x) {
 };
 
 
-void renderFavoriteColor() {
-	uint8_t* decompressed_buffer = new uint8_t[favorite_color_template_html_decompressed_size+1];
-	char* render_buffer = new char[favorite_color_template_html_decompressed_size+256];
-	size_t decompressed_size = fastlz_decompress(favorite_color_template_html_data, favorite_color_template_html_size, decompressed_buffer, favorite_color_template_html_decompressed_size);
-	if (decompressed_size == 0) {
-			delete [] render_buffer;
-			delete [] decompressed_buffer;
-			sendError("Decompression error");
-	}
-	decompressed_buffer[decompressed_size] = 0;
-
-	String code = server.hasArg("code") ? server.arg("code") : "000000000";
-	inputs::applyFavoriteColor(code);
+void renderFavoriteColor(HTTPRequest* req, HTTPResponse* res) {
+	String templateStr = configuration::getResourceStr(resource_favorite_color_template_html);
+	std::string code = "000000000";
+	req->getParams()->getQueryParameter("code", code);
+	inputs::applyFavoriteColor(String(code.c_str()));
 	outputs::writeOutput();
 	knobs::turnOff();
 
@@ -394,35 +355,32 @@ void renderFavoriteColor() {
 	if (channelsMode == "rgb") rgbToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
 	if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
 	if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
-
+	char* render_buffer = new char[favorite_color_template_html_decompressed_size+256];
 	sprintf(
-		render_buffer, (const char*)decompressed_buffer,
+		render_buffer, templateStr.c_str(),
 		(int)floor(255*r), (int)floor(255*g), (int)floor(255*b)
 	);
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, "text/html", (const char*)render_buffer);
+	res->setHeader("Cache-Control", "no-cache");
+  	res->setHeader("Content-Type", "text/html");
+	res->println(render_buffer);
 	delete [] render_buffer;
-	delete [] decompressed_buffer;
 }
 
 
-void simpleMode() {
-	if (server.method() == HTTP_POST) {
-		auto fun = [](String value) { return constrain<float>((float)atoi(value.c_str())/15.f, 0, 1);};    
-		ColorChannels channels = {fun(server.arg("ch0")), fun(server.arg("ch1")), fun(server.arg("ch2")), fun(server.arg("ch3"))};
+void simpleMode(HTTPRequest* req, HTTPResponse* res) {
+	if (req->getMethod() == "POST") {
+		httpsserver::ResourceParameters* params = req->getParams();
+		auto fun = [=](std::string name) {
+			std::string param = "0000";
+			params->getQueryParameter(name, param);
+			return constrain<float>((float)atoi(param.c_str())/15.f, 0, 1);
+		};    
+		ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
 		knobs::turnOff();
 		inputs::setAuto(webColorSpace, channels);
 		outputs::writeOutput();
 	}
-	uint8_t* decompressed_buffer = new uint8_t[simple_template_html_decompressed_size+1];
-	char* render_buffer = new char[simple_template_html_decompressed_size+256];
-	size_t decompressed_size = fastlz_decompress(simple_template_html_data, simple_template_html_size, decompressed_buffer, simple_template_html_decompressed_size);
-	if (decompressed_size == 0) {
-			delete [] render_buffer;
-			delete [] decompressed_buffer;
-			sendError("Decompression error");
-	}
-	decompressed_buffer[decompressed_size] = 0;
+	String templateStr = configuration::getResourceStr(resource_simple_template_html);
 	const char* colorspaces[] = {"hsv", "hsl", "rgb"};
 	const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
 	const char** channelsInCurrentColorspace = channels[0];
@@ -431,8 +389,9 @@ void simpleMode() {
 		if (destColorspace == colorspaces[i])
 			channelsInCurrentColorspace = channels[i];
 	ColorChannels filteredChannels = inputs::getAuto(webColorSpace);
+	char* render_buffer = new char[simple_template_html_decompressed_size+256];
 	sprintf(
-		render_buffer, (const char*)decompressed_buffer, 
+		render_buffer, templateStr.c_str(), 
 		channelsInCurrentColorspace[0],
 		floatFilter15(filteredChannels[0]),
 		channelsInCurrentColorspace[1],
@@ -443,50 +402,47 @@ void simpleMode() {
 		channelsInCurrentColorspace[3],
 		floatFilter15(filteredChannels[3])
 	);
-	server.sendHeader("Cache-Control", "no-cache");
-	server.send(200, "text/html", (const char*)render_buffer);
+	res->setHeader("Cache-Control", "no-cache");
+  	res->setHeader("Content-Type", "text/html");
+	res->println(render_buffer);
 	delete [] render_buffer;
-	delete [] decompressed_buffer;
 }
 
 
-void configureServer() {
-	httpsserver::createSelfSignedCert(
-		cert,
-		httpsserver::KEYSIZE_2048,
-		"CN=leddriver.local,O=FancyCompany,C=PL",
-		"20190101000000",
-		"29990101000000"
-	);
-	secureServer = new httpsserver::HTTPSServer(&cert);
+void handleIndex(HTTPRequest* req, HTTPResponse* res) {
+  res->setHeader("Content-Type", "text/html");
+  res->println("<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");
+}
 
-	server.enableDelay(false);
-	server.on("/", HTTP_GET, [&server](){sendCacheControlHeader(); server.send(200, "text/html", "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");});
-	server.on("/config.json", HTTP_GET, sendConfiguration);
-	server.on("/reset_configuration", HTTP_GET, [&server](){resetConfiguration(); sendOk();});
-	server.on("/favicon.ico", HTTP_GET, [&server](){sendDecompressedData(server, resource_favicon_svg.mime_type, resource_favicon_svg.data, resource_favicon_svg.size, resource_favicon_svg.decompressed_size);});
-	for (unsigned i=0;i<resources_count;i++)
-		server.on(resources[i]->name, HTTP_GET, [i, &server](){sendDecompressedData(server, resources[i]->mime_type, resources[i]->data, resources[i]->size, resources[i]->decompressed_size);});  
-	server.on("/config.json", HTTP_POST, [](){recvConfiguration(true);});
-	server.on("/assert_config", HTTP_POST, [](){recvConfiguration(false);});
-	server.on("/assert_json", HTTP_POST, customValidator);
-	server.on("/networks.json", HTTP_GET, sendNetworks);
-	server.on("/connect_to", HTTP_POST, connectToNetworkEndpoint);
-	server.on("/refresh_networks", HTTP_GET, autoScanWifiEndpoint);
-	server.on("/open_access_point", HTTP_GET, openAccessPointEndpoint);
-	server.on("/color.json", HTTP_GET, sendColors);
-	server.on("/color.json", HTTP_POST, setColors);
-	server.on("/simple.html", HTTP_GET, simpleMode);
-	server.on("/simple.html", HTTP_POST, simpleMode);
-	server.on("/update", HTTP_POST, updateEnd, update);
-	server.on("/version_info.json", HTTP_GET, getVersionInfo);
-	server.on("/favorite_color.html", HTTP_GET, renderFavoriteColor);
-	server.on("/get_favorites", HTTP_GET, sendFavourites);
-	server.on("/new_favorite", HTTP_GET, [](){dumpFavorite(server.hasArg("white") && server.arg("white") != "0");});
-	server.on("/save_favorites", HTTP_POST, saveFavorites);
-	server.on("/apply_favorite", HTTP_GET, applyFavorite);
-	server.on("/invalidate_cache", HTTP_GET, invalidateCache);
-	server.begin();
+
+void sendFavicon(HTTPRequest* req, HTTPResponse* res) {
+	server::sendDecompressedData(res, resource_favicon_svg);
+}
+
+
+void configureServer() {	
+	server::addCallback("/", "GET", handleIndex);
+	server::addCallback("/config.json", "GET", sendConfiguration);
+	server::addCallback("/favicon.ico", "GET", sendFavicon);
+	server::addCallback("/config.json", "POST", recvConfiguration);
+	server::addCallback("/assert_json", "POST", customValidator);
+	server::addCallback("/networks.json", "GET", sendNetworks);
+	server::addCallback("/connect_to", "POST", connectToNetworkEndpoint);
+	server::addCallback("/refresh_networks", "GET", autoScanWifiEndpoint);
+	server::addCallback("/open_access_point", "GET", openAccessPointEndpoint);
+	server::addCallback("/color.json", "GET", sendColors);
+	server::addCallback("/color.json", "POST", setColors);
+	server::addCallback("/simple.html", "GET", simpleMode);
+	server::addCallback("/simple.html", "POST", simpleMode);
+	server::addCallback("/update", "POST", update);
+	server::addCallback("/version_info.json", "GET", getVersionInfo);
+	server::addCallback("/favorite_color.html", "GET", renderFavoriteColor);
+	server::addCallback("/get_favorites", "GET", sendFavorites);
+	server::addCallback("/new_favorite", "GET", dumpFavorite);
+	server::addCallback("/save_favorites", "POST", saveFavorites);
+	server::addCallback("/apply_favorite", "GET", applyFavorite);
+	server::addCallback("/invalidate_cache", "GET", invalidateCache);
+	
 }
 
 
@@ -558,6 +514,7 @@ void setup() {
 	knobs::check(true);
 	knobs::attachTimer();
 	configureServer();
+    server::configure();
 }
 
 unsigned long long int rareChecksTime = 0;
@@ -569,7 +526,7 @@ void loop() {
 		unsigned i = 0;
 		do {
 			unsigned long long int t = millis();
-			server.handleClient();
+			server::loop();
 			ts = millis() - t;
 		} while (ts > 1 && i++ < 100);
 	}
