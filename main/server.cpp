@@ -76,6 +76,18 @@ namespace server {
     }
 
 
+    void start() {
+        secureServer->start();
+        insecureServer->start();
+    }
+
+
+    void loop() {
+        secureServer->loop();
+        insecureServer->loop();
+    }
+
+
     void addCallback(const char* address, const char* method, const CallbackFunction* callback) {
         ResourceNode* node = new ResourceNode(address, method, callback);
         secureServer->registerNode(node);
@@ -182,12 +194,6 @@ namespace server {
             }
         }
         return true;
-    }
-
-
-    void loop() {
-        secureServer->loop();
-        insecureServer->loop();
     }
 
 }

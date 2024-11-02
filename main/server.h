@@ -26,6 +26,7 @@ namespace server {
     
     void addCallback(const char* address, const char* method, const CallbackFunction* callback);
     void configure();
+    void start();
     void loop();
 
     void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize = 1024, int costatusCode = 200);

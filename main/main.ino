@@ -420,7 +420,8 @@ void sendFavicon(HTTPRequest* req, HTTPResponse* res) {
 }
 
 
-void configureServer() {	
+void configureServer() {
+    server::configure();	
 	server::addCallback("/", "GET", handleIndex);
 	server::addCallback("/config.json", "GET", sendConfiguration);
 	server::addCallback("/favicon.ico", "GET", sendFavicon);
@@ -442,7 +443,7 @@ void configureServer() {
 	server::addCallback("/save_favorites", "POST", saveFavorites);
 	server::addCallback("/apply_favorite", "GET", applyFavorite);
 	server::addCallback("/invalidate_cache", "GET", invalidateCache);
-	
+	server::start();
 }
 
 
@@ -514,7 +515,6 @@ void setup() {
 	knobs::check(true);
 	knobs::attachTimer();
 	configureServer();
-    server::configure();
 }
 
 unsigned long long int rareChecksTime = 0;
