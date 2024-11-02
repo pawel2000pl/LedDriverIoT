@@ -1,8 +1,10 @@
 #include <Arduino.h>
 #include <FS.h>
 #include <list>
+#include <vector>
 #include <SPIFFS.h>
 #include <Update.h>
+#include <base64.hpp>
 #include <functional>
 #include <ArduinoJson.h>
 #include <driver/temperature_sensor.h>
@@ -117,112 +119,40 @@ void recvConfiguration(HTTPRequest* req, HTTPResponse* res) {
 	server::sendOk(res);
 }
 
-/*
-void update(HTTPRequest* req, HTTPResponse* res) {
-	HTTPUpload& upload = server.upload();
-	if (upload.status == UPLOAD_FILE_START) {
-		Serial.printf("Update: %s\n", upload.filename.c_str());
-		if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
-			Update.printError(Serial);
-		}
-	} else if (upload.status == UPLOAD_FILE_WRITE) {
-		if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-			Update.printError(Serial);
-		}
-	} else if (upload.status == UPLOAD_FILE_END) {
-		Serial.println("Finished");
-		Update.end(true);
-		Update.printError(Serial);    
-	}
-	if (Update.hasError()) 
-		sendError(Update.errorString());
-	else {
-		invalidateCache();
-		taskQueue.push_back([](){ESP.restart();});
-	}
-}
-*/
-
 
 void update(HTTPRequest* req, HTTPResponse* res) {
-    // Sprawdzenie typu Content-Type, aby upewnić się, że jest to multipart/form-data
-    std::string contentType = req->getHeader("Content-Type");
-    size_t semicolonPos = contentType.find(";");
-    if (semicolonPos != std::string::npos) {
-        contentType = contentType.substr(0, semicolonPos);
-    }
-
-    if (contentType != "multipart/form-data") {
-        Serial.printf("Unknown POST Content-Type: %s\n", contentType.c_str());
-		server::sendError(res, "Unsupported Content-Type", 415);
-        return;
-    }
-
-    // Tworzenie parsera dla multipart/form-data
-    httpsserver::HTTPMultipartBodyParser* parser = new httpsserver::HTTPMultipartBodyParser(req);
-    bool updateStarted = false;
-    bool updateError = false;
-
-    while (parser->nextField()) {
-        // Odczytanie nazwy pola i nazwy pliku
-        std::string name = parser->getFieldName();
-        std::string filename = parser->getFieldFilename();
-
-        // Jeśli pole nie jest plikiem, przechodzimy dalej
-        if (name != "file") {
-            Serial.println("Skipping unexpected field");
-            continue;
-        }
-
-        Serial.printf("Update: %s\n", filename.c_str());
-
-        // Rozpoczęcie procesu aktualizacji
-        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
-            Update.printError(Serial);
-			server::sendError(res, "Cannot begin upgrading", 500);
-            updateError = true;
-            break;
-        }
-        updateStarted = true;
-
-        // Pobieranie i zapisywanie danych pliku
-        while (!parser->endOfField()) {
-            byte buf[512];
-            size_t readLength = parser->read(buf, sizeof(buf));
-            if (Update.write(buf, readLength) != readLength) {
-                Update.printError(Serial);
-				server::sendError(res, "Error during uploading - probably too large update file", 500);
-                updateError = true;
-                break;
-            }
-        }
-        if (updateError) break;
-    }
-
-    delete parser;
-
-	if (updateError) {
-		if (updateStarted) 
-			Update.abort();
+    if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+		Update.printError(Serial);
+		Update.abort();
+		server::sendError(res, "Cannot begin the update", 500);
 		return;
 	}
 
-    // Zakończenie aktualizacji
-    if (updateStarted) {
-        if (Update.end(true)) {  // true oznacza, że zakończono z sukcesem
-            Serial.println("Update Finished");
-			server::sendOk(res);
-            invalidateCache(req, res);
-            taskQueue.push_back([]() { ESP.restart(); });
-        } else {
-            Serial.println("Update failed at end");
-            Update.printError(Serial);
-			server::sendError(res, "Update failed", 500);
-        }
-    } else {
-        Serial.println("No update file received");
-		server::sendError(res, "No update file received", 400);
-    }
+	const unsigned max_buf_size = 16*1024;
+	std::vector<unsigned char> buf;
+	buf.resize(max_buf_size+4);
+	unsigned char* bufPtr = buf.data();
+
+	while (!req->requestComplete()) {
+		unsigned size = 0;
+		for (int i = 0; i < 32 && max_buf_size > size; i++)
+			size += req->readBytes(bufPtr+size, max_buf_size-size);
+		if (Update.write(bufPtr, size) != size) {
+			Update.printError(Serial);
+			Update.abort();
+			server::sendError(res, "Update error (network error or update file is too large)", 400);
+			return;
+		}
+	}
+
+	if ((!Update.end(true)) || Update.hasError()) 
+		server::sendError(res, Update.errorString(), 500);
+	else {
+		invalidateCache(req, res);
+		taskQueue.push_back([](){ESP.restart();});
+		server::sendOk(res);
+	}
+	Update.printError(Serial);   
 }
 
 

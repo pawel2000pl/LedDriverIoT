@@ -10,7 +10,9 @@ RUN arduino-cli core update-index
 RUN arduino-cli board listall
 RUN arduino-cli core install esp32:esp32
 RUN arduino-cli lib install ArduinoJson
+RUN arduino-cli lib install base64
 RUN git clone https://github.com/meshtastic/esp32_https_server /root/Arduino/libraries/esp32_https_server
+
 
 RUN mkdir -p /app
 COPY compilation_utils /app/compilation_utils
@@ -23,7 +25,7 @@ RUN python3 compilation_utils/validate_json.py /app/resources/default_config.jso
 RUN python3 compilation_utils/compile_resources.py
 RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
-RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --build-property upload.maximum_size=1966080 --build-property compiler.optimization_flags=-Os --output-dir /tmp/app-build ./main.ino
+RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -MMD -c" --output-dir /tmp/app-build ./main.ino
 
 RUN mkdir -p /var/www/build
 RUN cp /tmp/app-build/main* /var/www/build/

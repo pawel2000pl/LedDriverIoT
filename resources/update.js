@@ -1,27 +1,13 @@
-
-$id('update-form').addEventListener('submit', function(e) {
+$id('update-btn').addEventListener('click', async function(e) {
     e.preventDefault();
-    var form = $id('update-form');
-    var data = new FormData(form);
+    const fileInput = $id('update-file');
     $id('update-btn').disabled = true;
 
     fetch('/update', {
         method: 'POST',
-        body: data,
+        body: await fileInput.files[0].bytes(),
         headers: {
             'Accept': 'application/json'
-        },
-        processData: false,
-        contentType: false,
-        xhr: function() {
-            var xhr = new XMLHttpRequest();
-            xhr.upload.addEventListener('progress', function(evt) {
-                if (evt.lengthComputable) {
-                    var per = evt.loaded / evt.total;
-                    document.getElementById('prg').innerHTML = 'progress: ' + Math.round(per * 100) + '%';
-                }
-            }, false);
-            return xhr;
         }
     })
     .then(response => {

@@ -152,14 +152,14 @@ namespace server {
 
 
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err) {
-        if (err == DeserializationError::Ok) return true;
+        if (err == DeserializationError::Ok) return false;
         else if (err == DeserializationError::EmptyInput) sendError(res, "Empty input", 400);
         else if (err == DeserializationError::IncompleteInput) sendError(res, "Incomplete input", 422);
         else if (err == DeserializationError::InvalidInput) sendError(res, "Invalid input", 422);
         else if (err == DeserializationError::NoMemory) sendError(res, "Out of memory (content too long)", 413);
         else if (err == DeserializationError::TooDeep) sendError(res, "Data structure is too deep", 413);
         else sendError(res, "Unknown error in deserialization", 400);
-        return false;
+        return true;
     }
 
 
@@ -171,11 +171,12 @@ namespace server {
 
     std::vector<char> readBuffer(HTTPRequest* req) {
         std::vector<char> result;
-        result.reserve(MAX_POST_SIZE);
+        result.resize(MAX_POST_SIZE);
         unsigned size = 0;
         while (!req->requestComplete() && size < MAX_POST_SIZE) {
             size += req->readChars(result.data() + size, MAX_POST_SIZE-size);
         }
+        result.resize(size);
         result.shrink_to_fit();
         return std::move(result);
     }
