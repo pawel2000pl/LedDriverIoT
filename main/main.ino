@@ -4,7 +4,6 @@
 #include <vector>
 #include <SPIFFS.h>
 #include <Update.h>
-#include <base64.hpp>
 #include <functional>
 #include <ArduinoJson.h>
 #include <driver/temperature_sensor.h>

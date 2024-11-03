@@ -10,7 +10,6 @@ RUN arduino-cli core update-index
 RUN arduino-cli board listall
 RUN arduino-cli core install esp32:esp32
 RUN arduino-cli lib install ArduinoJson
-RUN arduino-cli lib install base64
 RUN git clone https://github.com/meshtastic/esp32_https_server /root/Arduino/libraries/esp32_https_server
 
 
