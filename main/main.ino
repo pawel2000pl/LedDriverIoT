@@ -1,7 +1,5 @@
 #include <Arduino.h>
 
-#include <FS.h>
-#include <SPIFFS.h>
 
 #include "src/wifi.h"
 #include "src/knobs.h"
@@ -43,7 +41,7 @@ void setup() {
 	Serial.println("Initialization");
 	randomSeed(29615);
 	hardware::detectHardware();
-	SPIFFS.begin(true);
+	configuration::init();
 	temperature::init();
 	initLedC();
 	modules::updateModules();

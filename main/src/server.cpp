@@ -1,9 +1,11 @@
 #include "server.h"
 
 #include <sstream>
+
 #include "fastlz.h"
 #include "resources.h"
 #include "configuration.h"
+
 
 namespace server {
 
@@ -59,14 +61,35 @@ namespace server {
     }
 
 
-    void configure() {
+    void generateCert() {
         httpsserver::createSelfSignedCert(
             cert,
             httpsserver::KEYSIZE_2048,
-            "CN=leddriver.local,O=FancyCompany,C=PL",
+            "CN=leddriver.local,O=PawelBielecki,C=PL",
             getCertValidFromDate().c_str(),
             getCertValidUntilDate().c_str()
         );
+        configuration::saveFile(CERT_KEY_FILE_NAME, cert.getPKData(), cert.getPKLength());
+        configuration::saveFile(CERT_PUB_FILE_NAME, cert.getCertData(), cert.getCertLength());
+    }
+
+
+    void loadCert() {
+        auto key = configuration::getFileBin(CERT_KEY_FILE_NAME);
+        auto pub = configuration::getFileBin(CERT_PUB_FILE_NAME);
+        if (key.size() & pub.size()) {
+            cert = httpsserver::SSLCert(
+                pub.data(), pub.size(),
+                key.data(), pub.size()
+            );
+        } else 
+            generateCert();
+    }
+
+
+    void configure() {
+        loadCert();
+
         secureServer = new httpsserver::HTTPSServer(&cert);
         insecureServer = new httpsserver::HTTPServer();
 
