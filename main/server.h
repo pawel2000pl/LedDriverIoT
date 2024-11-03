@@ -19,7 +19,6 @@ using HTTPResponse = httpsserver::HTTPResponse;
 using HTTPRequest = httpsserver::HTTPRequest;
 using ResourceNode = httpsserver::ResourceNode;
 
-
 namespace server {
 
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
