@@ -7,7 +7,7 @@ import mimetypes
 import json
 import hashlib
 
-os.system('gcc --std=c11 -O3 -x c main/fastlz.cpp -fpic -shared -o fastlz.so')
+os.system('gcc --std=c11 -O3 -x c main/src/fastlz.cpp -fpic -shared -o fastlz.so')
 
 lib = ctypes.CDLL('./fastlz.so')
 fastlz_compress_level = lib.fastlz_compress_level
@@ -202,5 +202,5 @@ result_content.append(create_name_resolver([rs[len('resources'):] for rs in all_
 result_content.append('}')
 result_content.append('')
 
-with open('main/resources.h', 'w') as f: f.write("\n".join(result_header))
-with open('main/resources.cpp', 'w') as f: f.write("\n".join(result_content))
+with open('main/src/resources.h', 'w') as f: f.write("\n".join(result_header))
+with open('main/src/resources.cpp', 'w') as f: f.write("\n".join(result_content))

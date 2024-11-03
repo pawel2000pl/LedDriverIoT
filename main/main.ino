@@ -3,15 +3,15 @@
 #include <FS.h>
 #include <SPIFFS.h>
 
-#include "wifi.h"
-#include "knobs.h"
-#include "server.h"
-#include "modules.h"
-#include "ledc_driver.h"
-#include "temperature.h"
-#include "configuration.h"
-#include "hardware_configuration.h"
-#include "src/initialization.h"
+#include "src/wifi.h"
+#include "src/knobs.h"
+#include "src/server.h"
+#include "src/modules.h"
+#include "src/ledc_driver.h"
+#include "src/temperature.h"
+#include "src/configuration.h"
+#include "src/hardware_configuration.h"
+#include "src/endpoints/initialization.h"
 
 #define RESET_CONF_TIME 10000
 #define RARE_CHECKS_INTERVAL (15000)
