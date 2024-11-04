@@ -62,12 +62,28 @@ namespace configuration {
     }
 
 
+    void removeFile(const String& filename) {
+        SPIFFS.remove(filename);
+    }
+
+
+    unsigned checkSum(const unsigned char* ptr, unsigned size, unsigned d) {
+        unsigned long long int buf = 1;
+        const unsigned char* endloop = ptr + size;
+        for (auto i = ptr; i < endloop; i++) {
+            buf = ((buf << 8) | *i);
+            if (buf >> 56) buf %= d;
+        }
+        return (buf < d) ? buf % d : buf;
+    }
+
+
     std::vector<unsigned char> getFileBin(const String& filename) {
-        File file = SPIFFS.open(filename, "r");
+        File file = SPIFFS.open(filename);
         if (file) {
             std::vector<unsigned char> result;
             result.resize(file.size());
-            file.readBytes((char*)result.data(), file.size());
+            file.read(result.data(), file.size());
             file.close();
             return std::move(result);
         }
@@ -76,7 +92,7 @@ namespace configuration {
 
 
     String getFileStr(const String& filename) {
-        File file = SPIFFS.open(filename, "r");
+        File file = SPIFFS.open(filename);
         if (file) {
             String buf = file.readString();
             file.close();
@@ -87,7 +103,7 @@ namespace configuration {
 
 
     void saveFile(const String& filename, const unsigned char* content, unsigned length) {
-        File file = SPIFFS.open(filename, "w");
+        File file = SPIFFS.open(filename, FILE_WRITE);
         file.write(content, length);
         file.close();
     }

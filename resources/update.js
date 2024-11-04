@@ -12,12 +12,12 @@ $id('update-btn').addEventListener('click', async function(e) {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Device response was not ok');
         }
         alert('Success! Wait until controller connect to your network agan and then refresh this page.');
     })
     .catch(error => {
-        alert('There was a problem with the fetch operation: ' + error.toString());
+        alert("There was a problem with the network connection.\nBut it is possible that the device just restarted before it sent response that everything is ok,\nso refresh this page and check if version has changed.");
     }).finally(()=>{
         $id('update-btn').disabled = false;
     });

@@ -9,7 +9,10 @@
 
 namespace server {
 
-    httpsserver::SSLCert cert;
+
+    std::vector<unsigned char>* keyBuf = NULL;
+    std::vector<unsigned char>* certBuf = NULL;
+    httpsserver::SSLCert* cert;
     httpsserver::HTTPSServer* secureServer;
     httpsserver::HTTPServer* insecureServer;
 
@@ -61,36 +64,40 @@ namespace server {
     }
 
 
-    void generateCert() {
+    httpsserver::SSLCert* generateCert() {
+        httpsserver::SSLCert* newCert = new httpsserver::SSLCert();
         httpsserver::createSelfSignedCert(
-            cert,
-            httpsserver::KEYSIZE_2048,
+            *newCert,
+            httpsserver::KEYSIZE_1024,
             "CN=leddriver.local,O=PawelBielecki,C=PL",
             getCertValidFromDate().c_str(),
             getCertValidUntilDate().c_str()
         );
-        configuration::saveFile(CERT_KEY_FILE_NAME, cert.getPKData(), cert.getPKLength());
-        configuration::saveFile(CERT_PUB_FILE_NAME, cert.getCertData(), cert.getCertLength());
+        configuration::saveFile(CERT_PUB_FILE_NAME, newCert->getCertData(), newCert->getCertLength());
+        configuration::saveFile(CERT_KEY_FILE_NAME, newCert->getPKData(), newCert->getPKLength());
+        return newCert;
     }
 
 
-    void loadCert() {
-        auto key = configuration::getFileBin(CERT_KEY_FILE_NAME);
-        auto pub = configuration::getFileBin(CERT_PUB_FILE_NAME);
-        if (key.size() & pub.size()) {
-            cert = httpsserver::SSLCert(
-                pub.data(), pub.size(),
-                key.data(), pub.size()
+    httpsserver::SSLCert* loadCert() {
+        if (certBuf) {delete certBuf; certBuf = NULL;}
+        if (keyBuf) {delete keyBuf; keyBuf = NULL;}
+        certBuf = new std::vector<unsigned char>(configuration::getFileBin(CERT_PUB_FILE_NAME));
+        keyBuf = new std::vector<unsigned char>(configuration::getFileBin(CERT_KEY_FILE_NAME));
+        if (certBuf->size() && keyBuf->size()) {
+            return new httpsserver::SSLCert(
+                certBuf->data(), certBuf->size(),
+                keyBuf->data(), keyBuf->size()
             );
-        } else 
-            generateCert();
+        }
+        return generateCert();
     }
 
 
     void configure() {
-        loadCert();
+        cert = loadCert();
 
-        secureServer = new httpsserver::HTTPSServer(&cert);
+        secureServer = new httpsserver::HTTPSServer(cert);
         insecureServer = new httpsserver::HTTPServer();
 
         ResourceNode* staticNode  = new ResourceNode("", "GET", &sendResource);
@@ -102,6 +109,11 @@ namespace server {
     void start() {
         secureServer->start();
         insecureServer->start();
+
+        if (!secureServer->isRunning()) {
+            configuration::removeFile(CERT_PUB_FILE_NAME);
+            configuration::removeFile(CERT_KEY_FILE_NAME);
+        }
     }
 
 
