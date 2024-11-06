@@ -38,5 +38,6 @@ namespace configuration {
     void resetConfiguration();
     void setConfiguration(DynamicJsonDocument configuration);
     void setFavorites(DynamicJsonDocument favorites);
+    void deleteCert();
 
 }

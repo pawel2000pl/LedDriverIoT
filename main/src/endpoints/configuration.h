@@ -14,5 +14,6 @@ namespace endpoints {
     void invalidateCache(HTTPRequest* req, HTTPResponse* res);
     void getVersionInfo(HTTPRequest* req, HTTPResponse* res);
     void sendNetworks(HTTPRequest* req, HTTPResponse* res);
+    void deleteCert(HTTPRequest* req, HTTPResponse* res);
 
 }

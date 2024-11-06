@@ -77,6 +77,12 @@
                         </p>
                     </p>
                     <button onclick="openAccessPoint()">Open access-point now</button>
+                    <h3>Additional actions</h3>
+                    <p>
+                        <button onclick="reconnect()">Remove HTTPS certificate</button>
+                        <button onclick="deleteCert()">Run autoconnect pipeline</button>
+                        <button onclick="restart()">Restart device</button>
+                    </p>
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
                         <include-raw src="wifi_desc.html"></include-raw>

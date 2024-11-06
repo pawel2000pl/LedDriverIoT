@@ -58,6 +58,12 @@ namespace endpoints {
     }
 
 
+    void deleteCert(HTTPRequest* req, HTTPResponse* res) {
+        server::sendOk(res); 
+        configuration::deleteCert();
+    }
+
+
     void sendNetworks(HTTPRequest* req, HTTPResponse* res) {
         unsigned lengthSum = 0;
         const auto& scannedNetworks = wifi::getScannedNetworks();

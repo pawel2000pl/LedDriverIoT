@@ -6,6 +6,7 @@
 #include "../wifi.h"
 #include "../server.h"
 #include "../modules.h"
+#include "../server.h"
 
 namespace endpoints {
 
@@ -29,5 +30,15 @@ namespace endpoints {
         server::sendOk(res); 
         modules::taskQueue.push_back(wifi::openAccessPoint);
     }
+
+
+    void reconnect(HTTPRequest* req, HTTPResponse* res) {
+        server::sendOk(res); 
+        modules::taskQueue.push_back([](){
+            wifi::disconnect();
+            wifi::autoConnectWifi();
+        });
+    }
+
 
 }

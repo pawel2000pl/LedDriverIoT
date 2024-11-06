@@ -11,5 +11,6 @@ namespace endpoints {
     void connectToNetworkEndpoint(HTTPRequest* req, HTTPResponse* res);
     void autoScanWifiEndpoint(HTTPRequest* req, HTTPResponse* res);
     void openAccessPointEndpoint(HTTPRequest* req, HTTPResponse* res);
+    void reconnect(HTTPRequest* req, HTTPResponse* res);
 
 }

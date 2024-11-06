@@ -147,6 +147,12 @@ namespace configuration {
     }
 
 
+    void deleteCert() {
+        removeFile(CERT_KEY_FILE_NAME);
+        removeFile(CERT_PUB_FILE_NAME);
+    }
+    
+
     void init() {
 	    SPIFFS.begin(true);
     }

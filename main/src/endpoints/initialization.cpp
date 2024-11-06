@@ -38,11 +38,13 @@ namespace endpoints {
         server::addCallback("/connect_to", "POST", connectToNetworkEndpoint);
         server::addCallback("/refresh_networks", "GET", autoScanWifiEndpoint);
         server::addCallback("/open_access_point", "GET", openAccessPointEndpoint);
+        server::addCallback("/reconnect", "GET", reconnect);
         server::addCallback("/color.json", "GET", sendColors);
         server::addCallback("/color.json", "POST", setColors);
         server::addCallback("/simple.html", "GET", simpleMode);
         server::addCallback("/simple.html", "POST", simpleMode);
         server::addCallback("/update", "POST", update);
+        server::addCallback("/restart", "GET", restart);
         server::addCallback("/version_info.json", "GET", getVersionInfo);
         server::addCallback("/favorite_color.html", "GET", renderFavoriteColor);
         server::addCallback("/get_favorites", "GET", sendFavorites);
@@ -50,6 +52,7 @@ namespace endpoints {
         server::addCallback("/save_favorites", "POST", saveFavorites);
         server::addCallback("/apply_favorite", "GET", applyFavorite);
         server::addCallback("/invalidate_cache", "GET", invalidateCache);
+        server::addCallback("/delete_cert", "GET", deleteCert);
         server::start();
     }
 

@@ -46,4 +46,10 @@ namespace endpoints {
         Update.printError(Serial);   
     }
 
+
+    void restart(HTTPRequest* req, HTTPResponse* res) {
+        server::sendOk(res);
+        modules::taskQueue.push_back([](){ESP.restart();});
+    }
+
 }
