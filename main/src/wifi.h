@@ -12,6 +12,7 @@ namespace wifi {
     IPAddress str2ip(const String& str);
     void updateConfiguration(const JsonVariant& configuration);
     void scanNetworks();
+    void disconnect();
     bool connectToNetwork(String ssid, String password);
     void fastInit();
     bool autoSta();

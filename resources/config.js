@@ -148,3 +148,18 @@ function refreshNetworks() {
 function openAccessPoint() {
     fetch('/open_access_point');
 }
+
+
+function reconnect() {
+    fetch('/reconnect');
+}
+
+
+function deleteCert() {
+    fetch('/delete_cert');
+}
+
+
+function restart() {
+    fetch('/restart');
+}

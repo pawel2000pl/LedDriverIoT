@@ -1,5 +1,6 @@
 #include "configuration.h"
 
+#include <FS.h>
 #include <SPIFFS.h>
 
 #include "fastlz.h"
@@ -61,28 +62,76 @@ namespace configuration {
     }
 
 
-    String getConfigurationStr() {
-        File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
-        if (configFile) {
-            String buf = configFile.readString();
-            configFile.close();
+    void removeFile(const String& filename) {
+        SPIFFS.remove(filename);
+    }
+
+
+    unsigned checkSum(const unsigned char* ptr, unsigned size, unsigned d) {
+        unsigned long long int buf = 1;
+        const unsigned char* endloop = ptr + size;
+        for (auto i = ptr; i < endloop; i++) {
+            buf = ((buf << 8) | *i);
+            if (buf >> 56) buf %= d;
+        }
+        return (buf < d) ? buf % d : buf;
+    }
+
+
+    std::vector<unsigned char> getFileBin(const String& filename) {
+        File file = SPIFFS.open(filename);
+        if (file) {
+            std::vector<unsigned char> result;
+            result.resize(file.size());
+            file.read(result.data(), file.size());
+            file.close();
+            return std::move(result);
+        }
+        return std::vector<unsigned char>();
+    }
+
+
+    String getFileStr(const String& filename) {
+        File file = SPIFFS.open(filename);
+        if (file) {
+            String buf = file.readString();
+            file.close();
             return buf;
         }
-        return getResourceStr(resource_default_config_json);
+        return "";
+    }
+
+
+    void saveFile(const String& filename, const unsigned char* content, unsigned length) {
+        File file = SPIFFS.open(filename, FILE_WRITE);
+        file.write(content, length);
+        file.close();
+    }
+
+
+    void saveFile(const String& filename, const char* content) {
+        unsigned length = -1;
+        while (content[++length]);
+        saveFile(filename, (const unsigned char*)content, length);
+    }
+
+
+    void saveFile(const String& filename, const String& content) {
+        saveFile(filename, (const unsigned char*)content.c_str(), content.length());
+    }
+
+
+    String getConfigurationStr() {
+        String buf = getFileStr(CONFIGURATION_FILENAME);
+        return buf == "" ? getResourceStr(resource_default_config_json) : buf;
     }
 
 
     DynamicJsonDocument getConfiguration() {
         DynamicJsonDocument configuration(JSON_CONFIG_BUF_SIZE);
-        File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "r");
-        if (configFile) {
-            String buf = configFile.readString();
-            configFile.close();
-            DeserializationError err = deserializeJson(configuration, buf);
-            if (err != DeserializationError::Ok || assertConfiguration(configuration).length())
-                configuration = getDefautltConfiguration();
-            // updateModules(); //TOTO
-        } else
+        String buf = getConfigurationStr();
+        DeserializationError err = deserializeJson(configuration, buf);
+        if (err != DeserializationError::Ok || assertConfiguration(configuration).length())
             configuration = getDefautltConfiguration();
         return configuration;
     }
@@ -90,22 +139,27 @@ namespace configuration {
 
     DynamicJsonDocument getFavorites() {
         DynamicJsonDocument favorites(JSON_FAVORITES_BUF_SIZE);
-
-        File favoritesFile = SPIFFS.open(FAVORITES_FILENAME, "r");
-        if (favoritesFile) {
-            String buf = favoritesFile.readString();
-            favoritesFile.close();
-            DeserializationError err = deserializeJson(favorites, buf);
-            if (err != DeserializationError::Ok || assertJson(favorites, "favorites-list").length())
-                favorites = getDefautltFavorites();
-        } else favorites = getDefautltFavorites();
+        String buf = getFileStr(FAVORITES_FILENAME);
+        DeserializationError err = deserializeJson(favorites, buf);
+        if (err != DeserializationError::Ok || assertJson(favorites, "favorites-list").length())
+            favorites = getDefautltFavorites();
         return favorites;
     }
 
 
+    void deleteCert() {
+        removeFile(CERT_KEY_FILE_NAME);
+        removeFile(CERT_PUB_FILE_NAME);
+    }
+    
+
+    void init() {
+	    SPIFFS.begin(true);
+    }
+
+
     void resetConfiguration() {
-        SPIFFS.remove(CONFIGURATION_FILENAME);
-        SPIFFS.remove(FAVORITES_FILENAME);
+        SPIFFS.format();
     }
 
 
@@ -113,9 +167,7 @@ namespace configuration {
         char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
         unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
         buf[size] = 0;
-        File configFile = SPIFFS.open(CONFIGURATION_FILENAME, "w");
-        configFile.println(buf);
-        configFile.close();
+        saveFile(CONFIGURATION_FILENAME, (unsigned char*)buf, size);
         delete [] buf;
     }
 
@@ -123,10 +175,7 @@ namespace configuration {
     void setFavorites(DynamicJsonDocument favorites) {
         char* buf = new char[JSON_FAVORITES_BUF_SIZE+1];
         unsigned size = serializeJson(favorites, buf, JSON_FAVORITES_BUF_SIZE);
-        buf[size] = 0;
-        File favoritesFile = SPIFFS.open(FAVORITES_FILENAME, "w");
-        favoritesFile.println(buf);
-        favoritesFile.close();
+        saveFile(FAVORITES_FILENAME, (unsigned char*)buf, size);
         delete [] buf;
     }
 
