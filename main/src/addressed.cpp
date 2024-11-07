@@ -45,7 +45,7 @@ namespace addressed {
         unsigned count;
         unsigned offset; //milliseconds but 1s = 1024ms
         unsigned animation_freq; //millisecond per led
-    }
+    };
 
 
     uint64 createMask(unsigned freq, unsigned th, unsigned tl, unsigned* length_ptr) {
