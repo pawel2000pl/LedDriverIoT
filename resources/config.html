@@ -3,9 +3,11 @@
 <html>
 
     <head>
-        <link rel="stylesheet" href="/styles.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta charset="UTF-8">
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="stylesheet" href="/styles.css" />
+        <link name="manifest" href="manifest.json" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8" />
     </head>
     
     <body>
@@ -75,6 +77,12 @@
                         </p>
                     </p>
                     <button onclick="openAccessPoint()">Open access-point now</button>
+                    <h3>Additional actions</h3>
+                    <p>
+                        <button onclick="deleteCert()">Remove HTTPS certificate</button>
+                        <button onclick="reconnect()">Run autoconnect pipeline</button>
+                        <button onclick="restart()">Restart device</button>
+                    </p>
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
                         <include-raw src="wifi_desc.html"></include-raw>
@@ -302,12 +310,14 @@
                         <span id="version-span"></span>
                         <br>
                         <span id="hardware-span"></span>
+                        <br>
+                        <span id="resources-span"></span>
                     </p>                    
-                    <form method="POST" action="#" enctype="multipart/form-data" id="update-form">
-                        <input type="file" name="update">
-                        <input id="update-btn" type="submit" value="Update">
-                    </form>                    
-                    <div id="prg"></div>
+                    <p>
+                        <input id="update-file" type="file" name="update">
+                        <input id="update-btn" type="button" value="Update">
+                    </p>                    
+                    <p id="prg"></p>
                 </div>
             </details>
              
@@ -324,18 +334,18 @@
 
         </div>
 
-        <script src="/utils.js"></script>
-        <script src="/conversions.js"></script>
-        <script src="/chart.js"></script>
+        <script src="/utils.js" defer></script>
+        <script src="/conversions.js" defer></script>
+        <script src="/chart.js" defer></script>
+        <script src="/component_list.js" defer></script>
         
-        <script src="/config_fetcher.js"></script>
-        <script src="/filter_selector.js"></script>
+        <script src="/config_fetcher.js" defer></script>
+        <script src="/filter_selector.js" defer></script>
 
-        <script src="/include_raw.js"></script>
-        <script src="/config.js"></script>
-        <script src="/component_list.js"></script>
-        <script src="/config_components.js"></script>
-        <script src="/update.js"></script>
+        <script src="/include_raw.js" defer></script>
+        <script src="/config.js" defer></script>
+        <script src="/config_components.js" defer></script>
+        <script src="/update.js" defer></script>
         
         
     </body>

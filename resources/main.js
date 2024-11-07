@@ -89,23 +89,11 @@ configPromise.then(()=>{
     });
 });
 
-Array.from(document.getElementsByClassName('show-favorites-button')).forEach((button)=>{
-    button.addEventListener('click', ()=>{
-        Array.from(document.getElementsByClassName('hide-with-favorites')).forEach((element)=>{
-            element.style.display = 'none';
-        });
-        Array.from(document.getElementsByClassName('show-with-favorites')).forEach((element)=>{
-            element.style.display = 'inline';
-        });
-    });
-});
 
-
-fetchVersion().then(async ([version, _])=>{
+fetchVersion().then(async ([version, _, resources])=>{
+    version = version + ' ' + resources;
     if (localStorage.version !== version) {
         await fetch("/invalidate_cache");
         localStorage.version = version;
     }
 });
-
-

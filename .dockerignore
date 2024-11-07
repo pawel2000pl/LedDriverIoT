@@ -2,8 +2,8 @@
 *__pycache__*
 .directory
 a.out
-main/resources.h
-main/resources.cpp
+main/src/resources.h
+main/src/resources.cpp
 *.bkp
 components
 build

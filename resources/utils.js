@@ -33,7 +33,7 @@ Array.from(document.getElementsByClassName('link-button')).forEach((button)=>{
 async function fetchVersion() {
     const response = await fetch('/version_info.json');
     const data = await response.json();
-    return [data.version + " [" + data.date + " " + data.time + "]", data.hardware];
+    return [data.version + " [" + data.date + " " + data.time + "]", data.hardware, data.resources_sha];
 }
 
 

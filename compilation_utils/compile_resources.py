@@ -5,8 +5,9 @@ import re
 import ctypes
 import mimetypes
 import json
+import hashlib
 
-os.system('gcc --std=c11 -O3 -x c main/fastlz.cpp -fpic -shared -o fastlz.so')
+os.system('gcc --std=c11 -O3 -x c main/src/fastlz.cpp -fpic -shared -o fastlz.so')
 
 lib = ctypes.CDLL('./fastlz.so')
 fastlz_compress_level = lib.fastlz_compress_level
@@ -46,6 +47,42 @@ def str2c(c_str):
     return ", ".join([str(ord(c)) for c in c_str])
 
 
+def find_best_divide_letter(name_list):
+    name_list_len = len(name_list)
+    best_letter = 'k'
+    best_pos = 0
+    best_value = 2*name_list_len
+
+    for i in range(min(len(name) for name in name_list)):
+        letters = list(set(name[i] for name in name_list))
+        for letter in letters:
+            part_count = sum(1 for name in name_list if ord(name[i]) <= ord(letter))
+            if abs(name_list_len - 2*part_count) < best_value:
+                best_value = abs(name_list_len - 2*part_count)
+                best_letter = letter
+                best_pos = i
+
+    return best_pos, best_letter
+
+
+def create_name_resolver(name_list, indent=2):
+    indent_s = " " * indent
+    if len(name_list) == 1:
+        res_str = 'resource_' + name_list[0].replace('.', '_').replace('/', '')
+        return indent_s + 'return (def && (!same_str(name, '+res_str+'.name))) ? *def : ' + res_str + ';'
+
+    pos, letter = find_best_divide_letter([name + '\0' for name in name_list])
+    list1 = [name for name in name_list if ord(name[pos]) <= ord(letter)]
+    list2 = [name for name in name_list if ord(name[pos]) > ord(letter)]
+    result = [
+        indent_s, "if (name[%d] <= %d)"%(pos, ord(letter)), " {\n",
+        create_name_resolver(list1, indent+2), "\n",
+        indent_s, "}\n",
+        create_name_resolver(list2, indent),
+    ]
+    return str().join(result)
+
+
 info_struct = """
 #pragma once
 
@@ -59,11 +96,19 @@ struct Resource {
 
 """
 
+same_str = """
+int same_str(const char* a, const char* b) {
+    while (*a || *b)
+        if (*(a++) != *(b++)) return 0;
+    return 1;
+}
+"""
 
 PATH = 'resources/'
 result_header = [info_struct]
 result_content = ['#include "resources.h"', '']
 resource_names = []
+all_srcs = dict()
 max_decompressed_size = 0
 max_compressed_size = 0
 total_compressed = 0
@@ -73,6 +118,7 @@ operators = ['<', '>', '<=', '>=', '=', '==', '===', '\\+', '-', '\\*', ',', ':'
 for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
         with open(PATH+filename) as f: content = f.read()
+        all_srcs[PATH+filename] = content
         orginal_content = content
         if filename.endswith('.json'):
             content = json.dumps(json.loads(content), indent=None)
@@ -124,12 +170,21 @@ print("Max decompressed:", max_decompressed_size)
 print("Max compressed:", max_compressed_size)
 print("Total compressed:", total_compressed)
 
+all_srcs_keys = list(all_srcs)
+all_srcs_keys.sort()
+whole_src = "\n".join([all_srcs[k] for k in all_srcs_keys])
+sha1 = hashlib.sha1()
+sha1.update(whole_src.encode('utf-8'))
 
 result_header.append('extern const struct Resource* resources[];')
 result_header.append('extern const unsigned int resources_count;')
 result_header.append('')
 result_header.append('extern const unsigned int max_resource_compressed_buffer;')
 result_header.append('extern const unsigned int max_resource_decompressed_buffer;')
+result_header.append('')
+result_header.append('extern const char* RESOURCES_SHA1;')
+result_header.append('')
+result_header.append('const struct Resource& getResourceByName(const char* name, const struct Resource* def=0);')
 result_header.append('')
 
 result_content.append('const struct Resource* resources[] = {'+','.join(['&'+name for name in resource_names])+'};')
@@ -138,6 +193,14 @@ result_content.append('')
 result_content.append('const unsigned int max_resource_compressed_buffer = '+str(max_compressed_size)+';')
 result_content.append('const unsigned int max_resource_decompressed_buffer = '+str(max_decompressed_size)+';')
 result_content.append('')
+result_content.append(same_str)
+result_content.append('')
+result_content.append('const char* RESOURCES_SHA1 = "'+sha1.hexdigest()+'";')
+result_content.append('')
+result_content.append('const struct Resource& getResourceByName(const char* name, const struct Resource* def) {')
+result_content.append(create_name_resolver([rs[len('resources'):] for rs in all_srcs.keys()]))
+result_content.append('}')
+result_content.append('')
 
-with open('main/resources.h', 'w') as f: f.write("\n".join(result_header))
-with open('main/resources.cpp', 'w') as f: f.write("\n".join(result_content))
+with open('main/src/resources.h', 'w') as f: f.write("\n".join(result_header))
+with open('main/src/resources.cpp', 'w') as f: f.write("\n".join(result_content))

@@ -105,11 +105,16 @@ namespace wifi {
     }
 
 
-    bool connectToNetwork(String ssid, String password) {
+    void disconnect() {
         if (WiFi.getMode() == WIFI_STA && WiFi.status() == WL_CONNECTED)
             WiFi.disconnect();
         else if (WiFi.getMode() == WIFI_AP)
             WiFi.softAPdisconnect();
+    }
+
+
+    bool connectToNetwork(String ssid, String password) {
+        disconnect();
         WiFi.mode(WIFI_STA);
         delay(100);
         Serial.print("Connecting to ");
@@ -125,8 +130,7 @@ namespace wifi {
 
     void openAccessPoint() {
         Serial.println("Switching to AP-mode");
-        if (WiFi.status() == WL_CONNECTED)
-            WiFi.disconnect();
+        disconnect();
         WiFi.mode(WIFI_AP);
         WiFi.softAPsetHostname(hostname.c_str());
         WiFi.softAPConfig(apAddress, apGateway, apSubnet);
