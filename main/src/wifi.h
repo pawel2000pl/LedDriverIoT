@@ -20,5 +20,9 @@ namespace wifi {
     void openAccessPoint();
     void autoConnectWifi();
     void checkConnection();
+    bool isAP();
+    String getApAddress();
+    unsigned long long int getConnectionTime();
+    unsigned getConnectionId();
 
 }

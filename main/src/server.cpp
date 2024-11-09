@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "wifi.h"
 #include "fastlz.h"
 #include "resources.h"
 #include "configuration.h"
@@ -66,12 +67,14 @@ namespace server {
 
     httpsserver::SSLCert* generateCert() {
         httpsserver::SSLCert* newCert = new httpsserver::SSLCert();
+        std::string fromDate = getCertValidFromDate();
+        std::string untilDate = getCertValidUntilDate();
         httpsserver::createSelfSignedCert(
             *newCert,
             httpsserver::KEYSIZE_1024,
             "CN=leddriver.local,O=PawelBielecki,C=PL",
-            getCertValidFromDate().c_str(),
-            getCertValidUntilDate().c_str()
+            fromDate.c_str(),
+            untilDate.c_str()
         );
         configuration::saveFile(CERT_PUB_FILE_NAME, newCert->getCertData(), newCert->getCertLength());
         configuration::saveFile(CERT_KEY_FILE_NAME, newCert->getPKData(), newCert->getPKLength());
@@ -177,7 +180,8 @@ namespace server {
 				delete [] decompressed_buffer;
 				return 0;
 		}
-		sendCacheControlHeader(res);
+		if (statusCode >= 200 && statusCode < 300) 
+            sendCacheControlHeader(res);
         res->setHeader("Content-Type", resource.mime_type);
         res->setStatusCode(statusCode);
 		res->write(decompressed_buffer, decompressed_size);
@@ -200,7 +204,13 @@ namespace server {
 
     void sendResource(HTTPRequest* req, HTTPResponse* res) {
         const Resource& resource = getResourceByName(req->getRequestString().c_str(), &resource_not_found_html);
-        sendDecompressedData(res, resource, resource.name == resource_not_found_html.name ? 404 : 200); //yes, we can compare const char* in this context
+        bool notFound = resource.name == resource_not_found_html.name; //yes, we can compare const char* in this context
+        bool useCaptive = wifi::isAP();
+        if (notFound && useCaptive) {
+            String apAddress = wifi::getApAddress();
+            res->setHeader("Location", "http://" + std::string(apAddress.c_str()) + "/");
+        }
+        sendDecompressedData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200); 
     }
 
 

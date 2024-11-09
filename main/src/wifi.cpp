@@ -2,6 +2,7 @@
 
 #include <WiFi.h>
 #include <WiFiAP.h>
+#include <DNSServer.h>
 
 #define MAX_WIFI_CHANNEL 13
 #define RSSI_AMP 0.2f
@@ -24,6 +25,9 @@ namespace wifi {
     bool apEnabled = true;
     bool apHidden = false;
     String hostname;
+    DNSServer dnsServer;
+    unsigned long long int connectionTime = 0;
+    unsigned connectionId = 0;
 
     float occupedChannels[MAX_WIFI_CHANNEL+1] = {0};
 
@@ -56,6 +60,22 @@ namespace wifi {
     }
 
 
+    unsigned long long int getConnectionTime() {
+        return connectionTime;
+    }
+
+
+    unsigned getConnectionId() {
+        return connectionId;
+    }
+
+
+    void updateConnectionStats() {
+        connectionTime = millis();
+        connectionId++;
+    }
+
+
     const std::vector<String>& getScannedNetworks() {
         return scannedNetworks;
     }
@@ -73,6 +93,7 @@ namespace wifi {
         }
         return IPAddress(numbers[0], numbers[1], numbers[2], numbers[3]);
     }
+
 
 
     void scanNetworks() {
@@ -108,8 +129,10 @@ namespace wifi {
     void disconnect() {
         if (WiFi.getMode() == WIFI_STA && WiFi.status() == WL_CONNECTED)
             WiFi.disconnect();
-        else if (WiFi.getMode() == WIFI_AP)
+        else if (WiFi.getMode() == WIFI_AP) {
+            dnsServer.stop();
             WiFi.softAPdisconnect();
+        }
     }
 
 
@@ -123,8 +146,10 @@ namespace wifi {
         WiFi.setHostname(hostname.c_str());
         WiFi.begin(ssid, password);
         while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
-                delay(10);
-        return WiFi.status() == WL_CONNECTED;
+            delay(10);
+        bool result = WiFi.status() == WL_CONNECTED;
+        if (result) updateConnectionStats();
+        return result;
     }
 
 
@@ -135,6 +160,8 @@ namespace wifi {
         WiFi.softAPsetHostname(hostname.c_str());
         WiFi.softAPConfig(apAddress, apGateway, apSubnet);
         WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4);
+        dnsServer.start();
+        updateConnectionStats();
     }
 
 
@@ -182,6 +209,19 @@ namespace wifi {
 
     bool connected() {
         return WiFi.status() == WL_CONNECTED || WiFi.getMode() == WIFI_AP;
+    }
+
+
+    bool isAP() {
+        return WiFi.getMode() == WIFI_AP;
+    }
+
+
+    String getApAddress() {
+        char buf[16];
+        int size = sprintf(buf, "%d.%d.%d.%d", (int)apAddress[0], (int)apAddress[1], (int)apAddress[2], (int)apAddress[3]);
+        buf[size] = 0;
+        return String(buf);
     }
 
 
