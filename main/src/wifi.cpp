@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <WiFiAP.h>
 #include <DNSServer.h>
+#include <ESPmDNS.h>
 
 #define MAX_WIFI_CHANNEL 13
 #define RSSI_AMP 0.2f
@@ -26,6 +27,7 @@ namespace wifi {
     bool apHidden = false;
     String hostname;
     DNSServer dnsServer;
+    MDNSResponder mdnsResponder;
     unsigned long long int connectionTime = 0;
     unsigned connectionId = 0;
 
@@ -136,6 +138,13 @@ namespace wifi {
     }
 
 
+    void configureMDNS() {
+        mdnsResponder.begin(hostname);
+        mdnsResponder.addService("http", "tcp", 80);
+        mdnsResponder.addService("https", "tcp", 443);
+    }
+
+
     bool connectToNetwork(String ssid, String password) {
         disconnect();
         WiFi.mode(WIFI_STA);
@@ -148,7 +157,10 @@ namespace wifi {
         while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
             delay(10);
         bool result = WiFi.status() == WL_CONNECTED;
-        if (result) updateConnectionStats();
+        if (result) {
+            updateConnectionStats();
+            configureMDNS();
+        }
         return result;
     }
 
@@ -162,6 +174,7 @@ namespace wifi {
         WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4);
         dnsServer.start();
         updateConnectionStats();
+        void configureMDNS();
     }
 
 

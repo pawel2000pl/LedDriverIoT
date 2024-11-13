@@ -89,11 +89,4 @@ configPromise.then(()=>{
     });
 });
 
-
-fetchVersion().then(async ([version, _, resources])=>{
-    version = version + ' ' + resources;
-    if (localStorage.version !== version) {
-        await fetch("/invalidate_cache");
-        localStorage.version = version;
-    }
-});
+updateClientApp();
