@@ -163,3 +163,6 @@ function deleteCert() {
 function restart() {
     fetch('/restart');
 }
+
+
+updateClientApp();

@@ -37,6 +37,18 @@ async function fetchVersion() {
 }
 
 
+
+function updateClientApp() {
+    fetchVersion().then(async ([version, _, resources])=>{
+        version = version + ' ' + resources;
+        if (localStorage.version === undefined)
+            localStorage.version = version;
+        else if (localStorage.version !== version)
+            window.location = '/invalidate_cache';
+    });
+}
+
+
 const $id = (id)=>document.getElementById(id);
 const $new = (...args)=>document.createElement(...args);
 

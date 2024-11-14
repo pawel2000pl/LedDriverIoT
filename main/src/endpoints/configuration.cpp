@@ -48,8 +48,10 @@ namespace endpoints {
 
     void invalidateCache(HTTPRequest* req, HTTPResponse* res) {
         res->setHeader("Clear-Site-Data", "\"cache\"");
+        res->setHeader("Content-Type", "text/html");
         res->setHeader("Connection", "close");
-        server::sendOk(res);
+        res->println("<p>Please wait, upgrading client app...</p>");
+        res->println("<script defer>localStorage.removeItem('version'); history.go(-1);</script>");
     }
 
 

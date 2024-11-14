@@ -9,6 +9,7 @@
 #include "colors.h"
 #include "network.h"
 #include "favorites.h"
+#include "temperature.h"
 #include "configuration.h"
 #include "initialization.h"
 
@@ -53,6 +54,7 @@ namespace endpoints {
         server::addCallback("/apply_favorite", "GET", applyFavorite);
         server::addCallback("/invalidate_cache", "GET", invalidateCache);
         server::addCallback("/delete_cert", "GET", deleteCert);
+        server::addCallback("/get_temp", "GET", getTemperature);
         server::start();
     }
 

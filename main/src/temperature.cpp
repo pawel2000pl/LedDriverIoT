@@ -12,6 +12,15 @@ namespace temperature {
     temperature_sensor_handle_t temp_handle = NULL;
 
 
+    float TemperatureResults::max() {
+        float v = internal;
+        for (auto x : external) 
+            if (x > v)
+                v = x;
+        return v;
+    }
+
+
     void init() {
         temperature_sensor_config_t temp_sensor = {
                 .range_min = 20,
@@ -29,20 +38,26 @@ namespace temperature {
     }
 
 
-    void check() {
-        float tsens_out;
+    TemperatureResults readTemperatures() {
+        TemperatureResults result;
+
         temperature_sensor_enable(temp_handle);
-        temperature_sensor_get_celsius(temp_handle, &tsens_out);
+        temperature_sensor_get_celsius(temp_handle, &result.internal);
         temperature_sensor_disable(temp_handle);
-        float temp_max = tsens_out;
 
         for (unsigned i=0;i<4;i++) {
             const auto& actions = hardware_configuration.thermistors[i];
             if (!actions.enabled) continue;
-            float T = readTemperature(actions.read()/2);
-            temp_max = max(temp_max, T);
+            result.external[i] = readTemperature(actions.read()/2);
         }
 
+        return result;
+    }
+
+
+    void check() {
+        TemperatureResults temps = readTemperatures();
+        float temp_max = temps.max();
         fanStatus = ((fanStatus) && (temp_max > FAN_TURN_OFF_TEMP)) || ((!fanStatus) && (temp_max > FAN_TURN_ON_TEMP));
         digitalWrite(hardware_configuration.fanPin, fanStatus ? HIGH : LOW);
     }
