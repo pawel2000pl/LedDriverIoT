@@ -1,6 +1,10 @@
 #include "addressed.h"
 #include <ESP32DMASPIMaster.h>
 #include <cmath>
+#include <vector>
+
+#include "constrain.h"
+#include "fixedpoint.h"
 
 namespace addressed {
 
@@ -8,6 +12,8 @@ namespace addressed {
     using uint32 = unsigned;
     using uint16 = unsigned short;
     using uint8 = unsigned char;
+
+    using fixed = FixedPoint<int, long long int, 12>;
 
     ESP32DMASPI::Master master;
 
@@ -41,11 +47,58 @@ namespace addressed {
     };
 
 
-    struct LedConfiguration {
+    struct LedSegment {
         unsigned count;
-        unsigned offset; //milliseconds but 1s = 1024ms
-        unsigned animation_freq; //millisecond per led
+        fixed offset;
+        fixed scale; 
+        char direction; //-1 or 1
+        char channel_count;
+        std::array<char, 5> channel_mapping;
     };
+
+
+    using fixedv5 = std::array<fixed, 5>;
+
+
+    struct ColorChange {
+        fixedv5 value; //red, green, blue, white-warm, white-cold
+        fixed speed;
+        uint64 time; // milliseconds
+        fixed distance; // dt * speed
+        bool used;
+    };
+
+
+    void fillSegment(fixedv5 current_color, const std::vector<ColorChange*> changes, const LedSegment& segment, uint8* buf) {
+        unsigned changes_size = changes.size();
+        fixed distance = segment.count * segment.scale + segment.offset;
+        uint8* buf_end = buf + segment.count;
+        uint8* buf_it = segment.direction >= 0 ? buf : (buf_end - segment.channel_count);
+        int buf_inc = segment.direction >= 0 ? segment.channel_count : -segment.channel_count;
+        for (unsigned i=changes_size-1;~i && buf_it >= buf && buf_it < buf_end;i--) {
+            ColorChange* current_change = changes[i];
+            fixed step = 1 / (distance - current_change->distance);
+            fixedv5 color_step;
+            for (int c=0;c<5;c++)
+                color_step[c] = (current_change->value[c] - current_color[c]) * step;
+            while (distance > current_change->distance && buf_it >= buf && buf_it < buf_end) {
+                distance -= step;
+                for (int c=0;c<5;c++)
+                    current_color[c] -= color_step[c];
+                for (int c=segment.channel_count;~c;c--)
+                    buf_it[c] = (uint8)constrain<int>(current_color[segment.channel_mapping[c]], 0, 255);
+                buf_it += buf_inc;
+            }
+        }
+        char fill_color[5];
+        for (int c=segment.channel_count;~c;c--)
+            fill_color[c] = (uint8)constrain<int>(current_color[segment.channel_mapping[c]], 0, 255);
+        while (buf_it >= buf && buf_it < buf_end) {
+            for (int c=segment.channel_count;~c;c--)
+                buf_it[c] = fill_color[c];
+            buf_it += buf_inc;
+        }
+    }
 
 
     uint64 createMask(unsigned freq, unsigned th, unsigned tl, unsigned* length_ptr) {
