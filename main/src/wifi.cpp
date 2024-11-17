@@ -139,6 +139,7 @@ namespace wifi {
 
 
     void configureMDNS() {
+        mdnsResponder.end();
         mdnsResponder.begin(hostname);
         mdnsResponder.addService("http", "tcp", 80);
         mdnsResponder.addService("https", "tcp", 443);
