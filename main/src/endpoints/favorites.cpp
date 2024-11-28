@@ -51,9 +51,11 @@ namespace endpoints {
             channels[3]
         );
         buf[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
-        res->println(buf);
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)buf, size);
     }
 
 
@@ -91,13 +93,16 @@ namespace endpoints {
         if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         char* render_buffer = new char[favorite_color_template_html_decompressed_size+256];
-        sprintf(
+        int size = sprintf(
             render_buffer, templateStr.c_str(),
             (int)floor(255*r), (int)floor(255*g), (int)floor(255*b)
         );
+        render_buffer[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "text/html");
-        res->println(render_buffer);
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)render_buffer, size);
         delete [] render_buffer;
     }
 

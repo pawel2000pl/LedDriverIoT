@@ -137,10 +137,12 @@ namespace server {
         char* buf = new char[bufSize];
         unsigned int size = serializeJson(data, buf, bufSize-1);
         buf[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setStatusCode(costatusCode);
-        res->print(buf);
+        res->write((uint8_t*)buf, size);
         delete [] buf;
     }
 
@@ -156,10 +158,14 @@ namespace server {
 
 
     void sendOk(HTTPResponse* res) {
+        const char* buf = "{\"status\": \"ok\"}";
+        char size_str[24];
+        int size = strlen(buf);
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setStatusCode(200);
-        res->print("{\"status\": \"ok\"}");
+        res->write((uint8_t*)buf, size);
     }
 
 
@@ -182,9 +188,11 @@ namespace server {
 		}
 		if (statusCode >= 200 && statusCode < 300) 
             sendCacheControlHeader(res);
+        char size_str[24];
         res->setHeader("Content-Type", resource.mime_type);
+        res->setHeader("Content-Length", itoa(decompressed_size, size_str, 10));
         res->setStatusCode(statusCode);
-		res->write(decompressed_buffer, decompressed_size);
+		res->write((uint8_t*)decompressed_buffer, decompressed_size);
 		delete [] decompressed_buffer;
 		return 1;
     }

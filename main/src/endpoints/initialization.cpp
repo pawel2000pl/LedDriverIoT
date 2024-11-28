@@ -18,8 +18,12 @@
 namespace endpoints {
 
     void handleIndex(HTTPRequest* req, HTTPResponse* res) {
+        const char* buf = "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">";
+        char size_str[24];
+        int size = strlen(buf);
         res->setHeader("Content-Type", "text/html");
-        res->println("<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)buf, size);
     }
 
 

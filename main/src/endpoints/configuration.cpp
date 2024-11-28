@@ -14,10 +14,13 @@ namespace endpoints {
 
     void sendConfiguration(HTTPRequest* req, HTTPResponse* res) {
         String buf = configuration::getConfigurationStr();
+        char size_str[24];
+        int size = buf.length();
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setStatusCode(200);
-        res->print(buf.c_str());
+        res->write((uint8_t*)buf.c_str(), size);
     }
 
 
@@ -47,11 +50,14 @@ namespace endpoints {
 
 
     void invalidateCache(HTTPRequest* req, HTTPResponse* res) {
+        const char* buf = "<p>Please wait, upgrading client app...</p><script defer>localStorage.removeItem('version'); history.go(-1);</script>";
+        char size_str[24];
+        int size = strlen(buf);
         res->setHeader("Clear-Site-Data", "\"cache\"");
         res->setHeader("Content-Type", "text/html");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setHeader("Connection", "close");
-        res->println("<p>Please wait, upgrading client app...</p>");
-        res->println("<script defer>localStorage.removeItem('version'); history.go(-1);</script>");
+        res->write((uint8_t*)buf, size);
     }
 
 

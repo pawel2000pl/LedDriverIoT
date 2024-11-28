@@ -30,9 +30,11 @@ namespace endpoints {
             channels[3]
         );
         buf[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
-        res->println(buf);
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)buf, size);
     }
 
 
@@ -69,7 +71,7 @@ namespace endpoints {
                 channelsInCurrentColorspace = channels[i];
         ColorChannels filteredChannels = inputs::getAuto(modules::webColorSpace);
         char* render_buffer = new char[simple_template_html_decompressed_size+256];
-        sprintf(
+        int size = sprintf(
             render_buffer, templateStr.c_str(), 
             channelsInCurrentColorspace[0],
             floatFilter15(filteredChannels[0]),
@@ -81,9 +83,12 @@ namespace endpoints {
             channelsInCurrentColorspace[3],
             floatFilter15(filteredChannels[3])
         );
+        render_buffer[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "text/html");
-        res->println(render_buffer);
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)render_buffer, size);
         delete [] render_buffer;
     }
 
