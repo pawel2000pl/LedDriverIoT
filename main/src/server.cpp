@@ -191,6 +191,7 @@ namespace server {
         char size_str[24];
         res->setHeader("Content-Type", resource.mime_type);
         res->setHeader("Content-Length", itoa(decompressed_size, size_str, 10));
+        res->setHeader("ETag", resource.etag);
         res->setStatusCode(statusCode);
 		res->write((uint8_t*)decompressed_buffer, decompressed_size);
 		delete [] decompressed_buffer;
@@ -217,6 +218,12 @@ namespace server {
         if (notFound && useCaptive) {
             String apAddress = wifi::getApAddress();
             res->setHeader("Location", "http://" + std::string(apAddress.c_str()) + "/");
+        }
+        if ((!notFound) && (req->getHeader("If-None-Match").find(resource.etag) != std::string::npos)) {
+            sendCacheControlHeader(res);
+            res->setHeader("ETag", resource.etag);
+            res->setStatusCode(304);
+            return;
         }
         sendDecompressedData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200); 
     }

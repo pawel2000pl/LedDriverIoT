@@ -2,10 +2,12 @@
 
 import os
 import re
-import ctypes
-import mimetypes
+import sys
 import json
+import base64
+import ctypes
 import hashlib
+import mimetypes
 
 os.system('gcc --std=c11 -O3 -x c main/src/fastlz.cpp -fpic -shared -o fastlz.so')
 
@@ -17,6 +19,12 @@ fastlz_compress_level.restype = ctypes.c_int
 fastlz_decompress = lib.fastlz_decompress
 fastlz_decompress.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int]
 fastlz_decompress.restype = ctypes.c_int
+
+
+def filehash(filename):
+    sha1 = hashlib.sha1()
+    sha1.update(open(filename).read().encode('utf-8'))
+    return base64.b64encode(sha1.digest()).decode('utf-8')
 
 
 def compress_data(data: bytes, level: int = 2) -> bytes:
@@ -89,6 +97,7 @@ info_struct = """
 struct Resource {
     const char* name;
     const char* mime_type;
+    const char* etag;
     const unsigned char* data;
     const unsigned int size;
     const unsigned int decompressed_size;
@@ -137,10 +146,12 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         assert content == decompressed        
         var_name = filename.replace('.', '_')
         resource_names.append('resource_'+var_name)
+        etag = '"' + filehash(PATH+filename) + '"'
 
         result_header.append('extern const unsigned char '+var_name+'_data[];')
         result_header.append('extern const char '+var_name+'_filename[];')
         result_header.append('extern const char '+var_name+'_mime_type[];')
+        result_header.append('extern const char '+var_name+'_etag[];')
         result_header.append('extern const unsigned int '+var_name+'_size;')
         result_header.append('extern const unsigned int '+var_name+'_decompressed_size;')
         result_header.append('extern const struct Resource resource_'+var_name+';')
@@ -149,11 +160,13 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         result_content.append('const unsigned char '+var_name+'_data[] = {'+str2c(compressed)+'};')
         result_content.append('const char '+var_name+'_filename[] = {'+str2c('/'+filename+"\0")+'};')
         result_content.append('const char '+var_name+'_mime_type[] = {'+str2c(mimetypes.guess_type(PATH+filename)[0]+"\0")+'};')
+        result_content.append('extern const char '+var_name+'_etag[] = {'+str2c(etag)+'};')
         result_content.append('const unsigned int '+var_name+'_size = '+str(len(compressed))+';')
         result_content.append('const unsigned int '+var_name+'_decompressed_size = '+str(len(content))+';')
         result_content.append('const struct Resource resource_'+var_name+' = {')
         result_content.append(' .name = '+var_name+'_filename,')
         result_content.append(' .mime_type = '+var_name+'_mime_type,')
+        result_content.append(' .etag = '+var_name+'_etag,')
         result_content.append(' .data = '+var_name+'_data,')
         result_content.append(' .size = '+var_name+'_size,')
         result_content.append(' .decompressed_size = '+var_name+'_decompressed_size')

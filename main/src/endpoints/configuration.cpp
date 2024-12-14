@@ -53,7 +53,7 @@ namespace endpoints {
         const char* buf = "<p>Please wait, upgrading client app...</p><script defer>localStorage.removeItem('version'); history.go(-1);</script>";
         char size_str[24];
         int size = strlen(buf);
-        res->setHeader("Clear-Site-Data", "\"cache\"");
+        res->setHeader("Clear-Site-Data", "\"*\"");
         res->setHeader("Content-Type", "text/html");
         res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setHeader("Connection", "close");
