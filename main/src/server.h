@@ -29,6 +29,8 @@ namespace server {
     void configure();
     void start();
     void loop();
+    void stop();
+    void restart();
 
     void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize = 1024, int costatusCode = 200);
     void sendError(HTTPResponse* res, String message, int code);

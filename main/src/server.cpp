@@ -14,9 +14,9 @@ namespace server {
 
     std::vector<unsigned char>* keyBuf = NULL;
     std::vector<unsigned char>* certBuf = NULL;
-    httpsserver::SSLCert* cert;
-    httpsserver::HTTPSServer* secureServer;
-    httpsserver::HTTPServer* insecureServer;
+    httpsserver::SSLCert* cert = NULL;
+    httpsserver::HTTPSServer* secureServer = NULL;
+    httpsserver::HTTPServer* insecureServer = NULL;
     bool captivePortalEnabled = false;
 
 
@@ -105,6 +105,10 @@ namespace server {
 
 
     void configure() {
+        if (cert) { delete cert; cert = NULL; }
+        if (secureServer) { delete secureServer; secureServer = NULL; }
+        if (insecureServer) { delete insecureServer; insecureServer = NULL; }
+
         cert = loadCert();
 
         secureServer = new httpsserver::HTTPSServer(cert);
@@ -113,17 +117,34 @@ namespace server {
         ResourceNode* staticNode  = new ResourceNode("", "GET", &sendResource);
         secureServer->setDefaultNode(staticNode);
         insecureServer->setDefaultNode(staticNode);
+
+        secureServer->start();
+        if (secureServer->isRunning())             
+            secureServer->stop();
+        else {
+            configuration::removeFile(CERT_PUB_FILE_NAME);
+            configuration::removeFile(CERT_KEY_FILE_NAME);
+        }
     }
 
 
     void start() {
         secureServer->start();
         insecureServer->start();
+        Serial.println(secureServer->isRunning() ? "sec ok" : "sec err");
+        Serial.println(insecureServer->isRunning() ? "ins ok" : "ins err");
+    }
 
-        if (!secureServer->isRunning()) {
-            configuration::removeFile(CERT_PUB_FILE_NAME);
-            configuration::removeFile(CERT_KEY_FILE_NAME);
-        }
+
+    void stop() {
+        secureServer->stop();
+        insecureServer->stop();
+    }
+
+
+    void restart() {
+        stop();
+        start();
     }
 
 
