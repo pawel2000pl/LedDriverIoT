@@ -1,8 +1,8 @@
 #include <cmath>
 #include "inputs.h"
+#include "outputs.h"
 #include "conversions.h"
 #include "filter_functions.h"
-#include "outputs.h"
 
 namespace inputs {
 

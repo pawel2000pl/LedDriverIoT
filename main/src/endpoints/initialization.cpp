@@ -7,6 +7,7 @@
 
 #include "update.h"
 #include "colors.h"
+#include "outputs.h"
 #include "network.h"
 #include "favorites.h"
 #include "temperature.h"
@@ -59,6 +60,7 @@ namespace endpoints {
         server::addCallback("/invalidate_cache", "GET", invalidateCache);
         server::addCallback("/delete_cert", "GET", deleteCert);
         server::addCallback("/get_temp", "GET", getTemperature);
+        server::addCallback("/get_tailored_scalling", "GET", getTailoredScalling);
         server::start();
     }
 

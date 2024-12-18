@@ -1,9 +1,10 @@
 #include "outputs.h"
 #include <Arduino.h>
 
+#include "constrain.h"
+#include "conversions.h"
 #include "ledc_driver.h"
 #include "filter_functions.h"
-#include "conversions.h"
 #include "hardware_configuration.h"
 
 std::vector<float> toFloatVector(const JsonVariantConst& source) {
@@ -159,6 +160,17 @@ namespace outputs {
 
     ColorChannels getColor() {
         return {hue, saturation, value, white};
+    }
+
+
+    ColorChannels getTailoredScalling() {
+        float r, g, b;
+        hsvToRgb(hue, saturation, value, r, g, b); 
+        float scale0 = constrain<float>(filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<float>(filters::outputRed(filters::globalOutput(1)), 1e-6), 0, 1);
+        float scale1 = constrain<float>(filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<float>(filters::outputGreen(filters::globalOutput(1)), 1e-6), 0, 1);
+        float scale2 = constrain<float>(filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<float>(filters::outputBlue(filters::globalOutput(1)), 1e-6), 0, 1);
+        float scale3 = constrain<float>(filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<float>(filters::outputWhite(filters::globalOutput(1)), 1e-6), 0, 1);
+        return {scale0, scale1, scale2, scale3};
     }
 
 }

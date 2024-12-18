@@ -167,4 +167,14 @@ function restart() {
 }
 
 
+async function getTailoredScalling() {
+    const response = await fetch('/get_tailored_scalling');
+    const data = await response.json();
+    $id('red-scalling-factor').value = data[0];
+    $id('green-scalling-factor').value = data[1];
+    $id('blue-scalling-factor').value = data[2];
+    $id('white-scalling-factor').value = data[3];
+}
+
+
 updateClientApp();
