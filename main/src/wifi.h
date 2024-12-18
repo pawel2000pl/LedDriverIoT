@@ -22,6 +22,8 @@ namespace wifi {
     void checkConnection();
     bool isAP();
     String getApAddress();
+    String getLocalIp();
+    String getHostname();
     unsigned long long int getConnectionTime();
     unsigned getConnectionId();
 

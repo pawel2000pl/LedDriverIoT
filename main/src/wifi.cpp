@@ -231,11 +231,26 @@ namespace wifi {
     }
 
 
-    String getApAddress() {
+    String ip2str(const IPAddress& addr) {
         char buf[16];
-        int size = sprintf(buf, "%d.%d.%d.%d", (int)apAddress[0], (int)apAddress[1], (int)apAddress[2], (int)apAddress[3]);
+        int size = sprintf(buf, "%d.%d.%d.%d", (int)addr[0], (int)addr[1], (int)addr[2], (int)addr[3]);
         buf[size] = 0;
         return String(buf);
+    }
+
+
+    String getApAddress() {
+        return ip2str(apAddress);
+    }
+
+
+    String getLocalIp() {
+        return isAP() ? getApAddress() : ip2str(WiFi.localIP());
+    }
+
+
+    String getHostname() {
+        return hostname;
     }
 
 

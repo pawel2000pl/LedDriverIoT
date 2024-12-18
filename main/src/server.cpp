@@ -239,10 +239,27 @@ namespace server {
     }
 
 
+    bool strContains(const std::string& s, const String& sub) {
+        return s.find(sub.c_str()) != std::string::npos;
+    }
+
+
+    bool refererIsMe(HTTPRequest* req) {
+        std::string referer = req->getHeader("Referer");
+        std::string host = req->getHeader("Host");
+        String ip = wifi::getLocalIp();
+        String hostname = wifi::getHostname() + ".local";
+        return strContains(referer, ip) 
+            || strContains(referer, hostname) 
+            || strContains(host, ip) 
+            || strContains(host, hostname);
+    }
+
+
     void sendResource(HTTPRequest* req, HTTPResponse* res) {
         const Resource& resource = getResourceByName(req->getRequestString().c_str(), &resource_not_found_html);
         bool notFound = resource.name == resource_not_found_html.name; //yes, we can compare const char* in this context
-        bool useCaptive = captivePortalEnabled && wifi::isAP();
+        bool useCaptive = captivePortalEnabled && wifi::isAP() && !refererIsMe(req);
         if (notFound && useCaptive) {
             String apAddress = wifi::getApAddress();
             res->setHeader("Location", "http://" + std::string(apAddress.c_str()) + "/");
