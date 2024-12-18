@@ -39,7 +39,7 @@ bool loadJsonEmpty() {
 }
 bool JsonEmptyLoaded = loadJsonEmpty();
 
-String validateJson(const JsonVariant object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults) {
+String validateJson(const JsonVariant& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults) {
 
 	bool objectTypeIsInline = objectType.is<String>();
 

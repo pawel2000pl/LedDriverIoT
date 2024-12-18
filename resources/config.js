@@ -11,6 +11,7 @@ function dumpConfig() {
                 "ssid": $id('ap-ssid').value,
                 "password": $id('ap-password').value,
                 "hidden": $id('ap-hidden').checked,
+                "captive": $id('ap-captive').checked,
                 "channel": Number($id('ap-channel').value),
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
@@ -73,6 +74,7 @@ function fillConfig(config) {
     $id('ap-ssid').value = config.wifi.access_point.ssid;
     $id('ap-password').value = config.wifi.access_point.password;
     $id('ap-hidden').checked = config.wifi.access_point.hidden;
+    $id('ap-captive').checked = config.wifi.access_point.captive;
     $id('ap-channel').value = config.wifi.access_point.channel;
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;

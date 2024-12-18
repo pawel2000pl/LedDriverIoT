@@ -13,7 +13,7 @@
 
 #include "resources.h"
 
-#define MAX_POST_SIZE (24*1024)
+#define MAX_POST_SIZE (16*1024-1)
 
 using HTTPResponse = httpsserver::HTTPResponse;
 using HTTPRequest = httpsserver::HTTPRequest;
@@ -22,6 +22,8 @@ using ResourceNode = httpsserver::ResourceNode;
 namespace server {
 
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
+    
+    void updateConfiguration(const JsonVariantConst& configuration);
     
     void addCallback(const char* address, const char* method, const CallbackFunction* callback);
     void configure();
@@ -35,7 +37,7 @@ namespace server {
     int sendDecompressedData(HTTPResponse* res, const Resource& resource, int statusCode=200);
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err);
     void sendResource(HTTPRequest* req, HTTPResponse* res);
-    std::vector<char> readBuffer(HTTPRequest* req);
+    std::vector<char> readBuffer(HTTPRequest* req, bool addZero=true);
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName="");
 
 }

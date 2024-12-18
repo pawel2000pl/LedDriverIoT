@@ -4,6 +4,7 @@
 
 #include "wifi.h"
 #include "fastlz.h"
+#include "constrain.h"
 #include "resources.h"
 #include "configuration.h"
 
@@ -16,6 +17,12 @@ namespace server {
     httpsserver::SSLCert* cert;
     httpsserver::HTTPSServer* secureServer;
     httpsserver::HTTPServer* insecureServer;
+    bool captivePortalEnabled = false;
+
+
+    void updateConfiguration(const JsonVariantConst& configuration) {
+        captivePortalEnabled = configuration["wifi"]["access_point"]["captive"].as<bool>();
+    }
 
 
     void extractMacroDate(int &day, int &month, int &year) {
@@ -214,7 +221,7 @@ namespace server {
     void sendResource(HTTPRequest* req, HTTPResponse* res) {
         const Resource& resource = getResourceByName(req->getRequestString().c_str(), &resource_not_found_html);
         bool notFound = resource.name == resource_not_found_html.name; //yes, we can compare const char* in this context
-        bool useCaptive = wifi::isAP();
+        bool useCaptive = captivePortalEnabled && wifi::isAP();
         if (notFound && useCaptive) {
             String apAddress = wifi::getApAddress();
             res->setHeader("Location", "http://" + std::string(apAddress.c_str()) + "/");
@@ -229,21 +236,28 @@ namespace server {
     }
 
 
-    std::vector<char> readBuffer(HTTPRequest* req) {
+    std::vector<char> readBuffer(HTTPRequest* req, bool addZero) {
         std::vector<char> result;
-        result.resize(MAX_POST_SIZE);
+        std::string content_length = req->getHeader("Content-Length");
+        int buf_size = constrain(atoi(content_length.c_str()), 0, MAX_POST_SIZE);
+        if (!buf_size) buf_size = MAX_POST_SIZE;
+        result.resize(buf_size + !!addZero);
+        char* result_data = result.data();
         unsigned size = 0;
-        while (!req->requestComplete() && size < MAX_POST_SIZE) {
-            size += req->readChars(result.data() + size, MAX_POST_SIZE-size);
+        while (!req->requestComplete() && size < buf_size) {
+            size += req->readChars(result_data + size, buf_size-size);
         }
+        if (addZero && (size == 0 || result[size-1] != 0)) 
+            result_data[size++] = 0;
         result.resize(size);
-        result.shrink_to_fit();
+        if (3*size < 2*buf_size)
+            result.shrink_to_fit();
         return std::move(result);
     }
 
 
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName) {
-        std::vector<char> rawData = server::readBuffer(req);
+        std::vector<char> rawData = server::readBuffer(req, true);
         DeserializationError err = deserializeJson(json, (const char*)rawData.data());
         if (sendDeserializationError(res, err)) 
             return false;

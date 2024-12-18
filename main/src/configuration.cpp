@@ -155,6 +155,11 @@ namespace configuration {
 
     void init() {
 	    SPIFFS.begin(true);
+        DynamicJsonDocument config = getConfiguration();
+        if (assertConfiguration(config).length())
+            setConfiguration(getDefautltConfiguration());
+        else
+            setConfiguration(config);
     }
 
 

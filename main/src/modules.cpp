@@ -19,6 +19,7 @@ namespace modules {
         inputs::updateConfiguration(configuration);
         outputs::updateConfiguration(configuration);
         wifi::updateConfiguration(configuration);
+        server::updateConfiguration(configuration);
         webColorSpace = configuration["channels"]["webMode"].as<String>();
         whiteKnobEnabled = configuration["hardware"]["enbleWhiteKnob"].as<bool>();
     }

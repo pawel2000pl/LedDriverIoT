@@ -11,9 +11,10 @@
         "access_point": {
             "enabled": true,
             "hidden": false,
+            "captive": true,
             "ssid": "LedDriver",
             "password": "ledDriver",
-            "channel": 1,
+            "channel": 0,
             "address": "192.168.1.1",
             "gateway": "192.168.1.254",
             "subnet": "255.255.255.0"
