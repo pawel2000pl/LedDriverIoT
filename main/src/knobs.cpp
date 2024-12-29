@@ -22,11 +22,18 @@ namespace knobs {
     const float analogResolution = 1.44f / (float)ANALOG_READ_MAX;
     const char* colorspaces[] = {"hsv", "hsl", "rgb"};
     const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
+
+    bool settingsInLock = false;
         
     hw_timer_t * timer = NULL;
 
     void turnOff() {
         knobMode = false;
+    }
+
+
+    void setLock(bool lockState) {
+        settingsInLock = lockState;
     }
 
 
@@ -91,6 +98,7 @@ namespace knobs {
 
 
     void ARDUINO_ISR_ATTR timerCheck() {
+        if (settingsInLock) return;
         check(false);
     }
 

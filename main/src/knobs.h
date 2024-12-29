@@ -5,6 +5,7 @@
 
 namespace knobs {
     
+    void setLock(bool lockState);
     void updateConfiguration(const JsonVariantConst& configuration);
     void turnOff();
     void check(bool force=false);

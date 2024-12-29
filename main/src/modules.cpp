@@ -15,6 +15,7 @@ namespace modules {
 
 
     void updateModules(JsonVariant configuration) {
+        knobs::setLock(true);
         knobs::updateConfiguration(configuration);
         inputs::updateConfiguration(configuration);
         outputs::updateConfiguration(configuration);
@@ -22,6 +23,7 @@ namespace modules {
         server::updateConfiguration(configuration);
         webColorSpace = configuration["channels"]["webMode"].as<String>();
         whiteKnobEnabled = configuration["hardware"]["enbleWhiteKnob"].as<bool>();
+        knobs::setLock(false);
     }
 
 
