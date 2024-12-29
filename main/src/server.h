@@ -22,6 +22,26 @@ using ResourceNode = httpsserver::ResourceNode;
 namespace server {
 
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
+
+    class RequestReader {
+    public:
+        RequestReader(HTTPRequest* req);
+
+        int read();
+        size_t readBytes(char* buffer, size_t length);
+
+    private:
+        static const int bufferSize = 1024;
+
+        HTTPRequest* request;
+        int bufPos;
+        int bufSize;
+        bool bufEnded;
+        unsigned char buffer[bufferSize];
+
+        void readBuffer();
+    };
+
     
     void updateConfiguration(const JsonVariantConst& configuration);
     

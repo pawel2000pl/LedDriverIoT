@@ -13,46 +13,33 @@
 namespace server {
 
 
-    class RequestReader {
+    RequestReader::RequestReader(HTTPRequest* req) 
+        : request(req), bufPos(0), bufEnded(false) {
+        readBuffer();
+    }
 
-        public:
-            RequestReader(HTTPRequest* req) : request(req), bufPos(0), bufEnded(false) {
-                readBuffer();
-            }
+    int RequestReader::read() {
+        if (bufPos < bufSize) return buffer[bufPos++];
+        if (bufEnded) return -1;
+        readBuffer();
+        return buffer[bufPos++];
+    }
 
-            int read() {
-                if (bufPos < bufSize) return buffer[bufPos++];
-                if (bufEnded) return -1;
-                readBuffer();
-                return buffer[bufPos++];
-            }
+    size_t RequestReader::readBytes(char* buffer, size_t length) {
+        char* bufEnd = buffer + length;
+        char* i = buffer - 1;
+        while (++i < bufEnd && (!bufEnded))
+            *i = (char)read();
+        return i - buffer;
+    }
 
-            size_t readBytes(char* buffer, size_t length) {
-                char* bufEnd = buffer + length;
-                char* i = buffer-1;
-                while (++i<bufEnd && (!bufEnded))
-                    *i = (char)read();
-                return i - buffer;
-            }
-
-        private:
-            const static int bufferSize = 1024;
-
-            HTTPRequest* request;
-            int bufPos;
-            int bufSize;
-            bool bufEnded;
-            unsigned char buffer[bufferSize];
-
-            void readBuffer() {
-                bufPos = 0;
-                bufSize = 0;
-                while ((!request->requestComplete()) && bufSize < bufferSize)
-                    bufSize += request->readBytes(buffer + bufSize, bufferSize - bufSize);
-                bufEnded = request->requestComplete();
-            }
-
-    };
+    void RequestReader::readBuffer() {
+        bufPos = 0;
+        bufSize = 0;
+        while ((!request->requestComplete()) && bufSize < bufferSize)
+            bufSize += request->readBytes(buffer + bufSize, bufferSize - bufSize);
+        bufEnded = request->requestComplete();
+    }
 
 
     std::vector<unsigned char>* keyBuf = NULL;
