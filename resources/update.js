@@ -17,7 +17,7 @@ $id('update-btn').addEventListener('click', async function(e) {
         alert('Success! Wait until controller connect to your network agan and then refresh this page.');
     })
     .catch(error => {
-        alert("There was a problem with the network connection. But it is possible that the device just restarted before it sent response that everything is ok, so refresh this page and check if version has changed.");
+        alert("There was a problem with the network connection. But it is possible that the device just restarted before it sent a response that everything is ok, so refresh this page and check if the version has changed.");
     }).finally(()=>{
         $id('update-btn').disabled = false;
     });

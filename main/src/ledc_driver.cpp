@@ -63,7 +63,7 @@ void setLedC(int gpio, unsigned channel, float value, float phase, bool invert) 
 		.timer_sel      = LEDC_TIMER,
 		.duty           = duty,
 		.hpoint         = hpoint,
-		.flags          = { .output_invert = invert ? 1 : 0 }
+		.flags          = { .output_invert = (invert ? 1u : 0u) }
 	};
 	ledc_channel_config(&ledc_channel);
 }

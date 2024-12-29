@@ -88,7 +88,6 @@ namespace knobs {
 
 
     void check(bool force) {
-        ColorChannels values;
         float cReduction = force ? 1.f : reduction;
         float opReductionc = 1.f - cReduction;
         for (int i=0;i<4;i++)
