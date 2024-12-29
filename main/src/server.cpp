@@ -12,6 +12,48 @@
 namespace server {
 
 
+    class RequestReader {
+
+        public:
+            RequestReader(HTTPRequest* req) : request(req), bufPos(0), bufEnded(false) {
+                readBuffer();
+            }
+
+            int read() {
+                if (bufPos < bufSize) return buffer[bufPos++];
+                if (bufEnded) return -1;
+                readBuffer();
+                return buffer[bufPos++];
+            }
+
+            size_t readBytes(char* buffer, size_t length) {
+                char* bufEnd = buffer + length;
+                char* i = buffer-1;
+                while (++i<bufEnd && (!bufEnded))
+                    *i = (char)read();
+                return i - buffer;
+            }
+
+        private:
+            const static int bufferSize = 1024;
+
+            HTTPRequest* request;
+            int bufPos;
+            int bufSize;
+            bool bufEnded;
+            unsigned char buffer[bufferSize];
+
+            void readBuffer() {
+                bufPos = 0;
+                bufSize = 0;
+                while ((!request->requestComplete()) && bufSize < bufferSize)
+                    bufSize += request->readBytes(buffer + bufSize, bufferSize - bufSize);
+                bufEnded = request->requestComplete();
+            }
+
+    };
+
+
     std::vector<unsigned char>* keyBuf = NULL;
     std::vector<unsigned char>* certBuf = NULL;
     httpsserver::SSLCert* cert = NULL;
@@ -274,6 +316,13 @@ namespace server {
     }
 
 
+    unsigned getContentLength(HTTPRequest* req, unsigned defaultValue) {
+        std::string content_length = req->getHeader("Content-Length");
+        if (!content_length.length()) return defaultValue;
+        return atoi(content_length.c_str());
+    }
+
+
     std::vector<char> readBuffer(HTTPRequest* req, bool addZero) {
         std::vector<char> result;
         std::string content_length = req->getHeader("Content-Length");
@@ -295,8 +344,13 @@ namespace server {
 
 
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName) {
-        std::vector<char> rawData = server::readBuffer(req, true);
-        DeserializationError err = deserializeJson(json, (const char*)rawData.data());
+        unsigned defaultContentLength = min(json.capacity(), MAX_POST_SIZE);
+        if (getContentLength(req, defaultContentLength) > min(json.capacity(), defaultContentLength)) {
+            server::sendError(res, "Content too large", 413);
+            return false;
+        }
+        RequestReader reader = RequestReader(req);
+        DeserializationError err = deserializeJson(json, reader);
         if (sendDeserializationError(res, err)) 
             return false;
         if (assertEntryName != "") {
