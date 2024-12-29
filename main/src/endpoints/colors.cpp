@@ -39,7 +39,7 @@ namespace endpoints {
 
 
     void setColors(HTTPRequest* req, HTTPResponse* res) {
-        StaticJsonDocument<256> data;
+        JsonDocument data;
         if (!server::readJson(req, res, data)) return;
         inputs::setAuto(modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
         outputs::writeOutput();

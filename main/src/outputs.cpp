@@ -94,6 +94,7 @@ namespace outputs {
                 break;
             case 3: 
                 k += values[3];
+                // fall through
             case 2:
                 for (int i=0;i<3;i++)
                     k += values[i];

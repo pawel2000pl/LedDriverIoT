@@ -9,10 +9,11 @@
 #include <regex.h>
 #include "validate_json.h"
 
+
 bool validateRange(const JsonVariantConst& object, const JsonVariantConst& schema) {
 	float value = object.as<float>();
-	if (schema.containsKey("min_value") && value < schema["min_value"]) return 0;
-	if (schema.containsKey("max_value") && value > schema["max_value"]) return 0;
+	if (schema["min_value"].is<float>() && value < schema["min_value"]) return 0;
+	if (schema["max_value"].is<float>() && value > schema["max_value"]) return 0;
 	return 1;
 }
 
@@ -28,8 +29,8 @@ bool isSimpleJsonType(String typeName) {
 	return false;
 }
 
-StaticJsonDocument<64> JsonEmpty;
-StaticJsonDocument<64> JsonNull;
+JsonDocument JsonEmpty;
+JsonDocument JsonNull;
 bool loadJsonEmpty() {
 	String emptyJson = "{}";
 	deserializeJson(JsonEmpty, emptyJson);
@@ -41,20 +42,20 @@ bool JsonEmptyLoaded = loadJsonEmpty();
 
 String validateJson(const JsonVariant& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults) {
 
-	bool objectTypeIsInline = objectType.is<String>();
+	bool objectTypeIsInline = objectType.is<unsigned char>();
 
 	if (objectTypeIsInline && !isSimpleJsonType(objectType.as<String>()))
 		return validateJson(object, schema, schema[objectType.as<String>()], path, defaults);
 	
 	const JsonVariantConst& objectSchema = objectTypeIsInline ? JsonEmpty.as<JsonVariantConst>() : objectType;
-	String type = objectTypeIsInline ? objectType : objectSchema.containsKey("type") ? objectSchema["type"] : String("object");
+	String type = objectTypeIsInline ? objectType : objectSchema["type"].is<unsigned char>() ? objectSchema["type"] : String("object");
 
 	if (type == "object") {
 		if (!object.is<JsonObject>()) return "Invalid type: " + path + " expected: object";
-		const auto& fields = (objectSchema.containsKey("fields") ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
+		const auto& fields = (objectSchema["fields"].is<JsonArray>() ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
 		for (const JsonPairConst& keyValue: fields) {
 			const auto& key = keyValue.key();
-			if (!object.containsKey(key)) {
+			if (object[key].isNull()) {
 				if (defaults.isNull())
 					return "Missing key: " + path + "/" + key.c_str();
 				object[key] = defaults[key];
@@ -69,14 +70,14 @@ String validateJson(const JsonVariant& object, const JsonVariantConst& schema, c
 		const auto& item = objectSchema["item"];
 		int size = object.size();
 		int defaultsSize = defaults.size();
-		if (!defaults.isNull() && size < defaultsSize && (objectSchema.containsKey("min_length") || objectSchema.containsKey("length"))) {
+		if (!defaults.isNull() && size < defaultsSize && (objectSchema["min_length"].is<int>() || objectSchema["length"].is<int>())) {
 			for (int i=size;i<defaultsSize;i++)
 				object.add(defaults[i]);
 			size = defaultsSize;
 		}
-		if (objectSchema.containsKey("max_length") && size > objectSchema["max_length"]) return "Array too long: " + path;
-		if (objectSchema.containsKey("min_length") && size < objectSchema["min_length"]) return "Array too short: " + path;
-		if (objectSchema.containsKey("length") && size != objectSchema["length"]) return "Invalid array size: " + path;
+		if (objectSchema["max_length"].is<int>() && size > objectSchema["max_length"]) return "Array too long: " + path;
+		if (objectSchema["min_length"].is<int>() && size < objectSchema["min_length"]) return "Array too short: " + path;
+		if (objectSchema["length"].is<int>() && size != objectSchema["length"]) return "Invalid array size: " + path;
 		for (int i=0;i<size;i++) {
 			String result = validateJson(object[i], schema, item, path+"/"+inttostr(i), defaults[i<defaultsSize?i:(defaultsSize-1)]);
 			if (result.length() != 0) return result;
@@ -97,10 +98,10 @@ String validateJson(const JsonVariant& object, const JsonVariantConst& schema, c
 	if (type == "string" || type == "text") {
 		if (!object.is<const char*>()) return "Invalid type: " + path + " expected: string";
 		const JsonString& casted = object.as<JsonString>();
-		if (objectSchema.containsKey("max_length") && casted.size() > objectSchema["max_length"]) return "Text too long: " + path;
-		if (objectSchema.containsKey("min_length") && casted.size() < objectSchema["min_length"]) return "Text too short: " + path;
-		if (objectSchema.containsKey("regexp") || objectSchema.containsKey("regex")) {
-			String pattern = objectSchema.containsKey("regexp") ? objectSchema["regexp"].as<String>() : objectSchema["regex"].as<String>();
+		if (objectSchema["max_length"].is<int>() && casted.size() > objectSchema["max_length"]) return "Text too long: " + path;
+		if (objectSchema["min_length"].is<int>() && casted.size() < objectSchema["min_length"]) return "Text too short: " + path;
+		if (objectSchema["regexp"].is<unsigned char>() || objectSchema["regex"].is<unsigned char>()) {
+			String pattern = objectSchema["regexp"].is<unsigned char>() ? objectSchema["regexp"].as<String>() : objectSchema["regex"].as<String>();
 			regex_t restrict;
 			regcomp(&restrict, pattern.c_str(), REG_EXTENDED | REG_NOSUB);      
 			int result = regexec(&restrict, casted.c_str(), 0, NULL, 0);

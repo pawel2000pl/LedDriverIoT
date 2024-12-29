@@ -11,7 +11,7 @@
 namespace endpoints {
 
     void connectToNetworkEndpoint(HTTPRequest* req, HTTPResponse* res) {
-        StaticJsonDocument<768> data;
+        JsonDocument data;
         if (!server::readJson(req, res, data, "wifi-entry")) return;
         server::sendOk(res);
         const String ssid = data["ssid"].as<String>();

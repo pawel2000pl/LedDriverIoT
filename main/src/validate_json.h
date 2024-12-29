@@ -5,7 +5,7 @@
   using String = std::string;
 #endif
  
-extern StaticJsonDocument<64> JsonEmpty;
-extern StaticJsonDocument<64> JsonNull;
+extern JsonDocument JsonEmpty;
+extern JsonDocument JsonNull;
 
 String validateJson(const JsonVariant& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path=".", const JsonVariantConst& defaults=JsonNull);
