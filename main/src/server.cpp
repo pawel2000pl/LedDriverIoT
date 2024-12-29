@@ -1,6 +1,7 @@
 #include "server.h"
 
 #include <sstream>
+#include <esp_system.h>
 
 #include "wifi.h"
 #include "fastlz.h"
@@ -323,39 +324,48 @@ namespace server {
     }
 
 
-    std::vector<char> readBuffer(HTTPRequest* req, bool addZero) {
-        std::vector<char> result;
+    std::vector<char>* readBuffer(HTTPRequest* req, bool addZero) {
+        std::vector<char>* result = new std::vector<char>();
         std::string content_length = req->getHeader("Content-Length");
         int buf_size = constrain(atoi(content_length.c_str()), 0, MAX_POST_SIZE);
         if (!buf_size) buf_size = MAX_POST_SIZE;
-        result.resize(buf_size + !!addZero);
-        char* result_data = result.data();
+        result->resize(buf_size + !!addZero);
+        char* result_data = result->data();
         unsigned size = 0;
         while (!req->requestComplete() && size < buf_size) {
             size += req->readChars(result_data + size, buf_size-size);
         }
-        if (addZero && (size == 0 || result[size-1] != 0)) 
+        if (addZero && (size == 0 || result_data[size-1] != 0)) 
             result_data[size++] = 0;
-        result.resize(size);
+        result->resize(size);
         if (3*size < 2*buf_size)
-            result.shrink_to_fit();
-        return std::move(result);
+            result->shrink_to_fit();
+        return result;
     }
 
 
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName) {
-        unsigned defaultContentLength = min(json.capacity(), MAX_POST_SIZE);
-        if (getContentLength(req, defaultContentLength) > min(json.capacity(), defaultContentLength)) {
+        unsigned freeHeap = esp_get_free_heap_size() - (assertEntryName.length() ? resource_config_schema_json.decompressed_size * 2 : 0);
+        unsigned maximumContentLength = min(freeHeap / 2, (unsigned)MAX_POST_SIZE);
+        unsigned contentLength = getContentLength(req, maximumContentLength);
+        if (contentLength > maximumContentLength) {
             server::sendError(res, "Content too large", 413);
             return false;
         }
-        RequestReader reader = RequestReader(req);
-        DeserializationError err = deserializeJson(json, reader);
+        DeserializationError err = DeserializationError::Ok;
+        if (4 * contentLength < freeHeap) {
+            std::vector<char>* rawData = server::readBuffer(req, true);
+            err = deserializeJson(json, (const char*)(rawData->data()));
+            delete rawData;
+        } else {
+            RequestReader reader = RequestReader(req);
+            err = deserializeJson(json, reader);
+        }
         if (sendDeserializationError(res, err)) 
             return false;
-        if (assertEntryName != "") {
+        if (assertEntryName.length()) {
             const String assertMessage = configuration::assertJson(json, assertEntryName);
-            if (assertMessage != "") {
+            if (assertMessage.length()) {
                 sendError(res, assertMessage, 422);
                 return false;
             }
