@@ -25,11 +25,11 @@ namespace endpoints {
 
 
     void customValidator(HTTPRequest* req, HTTPResponse* res) {
-        DynamicJsonDocument testJson(JSON_CONFIG_BUF_SIZE);
+        JsonDocument testJson;
         if (!server::readJson(req, res, testJson)) return;
         const auto configSchema = configuration::getConfigSchema();
         const String assertMessage = 
-            testJson.containsKey("type") ? 
+            testJson["type"].is<JsonString>() ? 
             validateJson(testJson["data"], configSchema, configSchema[testJson["type"].as<String>()]) : 
             validateJson(testJson["data"], testJson["schema"], testJson["schema"]["main"]);
         if (assertMessage != "") {
@@ -41,7 +41,7 @@ namespace endpoints {
 
 
     void recvConfiguration(HTTPRequest* req, HTTPResponse* res) {
-        DynamicJsonDocument configuration(JSON_CONFIG_BUF_SIZE);
+        JsonDocument configuration;
         if (!server::readJson(req, res, configuration, "main")) return;
         configuration::setConfiguration(configuration);
         modules::updateModules(configuration);
@@ -77,7 +77,7 @@ namespace endpoints {
         const auto& scannedNetworks = wifi::getScannedNetworks();
         for (auto s : scannedNetworks) lengthSum += s.length();
         unsigned bufSize = lengthSum + 64 * scannedNetworks.size() + 32;
-        DynamicJsonDocument networkList(bufSize);
+        JsonDocument networkList;
         for (auto s : scannedNetworks) networkList.add(s);
         server::sendJson(res, networkList, bufSize);
     }

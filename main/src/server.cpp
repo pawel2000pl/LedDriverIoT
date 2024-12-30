@@ -176,11 +176,9 @@ namespace server {
 
 
     void sendError(HTTPResponse* res, String message, int code = 400) {
-        StaticJsonDocument<1024> messageData;
+        JsonDocument messageData;
         messageData["status"] = "error";
         messageData["message"] = message;
-        char buf[1024];
-        unsigned int size = serializeJson(messageData, buf, 1023);
         sendJson(res, messageData, 1024, code);
     }
 

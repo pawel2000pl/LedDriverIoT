@@ -16,17 +16,17 @@
 namespace endpoints {
 
     void sendFavorites(HTTPRequest* req, HTTPResponse* res) {
-        DynamicJsonDocument favorites = configuration::getFavorites();
+        JsonDocument favorites = configuration::getFavorites();
         String colorspace = modules::webColorSpace;
-        DynamicJsonDocument response(JSON_FAVORITES_BUF_SIZE);
+        JsonDocument response;
         JsonArray reponseArray = response.to<JsonArray>();
         unsigned size = favorites.size();
         for (unsigned i=0;i<size;i++) {
-            JsonObject item = reponseArray.createNestedObject();
+            JsonObject item = reponseArray.add<JsonObject>();
             String code = favorites[i].as<String>();
             item["code"] = code;
             ColorChannels channels = inputs::favoriteColorPreview(colorspace, code);
-            JsonArray colorJson = item.createNestedArray("color");
+            JsonArray colorJson = item["color"].to<JsonArray>();
             colorJson.add(channels[0]);
             colorJson.add(channels[1]);
             colorJson.add(channels[2]);
@@ -60,7 +60,7 @@ namespace endpoints {
 
 
     void saveFavorites(HTTPRequest* req, HTTPResponse* res) {
-        DynamicJsonDocument data(JSON_FAVORITES_BUF_SIZE);
+        JsonDocument data;
         if (!server::readJson(req, res, data, "favorites-list")) return;
         configuration::setFavorites(data);
         server::sendOk(res);

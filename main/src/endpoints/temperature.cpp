@@ -9,7 +9,7 @@ namespace endpoints {
     void getTemperature(HTTPRequest* req, HTTPResponse* res) {
         temperature::TemperatureResults reads = temperature::readTemperatures();
 
-        DynamicJsonDocument tempJson(1024);
+        JsonDocument tempJson;
         tempJson["internal"] = reads.internal;
         tempJson["max"] = reads.max();
         tempJson["external"].add(reads.external[0]);
