@@ -42,13 +42,13 @@ bool JsonEmptyLoaded = loadJsonEmpty();
 
 String validateJson(const JsonVariant& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults) {
 
-	bool objectTypeIsInline = objectType.is<unsigned char>();
+	bool objectTypeIsInline = objectType.is<const char*>();
 
 	if (objectTypeIsInline && !isSimpleJsonType(objectType.as<String>()))
 		return validateJson(object, schema, schema[objectType.as<String>()], path, defaults);
 	
 	const JsonVariantConst& objectSchema = objectTypeIsInline ? JsonEmpty.as<JsonVariantConst>() : objectType;
-	String type = objectTypeIsInline ? objectType : objectSchema["type"].is<unsigned char>() ? objectSchema["type"] : String("object");
+	String type = objectTypeIsInline ? objectType : objectSchema["type"].is<const char*>() ? objectSchema["type"] : String("object");
 
 	if (type == "object") {
 		if (!object.is<JsonObject>()) return "Invalid type: " + path + " expected: object";
@@ -100,8 +100,8 @@ String validateJson(const JsonVariant& object, const JsonVariantConst& schema, c
 		const JsonString& casted = object.as<JsonString>();
 		if (objectSchema["max_length"].is<int>() && casted.size() > objectSchema["max_length"]) return "Text too long: " + path;
 		if (objectSchema["min_length"].is<int>() && casted.size() < objectSchema["min_length"]) return "Text too short: " + path;
-		if (objectSchema["regexp"].is<unsigned char>() || objectSchema["regex"].is<unsigned char>()) {
-			String pattern = objectSchema["regexp"].is<unsigned char>() ? objectSchema["regexp"].as<String>() : objectSchema["regex"].as<String>();
+		if (objectSchema["regexp"].is<const char*>() || objectSchema["regex"].is<const char*>()) {
+			String pattern = objectSchema["regexp"].is<const char*>() ? objectSchema["regexp"].as<String>() : objectSchema["regex"].as<String>();
 			regex_t restrict;
 			regcomp(&restrict, pattern.c_str(), REG_EXTENDED | REG_NOSUB);      
 			int result = regexec(&restrict, casted.c_str(), 0, NULL, 0);
