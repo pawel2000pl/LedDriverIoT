@@ -9,7 +9,6 @@
 #include <SSLCert.hpp>
 #include <HTTPRequest.hpp>
 #include <HTTPResponse.hpp>
-#include <HTTPResponse.hpp>
 
 #include "resources.h"
 
@@ -39,7 +38,7 @@ namespace server {
     int sendDecompressedData(HTTPResponse* res, const Resource& resource, int statusCode=200);
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err);
     void sendResource(HTTPRequest* req, HTTPResponse* res);
-    std::vector<char> readBuffer(HTTPRequest* req, bool addZero=true);
+    std::vector<char>* readBuffer(HTTPRequest* req, bool addZero=true);
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName="");
 
 }
