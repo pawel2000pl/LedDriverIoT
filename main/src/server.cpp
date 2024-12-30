@@ -8,39 +8,10 @@
 #include "constrain.h"
 #include "resources.h"
 #include "configuration.h"
+#include "dynamic_buffers.h"
 
 
 namespace server {
-
-
-    RequestReader::RequestReader(HTTPRequest* req) 
-        : request(req), bufPos(0), bufEnded(false) {
-        readBuffer();
-    }
-
-    int RequestReader::read() {
-        if (bufPos < bufSize) return buffer[bufPos++];
-        if (bufEnded) return -1;
-        readBuffer();
-        return buffer[bufPos++];
-    }
-
-    size_t RequestReader::readBytes(char* buffer, size_t length) {
-        char* bufEnd = buffer + length;
-        char* i = buffer - 1;
-        while (++i < bufEnd && (!bufEnded))
-            *i = (char)read();
-        return i - buffer;
-    }
-
-    void RequestReader::readBuffer() {
-        bufPos = 0;
-        bufSize = 0;
-        while ((!request->requestComplete()) && bufSize < bufferSize)
-            bufSize += request->readBytes(buffer + bufSize, bufferSize - bufSize);
-        bufEnded = request->requestComplete();
-    }
-
 
     std::vector<unsigned char>* keyBuf = NULL;
     std::vector<unsigned char>* certBuf = NULL;
@@ -191,17 +162,32 @@ namespace server {
     }
 
 
-    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize, int costatusCode) {
+    void sendJsonStatic(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize) {
         char* buf = new char[bufSize];
         unsigned int size = serializeJson(data, buf, bufSize-1);
         buf[size] = 0;
         char size_str[24];
-        res->setHeader("Cache-Control", "no-cache");
-        res->setHeader("Content-Type", "application/json");
         res->setHeader("Content-Length", itoa(size, size_str, 10));
-        res->setStatusCode(costatusCode);
         res->write((uint8_t*)buf, size);
         delete [] buf;
+    }
+
+
+    void sendJsonDynamic(HTTPResponse* res, const JsonVariantConst& data) {
+        ResponseWriter writer(res);
+        serializeJson(data, writer);
+    }
+
+
+    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize, int costatusCode) {
+        unsigned freeHeap = esp_get_free_heap_size();
+        res->setHeader("Cache-Control", "no-cache");
+        res->setHeader("Content-Type", "application/json");
+        res->setStatusCode(costatusCode);
+        if ((bufSize==0) || (4 * bufSize >= freeHeap)) 
+            sendJsonDynamic(res, data);
+        else
+            sendJsonStatic(res, data, bufSize);
     }
 
 
