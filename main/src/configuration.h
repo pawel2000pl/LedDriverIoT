@@ -18,7 +18,7 @@ namespace configuration {
 
     void init();
     void removeFile(const String& filename);
-    std::vector<unsigned char> getFileBin(const String& filename);
+    std::vector<unsigned char>* getFileBin(const String& filename);
     String getFileStr(const String& filename);
     unsigned checkSum(const unsigned char* ptr, unsigned size, unsigned d=1617849293);
     void saveFile(const String& filename, const unsigned char* content, unsigned length);

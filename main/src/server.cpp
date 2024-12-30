@@ -93,8 +93,8 @@ namespace server {
     httpsserver::SSLCert* loadCert() {
         if (certBuf) {delete certBuf; certBuf = NULL;}
         if (keyBuf) {delete keyBuf; keyBuf = NULL;}
-        certBuf = new std::vector<unsigned char>(configuration::getFileBin(CERT_PUB_FILE_NAME));
-        keyBuf = new std::vector<unsigned char>(configuration::getFileBin(CERT_KEY_FILE_NAME));
+        certBuf = configuration::getFileBin(CERT_PUB_FILE_NAME);
+        keyBuf = configuration::getFileBin(CERT_KEY_FILE_NAME);
         if (certBuf->size() && keyBuf->size()) {
             return new httpsserver::SSLCert(
                 certBuf->data(), certBuf->size(),

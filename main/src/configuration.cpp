@@ -78,16 +78,16 @@ namespace configuration {
     }
 
 
-    std::vector<unsigned char> getFileBin(const String& filename) {
+    std::vector<unsigned char>* getFileBin(const String& filename) {
         File file = SPIFFS.open(filename);
         if (file) {
-            std::vector<unsigned char> result;
-            result.resize(file.size());
-            file.read(result.data(), file.size());
+            std::vector<unsigned char>* result = new std::vector<unsigned char>();
+            result->resize(file.size());
+            file.read(result->data(), file.size());
             file.close();
-            return std::move(result);
+            return result;
         }
-        return std::vector<unsigned char>();
+        return new std::vector<unsigned char>();
     }
 
 
