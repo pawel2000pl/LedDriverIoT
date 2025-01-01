@@ -67,7 +67,8 @@ function dumpConfig() {
             "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
             "gateLoadingTime": Number($id('gate-loading-time').value),
             "frequency": Number($id('frequency-selector').value),
-            "enbleWhiteKnob": $id('activate-white-knob').checked,
+            "enableColorKnob": $id('activate-color-knob').checked,
+            "enableWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
         }
     };
@@ -126,7 +127,8 @@ function fillConfig(config) {
     $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
     $id('gate-loading-time').value = config.hardware.gateLoadingTime;
     $id('frequency-selector').value = config.hardware.frequency;
-    $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
+    $id('activate-color-knob').checked = config.hardware.enableColorKnob;
+    $id('activate-white-knob').checked = config.hardware.enableWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
 }
 

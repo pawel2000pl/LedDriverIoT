@@ -10,6 +10,7 @@ namespace modules {
 
     extern std::list<std::function<void()>> taskQueue;
     extern String webColorSpace;
+    extern bool colorKnobEnabled;
     extern bool whiteKnobEnabled;
 
     void updateModules(JsonVariant configuration);

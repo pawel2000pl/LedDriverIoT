@@ -39,7 +39,6 @@ namespace endpoints {
         if ((!Update.end(true)) || Update.hasError()) 
             server::sendError(res, Update.errorString(), 500);
         else {
-            invalidateCache(req, res);
             modules::taskQueue.push_back([](){ESP.restart();});
             server::sendOk(res);
         }

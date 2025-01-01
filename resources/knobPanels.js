@@ -8,14 +8,15 @@ function screenIsLandscape() {
 function defaultResizeFunction(clientWidth, clientHeight) {
     if (screenIsLandscape())
         return clientWidth / 8 - 1;
-    return Math.max(clientWidth / 5 - 1, clientHeight / (config.hardware.enbleWhiteKnob ? 10 : 8) - 1);
+    return Math.max(clientWidth / 5 - 1, clientHeight / (config.hardware.enableWhiteKnob ? 10 : 8) - 1);
 }
 
 
-function createTriColorPanel(parent, converter, ranges=[1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults=[0, 0, 0], resizeFunction=defaultResizeFunction) {
+function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults=[0, 0, 0], resizeFunction=defaultResizeFunction) {
     
     const mainDiv = document.createElement('div'); 
     mainDiv.className = 'knob-div';
+    if (!visible) mainDiv.style.display = 'none';
     
     const knobs = [null, null, null];
 

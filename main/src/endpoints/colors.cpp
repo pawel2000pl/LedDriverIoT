@@ -75,6 +75,7 @@ namespace endpoints {
         char* render_buffer = new char[simple_template_html_decompressed_size+256];
         int size = sprintf(
             render_buffer, templateStr.c_str(), 
+            modules::colorKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[0],
             floatFilter15(filteredChannels[0]),
             channelsInCurrentColorspace[1],

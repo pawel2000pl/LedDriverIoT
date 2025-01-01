@@ -222,7 +222,8 @@
         "frequency": 3800,
         "knobActivateDelta": 0.01,
         "gateLoadingTime": 0.55,
-        "enbleWhiteKnob": true,
+        "enableColorKnob": true,
+        "enableWhiteKnob": false,
         "invertOutputs": true,
         "knobsNoisesReduction": 1.7
     }

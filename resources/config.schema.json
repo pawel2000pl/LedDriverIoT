@@ -181,7 +181,8 @@
             },
             "phaseMode": "integer",
             "knobActivateDelta": "fraction",
-            "enbleWhiteKnob": "boolean",
+            "enableColorKnob": "boolean",
+            "enableWhiteKnob": "boolean",
             "invertOutputs": "boolean",
             "knobsNoisesReduction": {
                 "type": "float",

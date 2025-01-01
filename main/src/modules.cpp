@@ -11,6 +11,7 @@ namespace modules {
 
     std::list<std::function<void()>> taskQueue;
     String webColorSpace;
+    bool colorKnobEnabled;
     bool whiteKnobEnabled;
 
 
@@ -22,7 +23,8 @@ namespace modules {
         wifi::updateConfiguration(configuration);
         server::updateConfiguration(configuration);
         webColorSpace = configuration["channels"]["webMode"].as<String>();
-        whiteKnobEnabled = configuration["hardware"]["enbleWhiteKnob"].as<bool>();
+        colorKnobEnabled = configuration["hardware"]["enableColorKnob"].as<bool>();
+        whiteKnobEnabled = configuration["hardware"]["enableWhiteKnob"].as<bool>();
         knobs::setLock(false);
     }
 
