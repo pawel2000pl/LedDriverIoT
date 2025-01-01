@@ -52,7 +52,7 @@ String validateJson(const JsonVariant& object, const JsonVariantConst& schema, c
 
 	if (type == "object") {
 		if (!object.is<JsonObject>()) return "Invalid type: " + path + " expected: object";
-		const auto& fields = (objectSchema["fields"].is<JsonArray>() ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
+		const auto& fields = (objectSchema["type"] == "object" ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
 		for (const JsonPairConst& keyValue: fields) {
 			const auto& key = keyValue.key();
 			if (object[key].isNull()) {

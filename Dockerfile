@@ -21,6 +21,8 @@ COPY License.txt /app/License.txt
 WORKDIR /app
 RUN python3 compilation_utils/validate_json.py /app/resources/default_config.json /app/resources/config.schema.json
 RUN python3 compilation_utils/compile_resources.py
+RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp `find /root/Arduino/libraries/ArduinoJson -type d -exec echo -I{} -L{} \;` -o validate_configuration
+RUN ./validate_configuration
 RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
 RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -MMD -c" --output-dir /tmp/app-build ./main.ino 2>&1
