@@ -50,14 +50,41 @@ namespace endpoints {
 
 
     void invalidateCache(HTTPRequest* req, HTTPResponse* res) {
-        const char* buf = "<p>Please wait, upgrading client app...</p><script defer>localStorage.removeItem('version'); history.go(-1);</script>";
-        char size_str[24];
-        int size = strlen(buf);
         res->setHeader("Clear-Site-Data", "\"*\"");
         res->setHeader("Content-Type", "text/html");
-        res->setHeader("Content-Length", itoa(size, size_str, 10));
-        res->setHeader("Connection", "close");
-        res->write((uint8_t*)buf, size);
+        res->setHeader("Cache-Control", "no-cache");
+        res->print(
+            "<style>\n"
+            "html, body {\n"
+            "    max-width: 100wv;\n"
+            "    font-family: Arial;\n"
+            "    text-align: center;\n"
+            "    @media (prefers-color-scheme: dark) {\n"
+            "        color: white;\n"
+            "        background: black;\n"
+            "    }\n"
+            "}\n"
+            "</style>\n"
+            "<p>Please wait, upgrading client app...</p>\n"
+            "<progress id=\"upgrade_progress\" value=\"0\" max=\"100\"/>\n"
+            "<script defer>\n"
+            "   async function upgrade() {\n"
+        );
+        for (unsigned i=0;i<resources_count;i++) {
+            res->print("       await (await fetch('");
+            res->print(resources[i]->name);
+            res->print("', {cache: 'reload'})).text();\n");
+            res->print("       document.getElementById('upgrade_progress').value = ");
+            res->print((int)((i+1) * 100 / resources_count));
+            res->print(";\n");
+        }
+        res->print(
+            "       localStorage.removeItem('version');\n"
+            "       history.go(-1);\n"
+            "   }\n"
+            "   upgrade();"
+            "</script>\n"
+        );
     }
 
 

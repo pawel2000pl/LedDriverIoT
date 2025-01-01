@@ -20,8 +20,9 @@ namespace endpoints {
     };
 
 
-    void sendColors(HTTPRequest* req, HTTPResponse* res) {
-        ColorChannels channels = inputs::getAuto(modules::webColorSpace);
+    void getColors(HTTPRequest* req, HTTPResponse* res) {
+        std::string colorspace = "";
+        ColorChannels channels = inputs::getAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace);
         char buf[256];
         int size = sprintf(buf, "[%f, %f, %f, %f]", 
             channels[0],
@@ -41,7 +42,8 @@ namespace endpoints {
     void setColors(HTTPRequest* req, HTTPResponse* res) {
         JsonDocument data;
         if (!server::readJson(req, res, data)) return;
-        inputs::setAuto(modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+        std::string colorspace = "";
+        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
         outputs::writeOutput();
         knobs::turnOff();
         server::sendOk(res);   

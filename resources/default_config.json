@@ -22,7 +22,14 @@
     },
     "channels": {
         "webMode": "hsv",
-        "knobMode": "hsv"
+        "knobMode": "hsv",
+        "defaultColorEnabled": false,
+        "defaultColor": {
+            "hue": 0,
+            "saturation": 0,
+            "value": 0,
+            "white": 0
+        }
     },
     "filters": {
         "inputFilters": {

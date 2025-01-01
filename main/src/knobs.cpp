@@ -23,6 +23,9 @@ namespace knobs {
     const char* colorspaces[] = {"hsv", "hsl", "rgb"};
     const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
 
+    bool enableDefaultColor = false;
+    ColorChannels defaultColor = {0,0,0,0};
+
     bool settingsInLock = false;
         
     hw_timer_t * timer = NULL;
@@ -38,13 +41,14 @@ namespace knobs {
 
 
     void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& bias = configuration["hardware"]["bias"];
+        const auto bias = configuration["hardware"]["bias"];
+        const auto channelsJson = configuration["channels"];
         float biasUp = bias["up"].as<float>();
         float biasDown = bias["down"].as<float>();
         epsilon = configuration["hardware"]["knobActivateDelta"].as<float>();
         reduction = exp(-abs(configuration["hardware"]["knobsNoisesReduction"].as<float>()));
         applyBias = [=](float x) { return constrain<float>((x - biasDown) / (1.f - biasUp - biasDown), 0, 1); };
-        knobColorspace = configuration["channels"]["knobMode"].as<String>();
+        knobColorspace = channelsJson["knobMode"].as<String>();
         const char** channelsInCurrentColorspace = channels[0];
         for (int i=0;i<3;i++)
             if (knobColorspace == colorspaces[i])
@@ -52,6 +56,24 @@ namespace knobs {
         const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
         for (int i=0;i<4;i++)
             potentionemterMapping[i] = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<unsigned>();
+
+        enableDefaultColor = channelsJson["defaultColorEnabled"].as<bool>();
+        const auto defaultColorJson = channelsJson["defaultColor"];
+        defaultColor = {
+            defaultColorJson["hue"].as<float>(),
+            defaultColorJson["saturation"].as<float>(),
+            defaultColorJson["value"].as<float>(),
+            defaultColorJson["white"].as<float>()
+        };
+    }
+
+
+    void setDefaultColor() {
+        if (!enableDefaultColor) return;
+        delay(100); // let timer do some iterations
+        knobMode = false;
+        inputs::setHSVW(defaultColor[0], defaultColor[1], defaultColor[2], defaultColor[3]);
+        outputs::writeOutput();
     }
 
 

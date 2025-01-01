@@ -32,6 +32,24 @@
                             Select colorspace for knobs: 
                             <select id="knobs-mode-colorspace" class="colorspace-option"></select>
                         </p>
+                        <p class="prevent-select">
+                            Default color: 
+                            <p>
+                                <input id="enable-default-color" type="checkbox">
+                                <label for="enable-default-color">Enable default color</label>
+                            </p>
+                            <p>
+                                <input id="default-color-hue" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-saturation" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-value" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-white" type="number" min="0" max="1" step="0.01">
+                            </p>
+                            <p>
+                                <button onclick="setDefaultsBlack()">Set black</button>
+                                <button onclick="setDefaultsCurrent()">Set current</button>
+                                <button onclick="setDefaultsWhite()">Set white</button>
+                            </p>
+                        </p>
                         
                         <details class="info-div">
                             <summary class="prevent-select">Description</summary>

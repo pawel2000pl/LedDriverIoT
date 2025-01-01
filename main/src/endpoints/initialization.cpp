@@ -45,7 +45,7 @@ namespace endpoints {
         server::addCallback("/refresh_networks", "GET", autoScanWifiEndpoint);
         server::addCallback("/open_access_point", "GET", openAccessPointEndpoint);
         server::addCallback("/reconnect", "GET", reconnect);
-        server::addCallback("/color.json", "GET", sendColors);
+        server::addCallback("/color.json", "GET", getColors);
         server::addCallback("/color.json", "POST", setColors);
         server::addCallback("/simple.html", "GET", simpleMode);
         server::addCallback("/simple.html", "POST", simpleMode);

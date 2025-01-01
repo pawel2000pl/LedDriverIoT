@@ -71,7 +71,9 @@
         "type": "object",
         "fields": {
             "webMode": "channel-setting",
-            "knobMode": "channel-setting"
+            "knobMode": "channel-setting",
+            "defaultColorEnabled": "bool",
+            "defaultColor": "hsvw-color"
         }
     },
     "channel-setting": {
@@ -206,5 +208,11 @@
         "type": "array",
         "max_length": 64,
         "item": "favorite-color"
+    },
+    "hsvw-color": {
+        "hue": "fraction",
+        "saturation": "fraction",
+        "value": "fraction",
+        "white": "fraction"
     }
 }

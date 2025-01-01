@@ -20,7 +20,14 @@ function dumpConfig() {
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
-            "knobMode": $id('knobs-mode-colorspace').value
+            "knobMode": $id('knobs-mode-colorspace').value,
+            "defaultColorEnabled": $id('enable-default-color').checked,
+            "defaultColor": {
+                "hue": Number($id('default-color-hue').value),
+                "saturation": Number($id('default-color-saturation').value),
+                "value": Number($id('default-color-value').value),
+                "white": Number($id('default-color-white').value)
+            }
         },
         "filters": {
             "inputFilters": {
@@ -82,6 +89,11 @@ function fillConfig(config) {
 
     $id('web-mode-colorspace').value = config.channels.webMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
+    $id('enable-default-color').checked = config.channels.defaultColorEnabled;
+    $id('default-color-hue').value = config.channels.defaultColor.hue;
+    $id('default-color-saturation').value = config.channels.defaultColor.saturation;
+    $id('default-color-value').value = config.channels.defaultColor.value;
+    $id('default-color-white').value = config.channels.defaultColor.white;
 
     $id('input-hue').setValues(config.filters.inputFilters.hue);
     $id('input-saturation').setValues(config.filters.inputFilters.saturation);
@@ -174,6 +186,32 @@ async function getTailoredScalling() {
     $id('green-scalling-factor').value = data[1];
     $id('blue-scalling-factor').value = data[2];
     $id('white-scalling-factor').value = data[3];
+}
+
+
+function setDefaultsBlack() {
+    $id('default-color-hue').value = 0;
+    $id('default-color-saturation').value = 0;
+    $id('default-color-value').value = 0;
+    $id('default-color-white').value = 0;
+}
+
+
+function setDefaultsWhite() {
+    $id('default-color-hue').value = 0;
+    $id('default-color-saturation').value = 0;
+    $id('default-color-value').value = 1;
+    $id('default-color-white').value = 1;
+}
+
+
+async function setDefaultsCurrent() {
+    const response = await fetch('/color.json?colorspace=hsv');
+    const data = await response.json();
+    $id('default-color-hue').value = data[0];
+    $id('default-color-saturation').value = data[1];
+    $id('default-color-value').value = data[2];
+    $id('default-color-white').value = data[3];
 }
 
 
