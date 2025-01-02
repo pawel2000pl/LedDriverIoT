@@ -6,7 +6,7 @@ namespace endpoints {
 
     void getTailoredScalling(HTTPRequest* req, HTTPResponse* res) {
         ColorChannels scalling = outputs::getTailoredScalling();
-        char buf[256];
+        char buf[64];
         int size = sprintf(buf, "[%f, %f, %f, %f]", 
             scalling[0],
             scalling[1],

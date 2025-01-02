@@ -232,10 +232,8 @@ namespace wifi {
 
 
     String ip2str(const IPAddress& addr) {
-        char buf[16];
-        int size = sprintf(buf, "%d.%d.%d.%d", (int)addr[0], (int)addr[1], (int)addr[2], (int)addr[3]);
-        buf[size] = 0;
-        return String(buf);
+        String dot = ".";
+        return String((int)addr[0]) + dot + String((int)addr[1]) + dot + String((int)addr[2]) + dot + String((int)addr[3]);
     }
 
 

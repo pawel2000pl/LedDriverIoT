@@ -42,7 +42,7 @@ namespace endpoints {
         bool useWhite = white != "0";
         String dumped = inputs::dumpFavoriteColor(useWhite);
         ColorChannels channels = inputs::getAuto(modules::webColorSpace);
-        char buf[256];
+        char buf[128];
         int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%f, %f, %f, %f]}", 
             dumped.c_str(),
             channels[0],
