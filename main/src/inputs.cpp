@@ -181,7 +181,6 @@ namespace inputs {
 
 
     ColorChannels decodeFavoriteColor(const String& formattedColor, bool* useWhitePtr) {
-        // unsigned useWhite, h, s, v, w;
         const char* buf = formattedColor.c_str();
         unsigned useWhite = charToDigit(buf[0]);
         unsigned h = (charToDigit(buf[1]) << 4) | charToDigit(buf[2]);

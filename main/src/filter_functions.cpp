@@ -65,12 +65,12 @@ FloatFunction createInverseFunction(FloatFunction originalFunction, float epsilo
 }
 
 FloatFunction periodizeFunction(FloatFunction originalFunction, unsigned count) {
-	float fraq = 1.f / count;
+	float frac = 1.f / count;
 	return [=](float x) {
 		unsigned i = floor(x * count);
-		float ifraq = i * fraq;
-		float xf = (x - ifraq) * count;
+		float ifrac = i * frac;
+		float xf = (x - ifrac) * count;
 		float rp = (i & 1) ? 1.f - originalFunction(1.f - xf) : originalFunction(xf);
-		return rp * fraq + ifraq;
+		return rp * frac + ifrac;
 	};
 }
