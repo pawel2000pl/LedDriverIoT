@@ -31,7 +31,7 @@ void checkNewFrequency(unsigned freq) {
 struct ChannelCache {
 		bool initialized = false;
 		uint32_t duty = 0;
-		int hpoint = 9;
+		int hpoint = 0;
 		bool invert = false;
 };
 
@@ -47,7 +47,7 @@ float addGateLoadingTime(float value, float loadingTime) {
 ChannelCache cache[4];
 
 void setLedC(int gpio, unsigned channel, float value, float phase, bool invert) {
-	uint32_t duty = constrain<uint32_t>(round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
+	uint32_t duty = (uint32_t)constrain<int>(round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
 	int hpoint = constrain<int>(round(phase * (LEDC_PERIOD - 1)), 0, LEDC_PERIOD-1);
 	if (cache[channel].initialized && cache[channel].duty == duty && cache[channel].hpoint == hpoint && cache[channel].invert == invert)
 		return;

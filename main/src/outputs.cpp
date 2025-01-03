@@ -86,7 +86,7 @@ namespace outputs {
 
     ColorChannels getPhases(const ColorChannels& values) {
         ColorChannels phases = {0, 0, 0, 0};
-        float k = 1e-4;
+        float k = 0;
         switch (phaseMode) {
             case 1: 
                 for (int i=0;i<4;i++)
@@ -98,12 +98,14 @@ namespace outputs {
             case 2:
                 for (int i=0;i<3;i++)
                     k += values[i];
+                if (k == 0) break;
                 k = 1.f / k;
                 float sum = 0;
                 for (int i=0;i<4;i++) 
                     if (values[i] != 0) {
+                        sum = fmod(sum, 1.f);
                         phases[i] = sum;
-                        sum += fmod(sum + values[i] * k, 1.f);
+                        sum += values[i] * k;
                     }
                 break;
         }
