@@ -1,4 +1,5 @@
 #include "addressed.h"
+#define INTR_CPU_ID_AUTO ESP_INTR_CPU_AFFINITY_AUTO
 #include <ESP32DMASPIMaster.h>
 #include <cmath>
 #include <vector>
