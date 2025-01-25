@@ -18,26 +18,26 @@ namespace configuration {
 
     void init();
     void removeFile(const String& filename);
-    std::vector<unsigned char> getFileBin(const String& filename);
+    std::vector<unsigned char>* getFileBin(const String& filename);
     String getFileStr(const String& filename);
     unsigned checkSum(const unsigned char* ptr, unsigned size, unsigned d=1617849293);
     void saveFile(const String& filename, const unsigned char* content, unsigned length);
     void saveFile(const String& filename, const char* content);
     void saveFile(const String& filename, const String& content);
     String getResourceStr(const struct Resource& resource);
-    DynamicJsonDocument getResourceJson(const struct Resource& resource, unsigned size=0);
-    DynamicJsonDocument getDefautltConfiguration();
-    DynamicJsonDocument getDefautltFavorites();
-    DynamicJsonDocument getConfigSchema();
+    JsonDocument getResourceJson(const struct Resource& resource, unsigned size=0);
+    JsonDocument getDefautltConfiguration();
+    JsonDocument getDefautltFavorites();
+    JsonDocument getConfigSchema();
     String assertJson(JsonVariant configuration, String name);
     String assertConfiguration(JsonVariant configuration);
-    DynamicJsonDocument getVersionInfo();
+    JsonDocument getVersionInfo();
     String getConfigurationStr();
-    DynamicJsonDocument getConfiguration();
-    DynamicJsonDocument getFavorites();
+    JsonDocument getConfiguration();
+    JsonDocument getFavorites();
     void resetConfiguration();
-    void setConfiguration(DynamicJsonDocument configuration);
-    void setFavorites(DynamicJsonDocument favorites);
+    void setConfiguration(JsonDocument configuration);
+    void setFavorites(JsonDocument favorites);
     void deleteCert();
 
 }

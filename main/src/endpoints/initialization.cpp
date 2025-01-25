@@ -7,6 +7,7 @@
 
 #include "update.h"
 #include "colors.h"
+#include "outputs.h"
 #include "network.h"
 #include "favorites.h"
 #include "temperature.h"
@@ -18,8 +19,12 @@
 namespace endpoints {
 
     void handleIndex(HTTPRequest* req, HTTPResponse* res) {
+        const char* buf = "<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">";
+        char size_str[24];
+        int size = strlen(buf);
         res->setHeader("Content-Type", "text/html");
-        res->println("<meta http-equiv=\"refresh\" content=\"0; url=/index.html\">");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)buf, size);
     }
 
 
@@ -40,7 +45,7 @@ namespace endpoints {
         server::addCallback("/refresh_networks", "GET", autoScanWifiEndpoint);
         server::addCallback("/open_access_point", "GET", openAccessPointEndpoint);
         server::addCallback("/reconnect", "GET", reconnect);
-        server::addCallback("/color.json", "GET", sendColors);
+        server::addCallback("/color.json", "GET", getColors);
         server::addCallback("/color.json", "POST", setColors);
         server::addCallback("/simple.html", "GET", simpleMode);
         server::addCallback("/simple.html", "POST", simpleMode);
@@ -55,6 +60,7 @@ namespace endpoints {
         server::addCallback("/invalidate_cache", "GET", invalidateCache);
         server::addCallback("/delete_cert", "GET", deleteCert);
         server::addCallback("/get_temp", "GET", getTemperature);
+        server::addCallback("/get_tailored_scalling", "GET", getTailoredScalling);
         server::start();
     }
 

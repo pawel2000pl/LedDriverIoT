@@ -11,6 +11,7 @@ function dumpConfig() {
                 "ssid": $id('ap-ssid').value,
                 "password": $id('ap-password').value,
                 "hidden": $id('ap-hidden').checked,
+                "captive": $id('ap-captive').checked,
                 "channel": Number($id('ap-channel').value),
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
@@ -19,7 +20,14 @@ function dumpConfig() {
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
-            "knobMode": $id('knobs-mode-colorspace').value
+            "knobMode": $id('knobs-mode-colorspace').value,
+            "defaultColorEnabled": $id('enable-default-color').checked,
+            "defaultColor": {
+                "hue": Number($id('default-color-hue').value),
+                "saturation": Number($id('default-color-saturation').value),
+                "value": Number($id('default-color-value').value),
+                "white": Number($id('default-color-white').value)
+            }
         },
         "filters": {
             "inputFilters": {
@@ -59,7 +67,8 @@ function dumpConfig() {
             "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
             "gateLoadingTime": Number($id('gate-loading-time').value),
             "frequency": Number($id('frequency-selector').value),
-            "enbleWhiteKnob": $id('activate-white-knob').checked,
+            "enableColorKnob": $id('activate-color-knob').checked,
+            "enableWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
         }
     };
@@ -73,6 +82,7 @@ function fillConfig(config) {
     $id('ap-ssid').value = config.wifi.access_point.ssid;
     $id('ap-password').value = config.wifi.access_point.password;
     $id('ap-hidden').checked = config.wifi.access_point.hidden;
+    $id('ap-captive').checked = config.wifi.access_point.captive;
     $id('ap-channel').value = config.wifi.access_point.channel;
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;
@@ -80,6 +90,11 @@ function fillConfig(config) {
 
     $id('web-mode-colorspace').value = config.channels.webMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
+    $id('enable-default-color').checked = config.channels.defaultColorEnabled;
+    $id('default-color-hue').value = config.channels.defaultColor.hue;
+    $id('default-color-saturation').value = config.channels.defaultColor.saturation;
+    $id('default-color-value').value = config.channels.defaultColor.value;
+    $id('default-color-white').value = config.channels.defaultColor.white;
 
     $id('input-hue').setValues(config.filters.inputFilters.hue);
     $id('input-saturation').setValues(config.filters.inputFilters.saturation);
@@ -112,7 +127,8 @@ function fillConfig(config) {
     $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
     $id('gate-loading-time').value = config.hardware.gateLoadingTime;
     $id('frequency-selector').value = config.hardware.frequency;
-    $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
+    $id('activate-color-knob').checked = config.hardware.enableColorKnob;
+    $id('activate-white-knob').checked = config.hardware.enableWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
 }
 
@@ -162,6 +178,42 @@ function deleteCert() {
 
 function restart() {
     fetch('/restart');
+}
+
+
+async function getTailoredScalling() {
+    const response = await fetch('/get_tailored_scalling');
+    const data = await response.json();
+    $id('red-scalling-factor').value = data[0];
+    $id('green-scalling-factor').value = data[1];
+    $id('blue-scalling-factor').value = data[2];
+    $id('white-scalling-factor').value = data[3];
+}
+
+
+function setDefaultsBlack() {
+    $id('default-color-hue').value = 0;
+    $id('default-color-saturation').value = 0;
+    $id('default-color-value').value = 0;
+    $id('default-color-white').value = 0;
+}
+
+
+function setDefaultsWhite() {
+    $id('default-color-hue').value = 0;
+    $id('default-color-saturation').value = 0;
+    $id('default-color-value').value = 1;
+    $id('default-color-white').value = 1;
+}
+
+
+async function setDefaultsCurrent() {
+    const response = await fetch('/color.json?colorspace=hsv');
+    const data = await response.json();
+    $id('default-color-hue').value = data[0];
+    $id('default-color-saturation').value = data[1];
+    $id('default-color-value').value = data[2];
+    $id('default-color-white').value = data[3];
 }
 
 

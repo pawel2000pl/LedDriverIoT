@@ -20,26 +20,46 @@ namespace endpoints {
     };
 
 
-    void sendColors(HTTPRequest* req, HTTPResponse* res) {
-        ColorChannels channels = inputs::getAuto(modules::webColorSpace);
-        char buf[256];
-        int size = sprintf(buf, "[%f, %f, %f, %f]", 
-            channels[0],
-            channels[1],
-            channels[2],
-            channels[3]
-        );
+    unsigned fastFractionToStr(float fraction, char* buf) {
+        unsigned value = fraction * 1000000;
+        for (char* it=buf+7;it>buf;it--) {
+            *it = '0' + value % 10;
+            value /= 10;
+        }
+        buf[0] = buf[1];
+        buf[1] = '.'; 
+        return 8;
+    }
+
+
+    void getColors(HTTPRequest* req, HTTPResponse* res) {
+        std::string colorspace = "";
+        ColorChannels channels = inputs::getAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace);
+        char buf[64];
+        int size = 0;
+        buf[size++] = '[';
+        size += fastFractionToStr(channels[0], buf+size);
+        buf[size++] = ',';
+        size += fastFractionToStr(channels[1], buf+size);
+        buf[size++] = ',';
+        size += fastFractionToStr(channels[2], buf+size);
+        buf[size++] = ',';
+        size += fastFractionToStr(channels[3], buf+size);
+        buf[size++] = ']';
         buf[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
-        res->println(buf);
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)buf, size);
     }
 
 
     void setColors(HTTPRequest* req, HTTPResponse* res) {
-        StaticJsonDocument<256> data;
-        if (!server::readJson(req, res, data, "color-channels")) return;
-        inputs::setAuto(modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+        JsonDocument data;
+        if (!server::readJson(req, res, data)) return;
+        std::string colorspace = "";
+        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
         outputs::writeOutput();
         knobs::turnOff();
         server::sendOk(res);   
@@ -69,8 +89,9 @@ namespace endpoints {
                 channelsInCurrentColorspace = channels[i];
         ColorChannels filteredChannels = inputs::getAuto(modules::webColorSpace);
         char* render_buffer = new char[simple_template_html_decompressed_size+256];
-        sprintf(
+        int size = sprintf(
             render_buffer, templateStr.c_str(), 
+            modules::colorKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[0],
             floatFilter15(filteredChannels[0]),
             channelsInCurrentColorspace[1],
@@ -81,9 +102,12 @@ namespace endpoints {
             channelsInCurrentColorspace[3],
             floatFilter15(filteredChannels[3])
         );
+        render_buffer[size] = 0;
+        char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "text/html");
-        res->println(render_buffer);
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)render_buffer, size);
         delete [] render_buffer;
     }
 

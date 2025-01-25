@@ -19,24 +19,24 @@ namespace configuration {
     }
 
 
-    DynamicJsonDocument getResourceJson(const Resource& resource, unsigned size) {
-        DynamicJsonDocument document(size ? size : 2 * resource.size);
+    JsonDocument getResourceJson(const Resource& resource, unsigned size) {
+        JsonDocument document;
         deserializeJson(document, getResourceStr(resource));
         return document;
     }
 
 
-    DynamicJsonDocument getDefautltConfiguration() {
+    JsonDocument getDefautltConfiguration() {
         return getResourceJson(resource_default_config_json);
     }
 
 
-    DynamicJsonDocument getDefautltFavorites() {
+    JsonDocument getDefautltFavorites() {
         return getResourceJson(resource_default_favorites_json);
     }
 
 
-    DynamicJsonDocument getConfigSchema() {
+    JsonDocument getConfigSchema() {
         return getResourceJson(resource_config_schema_json);
     }
 
@@ -52,7 +52,7 @@ namespace configuration {
     }
 
 
-    DynamicJsonDocument getVersionInfo() {
+    JsonDocument getVersionInfo() {
         auto versionInfo = getResourceJson(resource_version_json, 1024);
         versionInfo["date"] = __DATE__;
         versionInfo["time"] = __TIME__;
@@ -78,16 +78,16 @@ namespace configuration {
     }
 
 
-    std::vector<unsigned char> getFileBin(const String& filename) {
+    std::vector<unsigned char>* getFileBin(const String& filename) {
         File file = SPIFFS.open(filename);
         if (file) {
-            std::vector<unsigned char> result;
-            result.resize(file.size());
-            file.read(result.data(), file.size());
+            std::vector<unsigned char>* result = new std::vector<unsigned char>();
+            result->resize(file.size());
+            file.read(result->data(), file.size());
             file.close();
-            return std::move(result);
+            return result;
         }
-        return std::vector<unsigned char>();
+        return new std::vector<unsigned char>();
     }
 
 
@@ -127,8 +127,8 @@ namespace configuration {
     }
 
 
-    DynamicJsonDocument getConfiguration() {
-        DynamicJsonDocument configuration(JSON_CONFIG_BUF_SIZE);
+    JsonDocument getConfiguration() {
+        JsonDocument configuration;
         String buf = getConfigurationStr();
         DeserializationError err = deserializeJson(configuration, buf);
         if (err != DeserializationError::Ok || assertConfiguration(configuration).length())
@@ -137,8 +137,8 @@ namespace configuration {
     }
 
 
-    DynamicJsonDocument getFavorites() {
-        DynamicJsonDocument favorites(JSON_FAVORITES_BUF_SIZE);
+    JsonDocument getFavorites() {
+        JsonDocument favorites;
         String buf = getFileStr(FAVORITES_FILENAME);
         DeserializationError err = deserializeJson(favorites, buf);
         if (err != DeserializationError::Ok || assertJson(favorites, "favorites-list").length())
@@ -155,6 +155,11 @@ namespace configuration {
 
     void init() {
 	    SPIFFS.begin(true);
+        JsonDocument config = getConfiguration();
+        if (assertConfiguration(config).length())
+            setConfiguration(getDefautltConfiguration());
+        else
+            setConfiguration(config);
     }
 
 
@@ -163,7 +168,7 @@ namespace configuration {
     }
 
 
-    void setConfiguration(DynamicJsonDocument configuration) {
+    void setConfiguration(JsonDocument configuration) {
         char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
         unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
         buf[size] = 0;
@@ -172,7 +177,7 @@ namespace configuration {
     }
 
 
-    void setFavorites(DynamicJsonDocument favorites) {
+    void setFavorites(JsonDocument favorites) {
         char* buf = new char[JSON_FAVORITES_BUF_SIZE+1];
         unsigned size = serializeJson(favorites, buf, JSON_FAVORITES_BUF_SIZE);
         saveFile(FAVORITES_FILENAME, (unsigned char*)buf, size);

@@ -11,9 +11,10 @@
         "access_point": {
             "enabled": true,
             "hidden": false,
+            "captive": true,
             "ssid": "LedDriver",
             "password": "ledDriver",
-            "channel": 1,
+            "channel": 0,
             "address": "192.168.1.1",
             "gateway": "192.168.1.254",
             "subnet": "255.255.255.0"
@@ -21,7 +22,14 @@
     },
     "channels": {
         "webMode": "hsv",
-        "knobMode": "hsv"
+        "knobMode": "hsv",
+        "defaultColorEnabled": false,
+        "defaultColor": {
+            "hue": 0,
+            "saturation": 0,
+            "value": 0,
+            "white": 0
+        }
     },
     "filters": {
         "inputFilters": {
@@ -214,7 +222,8 @@
         "frequency": 3800,
         "knobActivateDelta": 0.01,
         "gateLoadingTime": 0.55,
-        "enbleWhiteKnob": true,
+        "enableColorKnob": true,
+        "enableWhiteKnob": false,
         "invertOutputs": true,
         "knobsNoisesReduction": 1.7
     }

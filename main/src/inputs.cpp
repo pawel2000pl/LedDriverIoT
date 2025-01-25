@@ -1,8 +1,8 @@
 #include <cmath>
 #include "inputs.h"
+#include "outputs.h"
 #include "conversions.h"
 #include "filter_functions.h"
-#include "outputs.h"
 
 namespace inputs {
 
@@ -152,25 +152,41 @@ namespace inputs {
     }
     
 
+    void byteToHex(unsigned char value, char* ptr) {
+        unsigned char lo = value & 0xF;
+        unsigned char hi = value >> 4;
+        ptr[0] = (hi <= 9) ? ('0' + hi) : (('A' - 10) + hi);
+        ptr[1] = (lo <= 9) ? ('0' + lo) : (('A' - 10) + lo);
+    }
+
+
     String dumpFavoriteColor(const bool useWhite) {
         ColorChannels raw = outputs::getColor();
-        char buf[16] = {0};
-        int size = sprintf(buf, "%01X%02X%02X%02X%02X", 
-            useWhite ? 1 : 0,
-            (int)round(255*raw[0]),
-            (int)round(255*raw[1]),
-            (int)round(255*raw[2]),
-            (int)round(255*raw[3])
-        );
-        buf[size] = 0;
+        char buf[16];
+        buf[0] = useWhite ? '1' : '0';
+        byteToHex((int)round(255*raw[0]), buf+1);
+        byteToHex((int)round(255*raw[1]), buf+3);
+        byteToHex((int)round(255*raw[2]), buf+5);
+        byteToHex((int)round(255*raw[3]), buf+7);
+        buf[9] = 0;
         return String(buf);
     }
 
 
+    unsigned charToDigit(char chr) {
+        if (chr <= '9') return chr - '0';
+        if (chr >= 'a') return chr - 'a' + 10;
+        return chr - 'A' + 10;
+    }
+
+
     ColorChannels decodeFavoriteColor(const String& formattedColor, bool* useWhitePtr) {
-        unsigned useWhite, h, s, v, w;
-        sscanf(formattedColor.c_str(), "%01X%02X%02X%02X%02X", 
-            &useWhite, &h, &s, &v, &w);
+        const char* buf = formattedColor.c_str();
+        unsigned useWhite = charToDigit(buf[0]);
+        unsigned h = (charToDigit(buf[1]) << 4) | charToDigit(buf[2]);
+        unsigned s = (charToDigit(buf[3]) << 4) | charToDigit(buf[4]);
+        unsigned v = (charToDigit(buf[5]) << 4) | charToDigit(buf[6]);
+        unsigned w = (charToDigit(buf[7]) << 4) | charToDigit(buf[8]);
         if (useWhitePtr) *useWhitePtr = useWhite;
         return {(float)h / 255.f, (float)s / 255.f, (float)v / 255.f,  (float)w / 255.f};
     }

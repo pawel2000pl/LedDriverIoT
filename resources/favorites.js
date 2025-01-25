@@ -68,7 +68,7 @@ Promise.all([configPromise, favoritePromise]).then(([config, favorites])=>{
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(favoritesDiv.getValues())
         });
-    if (config.hardware.enbleWhiteKnob)
+    if (config.hardware.enableWhiteKnob)
         favoritesDiv.appendChild(addWhiteBtn);
     favoritesDiv.appendChild(saveBtn);
 });

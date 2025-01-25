@@ -1,21 +1,29 @@
 #include "server.h"
 
 #include <sstream>
+#include <esp_system.h>
 
 #include "wifi.h"
 #include "fastlz.h"
+#include "constrain.h"
 #include "resources.h"
 #include "configuration.h"
+#include "dynamic_buffers.h"
 
 
 namespace server {
 
-
     std::vector<unsigned char>* keyBuf = NULL;
     std::vector<unsigned char>* certBuf = NULL;
-    httpsserver::SSLCert* cert;
-    httpsserver::HTTPSServer* secureServer;
-    httpsserver::HTTPServer* insecureServer;
+    httpsserver::SSLCert* cert = NULL;
+    httpsserver::HTTPSServer* secureServer = NULL;
+    httpsserver::HTTPServer* insecureServer = NULL;
+    bool captivePortalEnabled = false;
+
+
+    void updateConfiguration(const JsonVariantConst& configuration) {
+        captivePortalEnabled = configuration["wifi"]["access_point"]["captive"].as<bool>();
+    }
 
 
     void extractMacroDate(int &day, int &month, int &year) {
@@ -85,8 +93,8 @@ namespace server {
     httpsserver::SSLCert* loadCert() {
         if (certBuf) {delete certBuf; certBuf = NULL;}
         if (keyBuf) {delete keyBuf; keyBuf = NULL;}
-        certBuf = new std::vector<unsigned char>(configuration::getFileBin(CERT_PUB_FILE_NAME));
-        keyBuf = new std::vector<unsigned char>(configuration::getFileBin(CERT_KEY_FILE_NAME));
+        certBuf = configuration::getFileBin(CERT_PUB_FILE_NAME);
+        keyBuf = configuration::getFileBin(CERT_KEY_FILE_NAME);
         if (certBuf->size() && keyBuf->size()) {
             return new httpsserver::SSLCert(
                 certBuf->data(), certBuf->size(),
@@ -98,6 +106,10 @@ namespace server {
 
 
     void configure() {
+        if (cert) { delete cert; cert = NULL; }
+        if (secureServer) { delete secureServer; secureServer = NULL; }
+        if (insecureServer) { delete insecureServer; insecureServer = NULL; }
+
         cert = loadCert();
 
         secureServer = new httpsserver::HTTPSServer(cert);
@@ -106,17 +118,34 @@ namespace server {
         ResourceNode* staticNode  = new ResourceNode("", "GET", &sendResource);
         secureServer->setDefaultNode(staticNode);
         insecureServer->setDefaultNode(staticNode);
+
+        secureServer->start();
+        if (secureServer->isRunning())             
+            secureServer->stop();
+        else {
+            configuration::removeFile(CERT_PUB_FILE_NAME);
+            configuration::removeFile(CERT_KEY_FILE_NAME);
+        }
     }
 
 
     void start() {
         secureServer->start();
         insecureServer->start();
+        Serial.println(secureServer->isRunning() ? "sec ok" : "sec err");
+        Serial.println(insecureServer->isRunning() ? "ins ok" : "ins err");
+    }
 
-        if (!secureServer->isRunning()) {
-            configuration::removeFile(CERT_PUB_FILE_NAME);
-            configuration::removeFile(CERT_KEY_FILE_NAME);
-        }
+
+    void stop() {
+        secureServer->stop();
+        insecureServer->stop();
+    }
+
+
+    void restart() {
+        stop();
+        start();
     }
 
 
@@ -133,33 +162,52 @@ namespace server {
     }
 
 
-    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize, int costatusCode) {
+    void sendJsonStatic(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize) {
         char* buf = new char[bufSize];
         unsigned int size = serializeJson(data, buf, bufSize-1);
         buf[size] = 0;
-        res->setHeader("Cache-Control", "no-cache");
-        res->setHeader("Content-Type", "application/json");
-        res->setStatusCode(costatusCode);
-        res->print(buf);
+        char size_str[24];
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->write((uint8_t*)buf, size);
         delete [] buf;
     }
 
 
+    void sendJsonDynamic(HTTPResponse* res, const JsonVariantConst& data) {
+        ResponseWriter writer(res);
+        serializeJson(data, writer);
+    }
+
+
+    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize, int costatusCode) {
+        unsigned freeHeap = esp_get_free_heap_size();
+        res->setHeader("Cache-Control", "no-cache");
+        res->setHeader("Content-Type", "application/json");
+        res->setStatusCode(costatusCode);
+        if ((bufSize==0) || (4 * bufSize >= freeHeap)) 
+            sendJsonDynamic(res, data);
+        else
+            sendJsonStatic(res, data, bufSize);
+    }
+
+
     void sendError(HTTPResponse* res, String message, int code = 400) {
-        StaticJsonDocument<1024> messageData;
+        JsonDocument messageData;
         messageData["status"] = "error";
         messageData["message"] = message;
-        char buf[1024];
-        unsigned int size = serializeJson(messageData, buf, 1023);
         sendJson(res, messageData, 1024, code);
     }
 
 
     void sendOk(HTTPResponse* res) {
+        const char* buf = "{\"status\": \"ok\"}";
+        char size_str[24];
+        int size = strlen(buf);
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
+        res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setStatusCode(200);
-        res->print("{\"status\": \"ok\"}");
+        res->write((uint8_t*)buf, size);
     }
 
 
@@ -182,9 +230,12 @@ namespace server {
 		}
 		if (statusCode >= 200 && statusCode < 300) 
             sendCacheControlHeader(res);
+        char size_str[24];
         res->setHeader("Content-Type", resource.mime_type);
+        res->setHeader("Content-Length", itoa(decompressed_size, size_str, 10));
+        res->setHeader("ETag", resource.etag);
         res->setStatusCode(statusCode);
-		res->write(decompressed_buffer, decompressed_size);
+		res->write((uint8_t*)decompressed_buffer, decompressed_size);
 		delete [] decompressed_buffer;
 		return 1;
     }
@@ -202,39 +253,90 @@ namespace server {
     }
 
 
+    bool strContains(const std::string& s, const String& sub) {
+        return s.find(sub.c_str()) != std::string::npos;
+    }
+
+
+    bool refererIsMe(HTTPRequest* req) {
+        std::string referer = req->getHeader("Referer");
+        std::string host = req->getHeader("Host");
+        String ip = wifi::getLocalIp();
+        String hostname = wifi::getHostname() + ".local";
+        return strContains(referer, ip) 
+            || strContains(referer, hostname) 
+            || strContains(host, ip) 
+            || strContains(host, hostname);
+    }
+
+
     void sendResource(HTTPRequest* req, HTTPResponse* res) {
         const Resource& resource = getResourceByName(req->getRequestString().c_str(), &resource_not_found_html);
         bool notFound = resource.name == resource_not_found_html.name; //yes, we can compare const char* in this context
-        bool useCaptive = wifi::isAP();
+        bool useCaptive = captivePortalEnabled && wifi::isAP() && !refererIsMe(req);
         if (notFound && useCaptive) {
             String apAddress = wifi::getApAddress();
             res->setHeader("Location", "http://" + std::string(apAddress.c_str()) + "/");
+        }
+        if ((!notFound) && (req->getHeader("If-None-Match").find(resource.etag) != std::string::npos)) {
+            sendCacheControlHeader(res);
+            res->setHeader("ETag", resource.etag);
+            res->setStatusCode(304);
+            return;
         }
         sendDecompressedData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200); 
     }
 
 
-    std::vector<char> readBuffer(HTTPRequest* req) {
-        std::vector<char> result;
-        result.resize(MAX_POST_SIZE);
+    unsigned getContentLength(HTTPRequest* req, unsigned defaultValue) {
+        std::string content_length = req->getHeader("Content-Length");
+        if (!content_length.length()) return defaultValue;
+        return atoi(content_length.c_str());
+    }
+
+
+    std::vector<char>* readBuffer(HTTPRequest* req, bool addZero) {
+        std::vector<char>* result = new std::vector<char>();
+        std::string content_length = req->getHeader("Content-Length");
+        int buf_size = constrain(atoi(content_length.c_str()), 0, MAX_POST_SIZE);
+        if (!buf_size) buf_size = MAX_POST_SIZE;
+        result->resize(buf_size + !!addZero);
+        char* result_data = result->data();
         unsigned size = 0;
-        while (!req->requestComplete() && size < MAX_POST_SIZE) {
-            size += req->readChars(result.data() + size, MAX_POST_SIZE-size);
+        while (!req->requestComplete() && size < buf_size) {
+            size += req->readChars(result_data + size, buf_size-size);
         }
-        result.resize(size);
-        result.shrink_to_fit();
-        return std::move(result);
+        if (addZero && (size == 0 || result_data[size-1] != 0)) 
+            result_data[size++] = 0;
+        result->resize(size);
+        if (3*size < 2*buf_size)
+            result->shrink_to_fit();
+        return result;
     }
 
 
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName) {
-        std::vector<char> rawData = server::readBuffer(req);
-        DeserializationError err = deserializeJson(json, (const char*)rawData.data());
+        unsigned freeHeap = esp_get_free_heap_size() - (assertEntryName.length() ? resource_config_schema_json.decompressed_size * 2 : 0);
+        unsigned maximumContentLength = min(freeHeap / 2, (unsigned)MAX_POST_SIZE);
+        unsigned contentLength = getContentLength(req, maximumContentLength);
+        if (contentLength > maximumContentLength) {
+            server::sendError(res, "Content too large", 413);
+            return false;
+        }
+        DeserializationError err = DeserializationError::Ok;
+        if (4 * contentLength < freeHeap) {
+            std::vector<char>* rawData = server::readBuffer(req, true);
+            err = deserializeJson(json, (const char*)(rawData->data()));
+            delete rawData;
+        } else {
+            RequestReader reader = RequestReader(req);
+            err = deserializeJson(json, reader);
+        }
         if (sendDeserializationError(res, err)) 
             return false;
-        if (assertEntryName != "") {
+        if (assertEntryName.length()) {
             const String assertMessage = configuration::assertJson(json, assertEntryName);
-            if (assertMessage != "") {
+            if (assertMessage.length()) {
                 sendError(res, assertMessage, 422);
                 return false;
             }

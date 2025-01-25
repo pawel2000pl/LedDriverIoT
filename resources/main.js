@@ -31,6 +31,7 @@ configPromise.then(()=>{
     var ready = true;
     const colors = createTriColorPanel(
         colorKnob, 
+        config.hardware.enableColorKnob,
         converters[config.channels.webMode], 
         [1, 1, 1], 
         12, 
@@ -40,7 +41,7 @@ configPromise.then(()=>{
 
     const white = createWhiteKnob(
         colorKnob, 
-        config.hardware.enbleWhiteKnob, 
+        config.hardware.enableWhiteKnob, 
         ()=>{modified = true;}
     );
 

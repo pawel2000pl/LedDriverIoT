@@ -48,6 +48,7 @@ void setup() {
 	knobs::check(true);
 	knobs::attachTimer();
 	endpoints::configureServer();
+	knobs::setDefaultColor();
 }
 
 unsigned long long int rareChecksTime = 0;

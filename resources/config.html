@@ -32,6 +32,24 @@
                             Select colorspace for knobs: 
                             <select id="knobs-mode-colorspace" class="colorspace-option"></select>
                         </p>
+                        <p class="prevent-select">
+                            Default color: 
+                            <p>
+                                <input id="enable-default-color" type="checkbox">
+                                <label for="enable-default-color">Enable default color</label>
+                            </p>
+                            <p>
+                                <input id="default-color-hue" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-saturation" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-value" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-white" type="number" min="0" max="1" step="0.01">
+                            </p>
+                            <p>
+                                <button onclick="setDefaultsBlack()">Set black</button>
+                                <button onclick="setDefaultsCurrent()">Set current</button>
+                                <button onclick="setDefaultsWhite()">Set white</button>
+                            </p>
+                        </p>
                         
                         <details class="info-div">
                             <summary class="prevent-select">Description</summary>
@@ -68,6 +86,7 @@
                             <div><span>SSID:</span><input id="ap-ssid"></div>
                             <div><span>Password:</span><input id="ap-password" type="password"></div>    
                             <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>
+                            <div><input id="ap-captive" type="checkbox"><label for="ap-captive">Enable captive portal</label></div>
                             <div>Channel (set 0 for auto):<input id="ap-channel" type="number" min="0" max="13" value="1"></div>
                         </p>
                         <p>
@@ -136,6 +155,9 @@
                             <span>White scalling factor: </span>
                             <input id="white-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
                         </div>
+                        <p>
+                            <button onclick="getTailoredScalling()">Set current color as scalling factors</button>
+                        </p>
                     </p>
                     <p>
                         <span>Output frequency:</span>
@@ -175,6 +197,9 @@
                         <input id="gate-loading-time" type="number" min="0.000" max="32" step="0.1" value="0.55">
                     </p>
                     <p>
+                        <input id="activate-color-knob" type="checkbox">
+                        <label for="activate-color-knob">Enable color channels</label>
+                        <br>
                         <input id="activate-white-knob" type="checkbox">
                         <label for="activate-white-knob">Enable white channel</label>
                         <br>
@@ -317,7 +342,11 @@
                         <input id="update-file" type="file" name="update">
                         <input id="update-btn" type="button" value="Update">
                     </p>                    
-                    <p id="prg"></p>
+                    <p>
+                        If some web panel's features do not work after upgrading, it may be required to clear cache of your browser manually. 
+                        <br>
+                        <a href="/invalidate_cache">Click here to clear all stored data and upgrade cache.</a> 
+                    </p>
                 </div>
             </details>
              

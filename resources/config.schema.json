@@ -34,6 +34,7 @@
                     "hidden": "boolean",
                     "ssid": "wifi-ssid",
                     "password": "ap-password",
+                    "captive": "boolean",
                     "channel": {
                         "type": "integer",
                         "min_value": 0,
@@ -70,7 +71,9 @@
         "type": "object",
         "fields": {
             "webMode": "channel-setting",
-            "knobMode": "channel-setting"
+            "knobMode": "channel-setting",
+            "defaultColorEnabled": "bool",
+            "defaultColor": "hsvw-color"
         }
     },
     "channel-setting": {
@@ -178,7 +181,8 @@
             },
             "phaseMode": "integer",
             "knobActivateDelta": "fraction",
-            "enbleWhiteKnob": "boolean",
+            "enableColorKnob": "boolean",
+            "enableWhiteKnob": "boolean",
             "invertOutputs": "boolean",
             "knobsNoisesReduction": {
                 "type": "float",
@@ -205,5 +209,11 @@
         "type": "array",
         "max_length": 64,
         "item": "favorite-color"
+    },
+    "hsvw-color": {
+        "hue": "fraction",
+        "saturation": "fraction",
+        "value": "fraction",
+        "white": "fraction"
     }
 }

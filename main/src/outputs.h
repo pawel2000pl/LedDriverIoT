@@ -13,5 +13,6 @@ namespace outputs {
     void setColor(float h, float s, float v, float w);
     void setColor(const ColorChannels& channels);
     ColorChannels getColor();
+    ColorChannels getTailoredScalling();
     
 }
