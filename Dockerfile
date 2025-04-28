@@ -5,6 +5,7 @@ RUN apt install -y curl git python3 python3-pip python3-serial
 RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
 
 RUN arduino-cli config init
+RUN arduino-cli config set network.connection_timeout 0
 RUN arduino-cli config add board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 RUN arduino-cli core update-index
 RUN arduino-cli board listall
