@@ -21,6 +21,11 @@ namespace temperature {
     }
 
 
+    bool TemperatureResults::tooHot() {
+        return internal > RESTART_TEMP;
+    }
+
+
     void init() {
         temperature_sensor_config_t temp_sensor = {
                 .range_min = 20,
@@ -55,12 +60,23 @@ namespace temperature {
     }
 
 
-    void check() {
+    TemperatureResults check() {
         TemperatureResults temps = readTemperatures();
         float temp_max = temps.max();
         fanStatus = ((fanStatus) && (temp_max > FAN_TURN_OFF_TEMP)) || ((!fanStatus) && (temp_max > FAN_TURN_ON_TEMP));
         digitalWrite(hardware_configuration.fanPin, fanStatus ? HIGH : LOW);
+        return temps;
     }
 
+
+    void block_until_is_ok() {
+        TemperatureResults temps;
+        while (true) {
+            temps = check();
+            if (temps.internal <= ALLOW_ON_MAX_TEMP && temps.internal >= ALLOW_ON_MIN_TEMP)
+                break;
+            delay(100);
+        }
+    }
 
 }

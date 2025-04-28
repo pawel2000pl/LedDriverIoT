@@ -40,8 +40,9 @@ void setup() {
 	Serial.println("Initialization");
 	randomSeed(29615);
 	hardware::detectHardware();
-	configuration::init();
 	temperature::init();
+	temperature::block_until_is_ok();
+	configuration::init();
 	initLedC();
 	modules::updateModules();
 	wifi::fastInit();
@@ -70,7 +71,7 @@ void loop() {
 	
 	if (rareChecksTime == 0 || millis() - rareChecksTime > RARE_CHECKS_INTERVAL) {
 		wifi::checkConnection();
-		temperature::check();
+		if (temperature::check().tooHot()) ESP.restart();
 		rareChecksTime = millis();
 	}
 
