@@ -16,7 +16,7 @@
 namespace endpoints {
 
     int floatFilter15(float x) { 
-        return (int)round(x * 15.f); 
+        return (int)std::round(x * 15.f); 
     };
 
 
@@ -93,14 +93,14 @@ namespace endpoints {
             render_buffer, templateStr.c_str(), 
             modules::colorKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[0],
-            floatFilter15(filteredChannels[0]),
+            (float)floatFilter15(filteredChannels[0]),
             channelsInCurrentColorspace[1],
-            floatFilter15(filteredChannels[1]),
+            (float)floatFilter15(filteredChannels[1]),
             channelsInCurrentColorspace[2],
-            floatFilter15(filteredChannels[2]),
+            (float)floatFilter15(filteredChannels[2]),
             modules::whiteKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[3],
-            floatFilter15(filteredChannels[3])
+            (float)floatFilter15(filteredChannels[3])
         );
         render_buffer[size] = 0;
         char size_str[24];

@@ -7,26 +7,26 @@
 #include "filter_functions.h"
 #include "hardware_configuration.h"
 
-std::vector<float> toFloatVector(const JsonVariantConst& source) {
-    std::vector<float> result;
+std::vector<fixed64> toFloatVector(const JsonVariantConst& source) {
+    std::vector<fixed64> result;
     unsigned size = source.size();
     result.reserve(size);
     for (unsigned i=0;i<size;i++)
-        result.push_back(source[i].as<float>());
+        result.push_back(source[i].as<fixed64>());
     return result;
 }
 
 
 namespace outputs {
 
-    float hue = 0;
-    float saturation = 0;
-    float value = 0;
-    float white = 0;
+    fixed64 hue = 0;
+    fixed64 saturation = 0;
+    fixed64 value = 0;
+    fixed64 white = 0;
 
     bool invertOutputs = 0;
     int phaseMode = 0;
-    float gateLoadingTime = 0;
+    fixed64 gateLoadingTime = 0;
     ColorChannels scalling = {1.0f, 1.0f, 1.0f, 1.0f};
     std::array<unsigned, 4> transistorConnections;
 
@@ -50,16 +50,16 @@ namespace outputs {
 
         const auto& hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();
-        gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<float>();
+        gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fixed64>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
         unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
         checkNewFrequency(outputFrequency);
 
         const auto& scallingJson = configuration["hardware"]["scalling"];
-        scalling[0] = scallingJson["red"].as<float>();
-        scalling[1] = scallingJson["green"].as<float>();
-        scalling[2] = scallingJson["blue"].as<float>();
-        scalling[3] = scallingJson["white"].as<float>();
+        scalling[0] = scallingJson["red"].as<fixed64>();
+        scalling[1] = scallingJson["green"].as<fixed64>();
+        scalling[2] = scallingJson["blue"].as<fixed64>();
+        scalling[3] = scallingJson["white"].as<fixed64>();
 
         const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
@@ -86,7 +86,7 @@ namespace outputs {
 
     ColorChannels getPhases(const ColorChannels& values) {
         ColorChannels phases = {0, 0, 0, 0};
-        float k = 0;
+        fixed64 k = 0;
         switch (phaseMode) {
             case 1: 
                 for (int i=0;i<4;i++)
@@ -100,7 +100,7 @@ namespace outputs {
                     k += values[i];
                 if (k == 0) break;
                 k = 1.f / k;
-                float sum = 0;
+                fixed64 sum = 0;
                 for (int i=0;i<4;i++) 
                     if (values[i] != 0) {
                         sum = fmod(sum, 1.f);
@@ -117,14 +117,14 @@ namespace outputs {
         ColorChannels results;
         for (int i=0;i<4;i++) {
             unsigned tc = transistorConnections[i];
-            results[i] = tc < 4 ? values[tc] : 0;
+            results[i] = tc < 4 ? values[tc] : (fixed64)0;
         }
         return results;
     }
 
 
     void writeOutput() {
-        float r, g, b;
+        fixed64 r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b);        
         ColorChannels filteredValues = {
             filters::outputRed(filters::globalOutput(r)) * scalling[0],
@@ -145,7 +145,7 @@ namespace outputs {
     }
 
 
-    void setColor(float h, float s, float v, float w) {
+    void setColor(fixed64 h, fixed64 s, fixed64 v, fixed64 w) {
         hue = h;
         saturation = s;
         value = v;
@@ -167,12 +167,12 @@ namespace outputs {
 
 
     ColorChannels getTailoredScalling() {
-        float r, g, b;
+        fixed64 r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b); 
-        float scale0 = constrain<float>(filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<float>(filters::outputRed(filters::globalOutput(1)), 1e-6), 0, 1);
-        float scale1 = constrain<float>(filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<float>(filters::outputGreen(filters::globalOutput(1)), 1e-6), 0, 1);
-        float scale2 = constrain<float>(filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<float>(filters::outputBlue(filters::globalOutput(1)), 1e-6), 0, 1);
-        float scale3 = constrain<float>(filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<float>(filters::outputWhite(filters::globalOutput(1)), 1e-6), 0, 1);
+        fixed64 scale0 = constrain<fixed64>(filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<fixed64>(filters::outputRed(filters::globalOutput(1)), 1e-6), 0, 1);
+        fixed64 scale1 = constrain<fixed64>(filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<fixed64>(filters::outputGreen(filters::globalOutput(1)), 1e-6), 0, 1);
+        fixed64 scale2 = constrain<fixed64>(filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<fixed64>(filters::outputBlue(filters::globalOutput(1)), 1e-6), 0, 1);
+        fixed64 scale3 = constrain<fixed64>(filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<fixed64>(filters::outputWhite(filters::globalOutput(1)), 1e-6), 0, 1);
         return {scale0, scale1, scale2, scale3};
     }
 

@@ -45,10 +45,10 @@ namespace endpoints {
         char buf[128];
         int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%f, %f, %f, %f]}", 
             dumped.c_str(),
-            channels[0],
-            channels[1],
-            channels[2],
-            channels[3]
+            (float)channels[0],
+            (float)channels[1],
+            (float)channels[2],
+            (float)channels[3]
         );
         buf[size] = 0;
         char size_str[24];
@@ -88,14 +88,14 @@ namespace endpoints {
         const auto& channelsMode = modules::webColorSpace;
         ColorChannels filteredChannels = inputs::getAuto(channelsMode);
 
-        float r, g, b;
+        fixed64 r, g, b;
         if (channelsMode == "rgb") rgbToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         char* render_buffer = new char[favorite_color_template_html_decompressed_size+256];
         int size = sprintf(
             render_buffer, templateStr.c_str(),
-            (int)floor(255*r), (int)floor(255*g), (int)floor(255*b)
+            (int)std::floor(255*r), (int)std::floor(255*g), (int)std::floor(255*b)
         );
         render_buffer[size] = 0;
         char size_str[24];

@@ -1,43 +1,44 @@
 #include "filter_functions.h"
 
-FloatFunction normalizeFunction(FloatFunction fun, float min_x, float max_x) {
-	const float fmin = fun(min_x);
-	const float fmax = fun(max_x);
-	const float x_diff = max_x-min_x;
-	const float minff = min(fmin, fmax);
-	const float absfdiff = abs(fmax-fmin);
-	return [=](float x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
+FloatFunction normalizeFunction(FloatFunction fun, fixed64 min_x, fixed64 max_x) {
+	const fixed64 fmin = fun(min_x);
+	const fixed64 fmax = fun(max_x);
+	const fixed64 x_diff = max_x-min_x;
+	const fixed64 minff = min(fmin, fmax);
+	const fixed64 absfdiff = abs(fmax-fmin);
+	return [=](fixed64 x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
 }
 
-FloatFunction constrainFunction(FloatFunction fun, float min_y, float max_y) {
-	return [=](float x) {
-		float y = fun(x);
+FloatFunction constrainFunction(FloatFunction fun, fixed64 min_y, fixed64 max_y) {
+	return [=](fixed64 x) {
+		fixed64 y = fun(x);
 		return (y < min_y) ? min_y : (y > max_y) ? max_y : y;
 	};
 }
 
 FloatFunction symFunction(FloatFunction fun) {
-	return [=](float x) { return 1-fun(1-x); };
+	return [=](fixed64 x) { return 1-fun(1-x); };
 }
 
+//TODO: approximations
 const std::vector<FloatFunction> filterFunctions = {
-	[](float x) {return x; },
-	[](float x) {return x*x; },
-	[](float x) {return sqrt(x); },
-	normalizeFunction([](float x) { return exp(M_PI*(x-1)); }),
-	normalizeFunction([](float x) { return asin(x*2-1); }),
-	normalizeFunction([](float x) { return cos((x - 1) * M_PI); }),
-	symFunction([](float x) {return x*x; }),
-	symFunction([](float x) {return sqrt(x); }),
-	normalizeFunction(symFunction([](float x) { return exp(M_PI*(x-1)); }))
+	[](fixed64 x) {return x; },
+	[](fixed64 x) {return x*x; },
+	[](fixed64 x) {return (fixed64)sqrt((float)x); },
+	normalizeFunction([](fixed64 x) { return (fixed64)exp(M_PI*((float)x-1)); }),
+	normalizeFunction([](fixed64 x) { return (fixed64)asin((float)x*2-1); }),
+	normalizeFunction([](fixed64 x) { return (fixed64)cos(((float)x - 1) * M_PI); }),
+	symFunction([](fixed64 x) {return x*x; }),
+	symFunction([](fixed64 x) {return (fixed64)sqrt((float)x); }),
+	normalizeFunction(symFunction([](fixed64 x) { return (fixed64)exp(M_PI*((float)x-1)); }))
 };
 const std::vector<FloatFunction>* filterFunctionsPtr = &filterFunctions;
 const unsigned filterFunctionsCount = filterFunctions.size();
 
-FloatFunction mixFilterFunctions(std::vector<float> filters) {
+FloatFunction mixFilterFunctions(std::vector<fixed64> filters) {
 	while (filters.size() < filterFunctionsCount) filters.push_back(0.f);
-	return constrainFunction(normalizeFunction([=](float x) { 
-		float sum = 0;
+	return constrainFunction(normalizeFunction([=](fixed64 x) { 
+		fixed64 sum = 0;
 		for (int i=0;i<filterFunctionsCount;i++)
 			if (filters[i] != 0)
 				sum += filters[i] * filterFunctionsPtr->at(i)(x);
@@ -45,15 +46,15 @@ FloatFunction mixFilterFunctions(std::vector<float> filters) {
 	}));
 }
 
-FloatFunction createInverseFunction(FloatFunction originalFunction, float epsilon) {
+FloatFunction createInverseFunction(FloatFunction originalFunction, fixed64 epsilon) {
 		const bool minus = originalFunction(0) > originalFunction(1);    
-		return [=](float y) {
-				float left = 0;
-				float right = 1;
+		return [=](fixed64 y) {
+				fixed64 left = 0;
+				fixed64 right = 1;
 				if (minus) y = -y;
 				while (right - left > epsilon) {
-						const float mid = (left + right) / 2;
-						float value = originalFunction(mid);
+						const fixed64 mid = (left + right) / 2;
+						fixed64 value = originalFunction(mid);
 						if (minus) value = -value;
 						if (value < y)
 							left = mid;
@@ -65,12 +66,12 @@ FloatFunction createInverseFunction(FloatFunction originalFunction, float epsilo
 }
 
 FloatFunction periodizeFunction(FloatFunction originalFunction, unsigned count) {
-	float frac = 1.f / count;
-	return [=](float x) {
-		unsigned i = floor(x * count);
-		float ifrac = i * frac;
-		float xf = (x - ifrac) * count;
-		float rp = (i & 1) ? 1.f - originalFunction(1.f - xf) : originalFunction(xf);
+	fixed64 frac = 1.f / count;
+	return [=](fixed64 x) {
+		unsigned i = std::floor(x * count);
+		fixed64 ifrac = i * frac;
+		fixed64 xf = (x - ifrac) * count;
+		fixed64 rp = (i & 1) ? 1.f - originalFunction(1.f - xf) : originalFunction(xf);
 		return rp * frac + ifrac;
 	};
 }

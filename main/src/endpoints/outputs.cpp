@@ -8,10 +8,10 @@ namespace endpoints {
         ColorChannels scalling = outputs::getTailoredScalling();
         char buf[64];
         int size = sprintf(buf, "[%f, %f, %f, %f]", 
-            scalling[0],
-            scalling[1],
-            scalling[2],
-            scalling[3]
+            (float)scalling[0],
+            (float)scalling[1],
+            (float)scalling[2],
+            (float)scalling[3]
         );
         buf[size] = 0;
         char size_str[24];

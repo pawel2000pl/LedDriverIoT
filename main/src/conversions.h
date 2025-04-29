@@ -1,11 +1,12 @@
 #pragma once
+#include "common_types.h"
 
-void rgbToHsl(float r, float g, float b, float& h, float& s, float& l);
-void hslToRgb(float h, float s, float l, float& r, float& g, float& b);
-void rgbToHsv(float r, float g, float b, float& h, float& s, float& v) ;
-void hsvToRgb(float h, float s, float v, float& r, float& g, float& b);
-void hslToHsv(float h, float s_l, float l, float &h_out, float &s_v_out, float &v_out);
-void hsvToHsl(float h, float s_v, float v, float &h_out, float &s_l_out, float &l_out);
-void rgbToRgb(float r, float g, float b, float& outR, float& outG, float& outB);
-void hsvToHsv(float h, float s, float v, float& outH, float& outS, float& outV);
-void hslToHsl(float h, float s, float l, float& outH, float& outS, float& outL);
+void rgbToHsl(fixed64 r, fixed64 g, fixed64 b, fixed64& h, fixed64& s, fixed64& l);
+void hslToRgb(fixed64 h, fixed64 s, fixed64 l, fixed64& r, fixed64& g, fixed64& b);
+void rgbToHsv(fixed64 r, fixed64 g, fixed64 b, fixed64& h, fixed64& s, fixed64& v) ;
+void hsvToRgb(fixed64 h, fixed64 s, fixed64 v, fixed64& r, fixed64& g, fixed64& b);
+void hslToHsv(fixed64 h, fixed64 s_l, fixed64 l, fixed64 &h_out, fixed64 &s_v_out, fixed64 &v_out);
+void hsvToHsl(fixed64 h, fixed64 s_v, fixed64 v, fixed64 &h_out, fixed64 &s_l_out, fixed64 &l_out);
+void rgbToRgb(fixed64 r, fixed64 g, fixed64 b, fixed64& outR, fixed64& outG, fixed64& outB);
+void hsvToHsv(fixed64 h, fixed64 s, fixed64 v, fixed64& outH, fixed64& outS, fixed64& outV);
+void hslToHsl(fixed64 h, fixed64 s, fixed64 l, fixed64& outH, fixed64& outS, fixed64& outL);

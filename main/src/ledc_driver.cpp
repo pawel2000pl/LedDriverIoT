@@ -13,7 +13,8 @@ void initLedC(void) {
 		.duty_resolution  = LEDC_DUTY_RES,
 		.timer_num        = LEDC_TIMER,
 		.freq_hz          = current_pwm_frequency,  
-		.clk_cfg          = LEDC_AUTO_CLK
+		.clk_cfg          = LEDC_AUTO_CLK,
+		.deconfigure	  = false // TODO: CHECK
 	};
 	// screw errors, it works fine
 	ledc_timer_config(&ledc_timer);
@@ -36,19 +37,19 @@ struct ChannelCache {
 };
 
 
-float addGateLoadingTime(float value, float loadingTime) {
+fixed64 addGateLoadingTime(fixed64 value, fixed64 loadingTime) {
 		if (value == 0)
 				return 0;
-		float offset = loadingTime * float(current_pwm_frequency) * 1e-6;
+		fixed64 offset = loadingTime * fixed64(current_pwm_frequency) * 1e-6;
 		return value / (1.f - offset) + offset;
 }
 
 
 ChannelCache cache[4];
 
-void setLedC(int gpio, unsigned channel, float value, float phase, bool invert) {
-	uint32_t duty = (uint32_t)constrain<int>(round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
-	int hpoint = constrain<int>(round(phase * (LEDC_PERIOD - 1)), 0, LEDC_PERIOD-1);
+void setLedC(int gpio, unsigned channel, fixed64 value, fixed64 phase, bool invert) {
+	uint32_t duty = (uint32_t)constrain<int>(std::round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
+	int hpoint = constrain<int>(std::round(phase * (LEDC_PERIOD - 1)), 0, LEDC_PERIOD-1);
 	if (cache[channel].initialized && cache[channel].duty == duty && cache[channel].hpoint == hpoint && cache[channel].invert == invert)
 		return;
 	cache[channel].hpoint = hpoint;
@@ -63,6 +64,7 @@ void setLedC(int gpio, unsigned channel, float value, float phase, bool invert) 
 		.timer_sel      = LEDC_TIMER,
 		.duty           = duty,
 		.hpoint         = hpoint,
+		.sleep_mode		= LEDC_SLEEP_MODE_KEEP_ALIVE,
 		.flags          = { .output_invert = (invert ? 1u : 0u) }
 	};
 	ledc_channel_config(&ledc_channel);
