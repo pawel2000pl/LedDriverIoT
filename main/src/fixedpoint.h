@@ -34,19 +34,19 @@
 #include <type_traits>
 
 // T - type for data storage
-// TB - type used for multiplication and division
+// TC - type used for calculating products and quotients (best is double-sized T)
 // frac_bits - count of fraction bits (bits after point)
 
-template<typename T, typename TB, unsigned frac_bits>
+template<typename T, typename TC=T, unsigned frac_bits=sizeof(T)*4-1>
 class fixedpoint {
 
     public:
 
-        #define FIXED_POINT_INTEGRAL_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value, I>::type* = nullptr>
+        #define FIXED_POINT_INTEGER_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value, I>::type* = nullptr>
         #define FIXED_POINT_FLOAT_TEMPLATE template<typename FP, typename std::enable_if<std::is_floating_point<FP>::value, FP>::type* = nullptr>
         #define FIXED_POINT_ARITHMETIC_TEMPLATE template<typename A, typename std::enable_if<std::is_arithmetic<A>::value, A>::type* = nullptr>
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr fixedpoint(const I value) noexcept : buf((T)value << frac_bits) {}
 
         FIXED_POINT_FLOAT_TEMPLATE
@@ -60,13 +60,13 @@ class fixedpoint {
 
         ~fixedpoint() noexcept = default;
 
-        template<typename T2, typename TB2>
-        constexpr fixedpoint(const fixedpoint<T2, TB2, frac_bits>& another) noexcept
+        template<typename T2, typename TC2>
+        constexpr fixedpoint(const fixedpoint<T2, TC2, frac_bits>& another) noexcept
          : buf(another.buf) {}
 
-        template<typename T2, typename TB2, unsigned frac_bits2>
-        constexpr fixedpoint(const fixedpoint<T2, TB2, frac_bits2>& another) noexcept
-         : buf(another.buf << (int)((int)frac_bits - (int)frac_bits2)) {}
+        template<typename T2, typename TC2, unsigned frac_bits2>
+        constexpr fixedpoint(const fixedpoint<T2, TC2, frac_bits2>& another) noexcept
+         : buf((frac_bits > frac_bits2) ? another.buf << (frac_bits - frac_bits2) : another.buf >> (frac_bits2 - frac_bits)) {}
 
         constexpr static fixedpoint buf_cast(const T buf) noexcept {
             return fixedpoint(buf, true);
@@ -76,12 +76,12 @@ class fixedpoint {
             return fixedpoint(first.buf + second.buf, true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator+(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf + ((T)second << frac_bits), true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator+(const I first, const fixedpoint second) noexcept {
             return fixedpoint(((T)first << frac_bits) + second.buf, true);
         }
@@ -100,12 +100,12 @@ class fixedpoint {
             return fixedpoint(first.buf - second.buf, true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator-(const fixedpoint first, const I second) noexcept  {
             return fixedpoint(first.buf - ((T)second << frac_bits), true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator-(const I first, const fixedpoint second) noexcept {
             return fixedpoint(((T)first << frac_bits) - second.buf, true);
         }
@@ -121,7 +121,7 @@ class fixedpoint {
         }
 
         constexpr friend fixedpoint operator*(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint((((TB)first.buf >> bits_shift_imp_element) * ((TB)second.buf >> bits_shift_norm_element)) >> bits_shift_large_num, true);
+            return fixedpoint((((TC)first.buf >> bits_shift_imp_element) * ((TC)second.buf >> bits_shift_norm_element)) >> bits_shift_large_num, true);
         }
 
         FIXED_POINT_ARITHMETIC_TEMPLATE
@@ -135,35 +135,35 @@ class fixedpoint {
         }
 
         constexpr friend fixedpoint operator/(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint((((TB)first.buf << bits_shift_large_num) / ((TB)second.buf >> bits_shift_norm_element)) << bits_shift_imp_element, true);
+            return fixedpoint((((TC)first.buf << bits_shift_large_num) / ((TC)second.buf >> bits_shift_norm_element)) << bits_shift_imp_element, true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         friend fixedpoint operator/(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf / second, true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator/(const I first, const fixedpoint second) noexcept {
-            return fixedpoint((((TB)first << (bits_shift_large_num + frac_bits)) / ((TB)second.buf >> bits_shift_norm_element)) << bits_shift_imp_element, true);
+            return fixedpoint((((TC)first << (bits_shift_large_num + frac_bits)) / ((TC)second.buf >> bits_shift_norm_element)) << bits_shift_imp_element, true);
         }
 
         FIXED_POINT_FLOAT_TEMPLATE
         constexpr friend fixedpoint operator/(const fixedpoint first, const FP second) noexcept {
-            return fixedpoint((((TB)first.buf << bits_shift_large_num) / (TB)(second * ((TB)1 << (frac_bits - bits_shift_norm_element)))) << bits_shift_imp_element, true);
+            return fixedpoint((((TC)first.buf << bits_shift_large_num) / (TC)(second * ((TC)1 << (frac_bits - bits_shift_norm_element)))) << bits_shift_imp_element, true);
         }
 
         FIXED_POINT_FLOAT_TEMPLATE
         constexpr friend fixedpoint operator/(const FP first, const fixedpoint second) noexcept {
-            return fixedpoint((TB)(first * ((TB)1 << (bits_shift_large_num + frac_bits))) / (TB)second.buf, true);
+            return fixedpoint((TC)(first * ((TC)1 << (bits_shift_large_num + frac_bits))) / (TC)second.buf, true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator<<(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf << second, true);
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr friend fixedpoint operator>>(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf >> second, true);
         }
@@ -185,9 +185,9 @@ class fixedpoint {
         #define FIXED_POINT_TEMPLATE_DECLARATION
         FixedPointOperatorsMaker(fixedpoint, first.buf, fixedpoint, second.buf)
         #undef FIXED_POINT_TEMPLATE_DECLARATION
-        #define FIXED_POINT_TEMPLATE_DECLARATION FIXED_POINT_INTEGRAL_TEMPLATE
+        #define FIXED_POINT_TEMPLATE_DECLARATION FIXED_POINT_INTEGER_TEMPLATE
         FixedPointOperatorsMaker(fixedpoint, first.buf, I, (T)second << frac_bits)
-        FixedPointOperatorsMaker(I, first << frac_bits, fixedpoint, second.buf)
+        FixedPointOperatorsMaker(I, (T)first << frac_bits, fixedpoint, second.buf)
         #undef FIXED_POINT_TEMPLATE_DECLARATION
         #define FIXED_POINT_TEMPLATE_DECLARATION FIXED_POINT_FLOAT_TEMPLATE
         FixedPointOperatorsMaker(fixedpoint, first.buf, FP, second * ((T)1 << frac_bits))
@@ -205,7 +205,7 @@ class fixedpoint {
             buf += another.buf;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         void operator+=(const I another) noexcept {
             buf += (T)another << frac_bits;
         }
@@ -214,35 +214,35 @@ class fixedpoint {
             buf -= another.buf;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         void operator-=(const I another) noexcept {
             buf -= (T)another << frac_bits;
         }
 
         void operator*=(const fixedpoint another) noexcept {
-            buf = (((TB)buf >> bits_shift_imp_element) * ((TB)another.buf >> bits_shift_norm_element)) >> bits_shift_large_num;
+            buf = (((TC)buf >> bits_shift_imp_element) * ((TC)another.buf >> bits_shift_norm_element)) >> bits_shift_large_num;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         void operator*=(const I another) {
             buf *= another;
         }
 
         void operator/=(const fixedpoint another) noexcept {
-            buf = (((TB)buf << bits_shift_large_num) / (TB)(another.buf >> bits_shift_norm_element)) << bits_shift_imp_element;
+            buf = (((TC)buf << bits_shift_large_num) / (TC)(another.buf >> bits_shift_norm_element)) << bits_shift_imp_element;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         void operator/=(const I another) noexcept {
             buf /= another;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         void operator<<=(const I another) noexcept {
             buf <<= another;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         void operator>>=(const I another) noexcept {
             buf >>= another;
         }
@@ -261,7 +261,7 @@ class fixedpoint {
             return (FP)buf * k;
         }
 
-        FIXED_POINT_INTEGRAL_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE
         constexpr operator I() const noexcept {
             return buf >> frac_bits;
         }
@@ -392,22 +392,22 @@ class fixedpoint {
             return stream;
         }
 
-        friend struct std::numeric_limits<fixedpoint<T, TB, frac_bits>>;
+        friend struct std::numeric_limits<fixedpoint<T, TC, frac_bits>>;
 
-        template<typename T2, typename TB2, unsigned frac_bits2>
+        template<typename T2, typename TC2, unsigned frac_bits2>
         friend class fixedpoint;
 
         static_assert(std::is_arithmetic<T>::value, "Type for the buf must be arithmetic.");
-        static_assert(std::is_arithmetic<TB>::value, "Type helper for multiplication must be arithmetic.");
+        static_assert(std::is_arithmetic<TC>::value, "Type helper for multiplication must be arithmetic.");
         static_assert(std::numeric_limits<T>::radix == 2, "Type for the buf must be binary (radix == 2).");
-        static_assert(std::numeric_limits<TB>::radix == 2, "Type helper for multiplication must be binary (radix == 2).");
+        static_assert(std::numeric_limits<TC>::radix == 2, "Type helper for multiplication must be binary (radix == 2).");
         static_assert(std::numeric_limits<T>::is_integer, "Type for the buf must be an integer type.");
-        static_assert(std::numeric_limits<TB>::is_integer, "Type for multiplication must be an integer type.");
-        static_assert(std::is_signed<T>::value == std::is_signed<TB>::value, "T and TB must be both signed or unsigned.");
+        static_assert(std::numeric_limits<TC>::is_integer, "Type for multiplication must be an integer type.");
+        static_assert(std::is_signed<T>::value == std::is_signed<TC>::value, "T and TC must be both signed or unsigned.");
         static_assert(sizeof(T) * 8 - std::is_signed<T>::value > frac_bits, "There must be less fraction bits than number of bits in the buf type.");
-        static_assert(sizeof(T) <= sizeof(TB), "Type for multiplication must be equal or greater than buf type.");
+        static_assert(sizeof(T) <= sizeof(TC), "Type for multiplication must be equal or greater than buf type.");
 
-        #undef FIXED_POINT_INTEGRAL_TEMPLATE
+        #undef FIXED_POINT_INTEGER_TEMPLATE
         #undef FIXED_POINT_FLOAT_TEMPLATE
         #undef FIXED_POINT_ARITHMETIC_TEMPLATE
 
@@ -418,11 +418,7 @@ class fixedpoint {
             return (a<b) ? a : b;
         }
 
-        static constexpr int max(int a, int b) {
-            return (a>b) ? a : b;
-        }
-
-        constexpr const static auto bits_shift_large_num = min((sizeof(TB) - sizeof(T)) * 4, frac_bits);
+        constexpr const static auto bits_shift_large_num = min((sizeof(TC) - sizeof(T)) * 4, frac_bits);
         constexpr const static auto bits_shift_norm_element = (frac_bits - bits_shift_large_num) >> 1;
         constexpr const static auto bits_shift_imp_element = frac_bits - bits_shift_large_num - bits_shift_norm_element;
 
@@ -441,35 +437,35 @@ class fixedpoint {
 
 namespace std {
 
-    template<typename T, typename TB, unsigned frac_bits>
-    constexpr T floor(const fixedpoint<T, TB, frac_bits> x) noexcept {
+    template<typename T, typename TC, unsigned frac_bits>
+    constexpr T floor(const fixedpoint<T, TC, frac_bits> x) noexcept {
         return x.getBuf() >> frac_bits;
     }
 
-    template<typename T, typename TB, unsigned frac_bits>
-    constexpr T ceil(const fixedpoint<T, TB, frac_bits> x) noexcept {
+    template<typename T, typename TC, unsigned frac_bits>
+    constexpr T ceil(const fixedpoint<T, TC, frac_bits> x) noexcept {
         return (x.getBuf() >> frac_bits) + !!x.getfrac();
     }
 
-    template<typename T, typename TB, unsigned frac_bits>
-    constexpr T round(const fixedpoint<T, TB, frac_bits> x) noexcept {
+    template<typename T, typename TC, unsigned frac_bits>
+    constexpr T round(const fixedpoint<T, TC, frac_bits> x) noexcept {
         return (x.getBuf() >> frac_bits) + (x.getfrac() >> (frac_bits-1));
     }
 
-    template<typename T, typename TB, unsigned frac_bits>
-    constexpr fixedpoint<T, TB, frac_bits> abs(const fixedpoint<T, TB, frac_bits> x) noexcept {
+    template<typename T, typename TC, unsigned frac_bits>
+    constexpr fixedpoint<T, TC, frac_bits> abs(const fixedpoint<T, TC, frac_bits> x) noexcept {
         return x.isNeg() ? -x : x;
     }
 
-    template<typename T, typename TB, unsigned frac_bits>
-    constexpr fixedpoint<T, TB, frac_bits> sign(const fixedpoint<T, TB, frac_bits> x) noexcept {
+    template<typename T, typename TC, unsigned frac_bits>
+    constexpr fixedpoint<T, TC, frac_bits> sign(const fixedpoint<T, TC, frac_bits> x) noexcept {
         return x.getBuf() ? (x.isNeg() ? -1 : 1) : 0;
     }
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct hash<fixedpoint<T, TB, frac_bits>> {
+    template<typename T, typename TC, unsigned frac_bits>
+    struct hash<fixedpoint<T, TC, frac_bits>> {
 
-        std::size_t operator()(const fixedpoint<T, TB, frac_bits>& fp) const noexcept {
+        std::size_t operator()(const fixedpoint<T, TC, frac_bits>& fp) const noexcept {
             std::size_t buf = hash_t(fp.getBuf()) ^ ((frac_bits - 1) * (sizeof(T)-1));
             return buf + (buf << frac_bits) + (buf >> frac_bits);
         }
@@ -477,36 +473,36 @@ namespace std {
         std::hash<T> hash_t;
     };
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct is_arithmetic<fixedpoint<T, TB, frac_bits>> : public std::true_type {};
+    template<typename T, typename TC, unsigned frac_bits>
+    struct is_arithmetic<fixedpoint<T, TC, frac_bits>> : public std::true_type {};
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct is_scalar<fixedpoint<T, TB, frac_bits>> : public std::true_type {};
+    template<typename T, typename TC, unsigned frac_bits>
+    struct is_scalar<fixedpoint<T, TC, frac_bits>> : public std::true_type {};
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct is_object<fixedpoint<T, TB, frac_bits>> : public std::true_type {};
+    template<typename T, typename TC, unsigned frac_bits>
+    struct is_object<fixedpoint<T, TC, frac_bits>> : public std::true_type {};
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct is_signed<fixedpoint<T, TB, frac_bits>> : public std::is_signed<T> {};
+    template<typename T, typename TC, unsigned frac_bits>
+    struct is_signed<fixedpoint<T, TC, frac_bits>> : public std::is_signed<T> {};
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct is_unsigned<fixedpoint<T, TB, frac_bits>> : public std::is_unsigned<T> {};
+    template<typename T, typename TC, unsigned frac_bits>
+    struct is_unsigned<fixedpoint<T, TC, frac_bits>> : public std::is_unsigned<T> {};
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct make_signed<fixedpoint<T, TB, frac_bits>> {
-        fixedpoint<make_signed<T>, make_signed<TB>, frac_bits> type;
+    template<typename T, typename TC, unsigned frac_bits>
+    struct make_signed<fixedpoint<T, TC, frac_bits>> {
+        fixedpoint<make_signed<T>, make_signed<TC>, frac_bits> type;
     };
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct make_unsigned<fixedpoint<T, TB, frac_bits>> {
-        fixedpoint<make_unsigned<T>, make_unsigned<TB>, frac_bits> type;
+    template<typename T, typename TC, unsigned frac_bits>
+    struct make_unsigned<fixedpoint<T, TC, frac_bits>> {
+        fixedpoint<make_unsigned<T>, make_unsigned<TC>, frac_bits> type;
     };
 
-    template<typename T, typename TB, unsigned frac_bits>
-    struct numeric_limits<fixedpoint<T, TB, frac_bits>> {
+    template<typename T, typename TC, unsigned frac_bits>
+    struct numeric_limits<fixedpoint<T, TC, frac_bits>> {
 
         using numeric_limits_t = numeric_limits<T>;
-        using fp = numeric_limits<fixedpoint<T, TB, frac_bits>>;
+        using fp = fixedpoint<T, TC, frac_bits>;
 
         static const auto is_specialized = true;
         static const auto is_signed = (bool)std::is_signed<T>::value;
@@ -516,7 +512,7 @@ namespace std {
         static const auto has_quiet_NaN = numeric_limits_t::has_quiet_NaN;
         static const auto has_denorm = std::denorm_absent;
         static const auto has_denorm_loss = false;
-        static const auto round_style = numeric_limits_t::round_toward_zero;
+        static const auto round_style = numeric_limits_t::round_style;
         static const auto is_iec559 = false;
         static const auto digits = numeric_limits_t::digits;
         static const auto digits10 = numeric_limits_t::digits10;
@@ -559,9 +555,6 @@ namespace std {
         static constexpr fp denorm_min() noexcept {
             return fp(1, true);
         }
-
-        using float_round_style = typename numeric_limits_t::float_round_style;
-        using float_denorm_style = typename numeric_limits_t::float_denorm_style;
 
     };
 

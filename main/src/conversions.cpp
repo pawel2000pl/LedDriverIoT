@@ -30,7 +30,7 @@ fixed64 hue2rgb(fixed64 p, fixed64 q, fixed64 t) {
     if (t > 1) t -= 1;
     if (t < (fixed64)1/6) return p + (q - p) * 6 * t;
     if (t < (fixed64)1/2) return q;
-    if (t < (fixed64)2/3) return p + (q - p) * (2/3 - t) * 6;
+    if (t < (fixed64)2/3) return p + (q - p) * ((fixed64)2/3 - t) * 6;
     return p;
 }
 

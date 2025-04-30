@@ -1,4 +1,5 @@
 #include "filter_functions.h"
+#include "taylormath.h"
 
 FloatFunction normalizeFunction(FloatFunction fun, fixed64 min_x, fixed64 max_x) {
 	const fixed64 fmin = fun(min_x);
@@ -20,17 +21,17 @@ FloatFunction symFunction(FloatFunction fun) {
 	return [=](fixed64 x) { return 1-fun(1-x); };
 }
 
-//TODO: approximations
+
 const std::vector<FloatFunction> filterFunctions = {
 	[](fixed64 x) {return x; },
 	[](fixed64 x) {return x*x; },
-	[](fixed64 x) {return (fixed64)sqrt((float)x); },
-	normalizeFunction([](fixed64 x) { return (fixed64)exp(M_PI*((float)x-1)); }),
-	normalizeFunction([](fixed64 x) { return (fixed64)asin((float)x*2-1); }),
-	normalizeFunction([](fixed64 x) { return (fixed64)cos(((float)x - 1) * M_PI); }),
+	[](fixed64 x) {return taylor::sqrt<fixed64>(x); },
+	normalizeFunction([](fixed64 x) { return taylor::exp<fixed64>(M_PI*(x-1)); }),
+	normalizeFunction([](fixed64 x) { return taylor::asin<fixed64>(x*2-1); }),
+	normalizeFunction([](fixed64 x) { return taylor::cos<fixed64>((x - 1) * M_PI); }),
 	symFunction([](fixed64 x) {return x*x; }),
-	symFunction([](fixed64 x) {return (fixed64)sqrt((float)x); }),
-	normalizeFunction(symFunction([](fixed64 x) { return (fixed64)exp(M_PI*((float)x-1)); }))
+	symFunction([](fixed64 x) {return taylor::sqrt<fixed64>(x); }),
+	normalizeFunction(symFunction([](fixed64 x) { return taylor::exp<fixed64>(M_PI*(x-1)); }))
 };
 const std::vector<FloatFunction>* filterFunctionsPtr = &filterFunctions;
 const unsigned filterFunctionsCount = filterFunctions.size();
