@@ -22,9 +22,10 @@ namespace taylor {
         T result = 0;
         T poly = sine ? x : (T)1;
         T x2 = x*x;
+        unsigned add_gamma = sine ? 1 : 0;
         unsigned i = 0;
-        while (i < 21) {
-            T part = poly / gamma_tab[(i<<1)|1];
+        while (i < 10) {
+            T part = poly / gamma_tab[(i<<1)|add_gamma];
             if (__glibc_unlikely(part <= 0)) return result;
             T new_result = (++i & 1) ? (result + part) : (result - part);
             if (__glibc_unlikely(result == new_result)) return result;
@@ -36,31 +37,29 @@ namespace taylor {
 
 
     template<typename T>
-    T base_trig(T x, bool sine) {
-        bool reverse_sign = false;
-        if (x < 0) {
-            x = -x;
-            if (sine) reverse_sign = true;
-        }
+    T base_trig(T x) {
+        if (x < 0) x = -x;
         constexpr static T pi2 = M_PI / 2;
         constexpr static T pi4 = M_PI / 4;
         unsigned n = std::floor(x / pi2);
         T rest = x - n * pi2;
-        T result = (rest > pi4) ? base_trig_pos<T>(pi2 - rest, !sine) : base_trig_pos<T>(rest, sine);
-        reverse_sign ^= ((n & 3) > 1);
-        return reverse_sign ? -result : result;
+        n &= 3;
+        if (n & 1) rest = pi2 - rest;
+        T result = (rest > pi4) ? base_trig_pos<T>(pi2 - rest, true) : base_trig_pos<T>(rest, false);
+        return (n == 1 || n == 2) ? -result : result;
     }
 
 
     template<typename T>
     T sin(T x) {
-        return base_trig<T>(x, true);
+        constexpr static T pi2 = M_PI / 2;
+        return base_trig<T>(x - pi2);
     }
 
 
     template<typename T>
     T cos(T x) {
-        return base_trig<T>(x, false);
+        return base_trig<T>(x);
     }
 
 
@@ -105,15 +104,14 @@ namespace taylor {
         x = 1-x;
         T result = 0;
         T coeff = sqrt(2*x);
-        T poly = x;
-        T x2 = x*x;
+        T poly = 1;
         for (unsigned i=0;i<18;i++) {
-            T part = (T)pochhammer_counters[i] / (1ULL << (i+1)) * poly / (gamma_tab[i] + 2 * i * gamma_tab[i]);
+            T part = (T)pochhammer_counters[i] / (1ULL << (i<<1)) * poly / (gamma_tab[i] + 2 * i * gamma_tab[i]);
             if (__glibc_unlikely(part <= 0)) return pi2 - coeff * result;
             T new_result = (result + part);
             if (__glibc_unlikely(result == new_result)) return pi2 - coeff * result;
             result = new_result;
-            poly *= x2;
+            poly *= x;
         }
         return pi2 - coeff * result;
     }
@@ -124,15 +122,15 @@ namespace taylor {
         static T half = 0;
         if (__glibc_unlikely(half == 0)) {
             T test = 1;
+            test /= 2;
+            half = test;
             while (test > 0) {
                 test /= 2;
-                T test_half = half + test;
-                T v1 = base_asin1<T>(test_half);
-                T v2 = base_asin2<T>(test_half);
-                if (v1 <= v2) {
-                    half = test_half;
-                    if (v1 == v2) break;
-                }
+                T test_half1 = half + test;
+                T test_half2 = half - test;
+                T diff1 = base_asin2<T>(test_half1) - base_asin1<T>(test_half1);
+                T diff2 = base_asin2<T>(test_half2) - base_asin1<T>(test_half2);
+                half = (diff1 < diff2) ? test_half1 : test_half2;
             }
         }
         return (x < half) ? base_asin1<T>(x) : base_asin2<T>(x);
@@ -185,7 +183,6 @@ namespace taylor {
 
     template<typename T>
     T exp_small_pos(T x) {
-        // std::cout << x << "  --\n";
         T poly = 1;
         T result = 0;
         for (unsigned i=0;i<21;i++) {

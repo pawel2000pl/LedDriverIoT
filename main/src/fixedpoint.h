@@ -556,6 +556,9 @@ namespace std {
             return fp(1, true);
         }
 
+        using float_round_style = std::float_round_style;
+        using float_denorm_style = std::float_denorm_style;
+
     };
 
 }
