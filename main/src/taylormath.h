@@ -1,9 +1,10 @@
 #ifndef FIXED_MATH
 #define FIXED_MATH
 
-#include <functional>
 #include <cmath>
 #include <limits>
+#include <cstdint>
+#include <functional>
 
 #ifndef __glibc_unlikely
 #define __glibc_unlikely
@@ -14,8 +15,8 @@
 
 namespace taylor {
 
-    extern unsigned long long gamma_tab[];
-    extern unsigned long long pochhammer_counters[];
+    extern std::uint64_t gamma_tab[];
+    extern std::uint64_t pochhammer_counters[];
 
     template<typename T>
     T base_trig_pos(T x, bool sine) {
@@ -150,7 +151,8 @@ namespace taylor {
         T result = 0;
         unsigned i = 1;
         while (1) {
-            T part = poly / i;
+            T part = poly / i;            
+            if (__glibc_unlikely(part > (T)(1) || part < (T)(-1) || part == 0)) return result;
             T new_result = (i++ & 1) ? (result + part) : (result - part);
             if (__glibc_unlikely(result == new_result)) return result;
             result = new_result;
@@ -177,7 +179,7 @@ namespace taylor {
 
     template<typename T>
     T ln(T x) {
-        return (x < 2) ? ln1(x) : (ln(x-1) - ln_part2(x));
+        return (x < 2) ? ln1<T>(x) : (ln<T>(x-1) - ln_part2<T>(x));
     }
 
 

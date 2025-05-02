@@ -81,7 +81,6 @@ class fixedpoint {
 
         #define FIXED_POINT_INTEGER_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value, I>::type* = nullptr>
         #define FIXED_POINT_FLOAT_TEMPLATE template<typename FP, typename std::enable_if<std::is_floating_point<FP>::value, FP>::type* = nullptr>
-        #define FIXED_POINT_ARITHMETIC_TEMPLATE template<typename A, typename std::enable_if<std::is_arithmetic<A>::value, A>::type* = nullptr>
 
         FIXED_POINT_INTEGER_TEMPLATE
         constexpr fixedpoint(const I value) noexcept : buf((T)value << frac_bits) {}
@@ -161,13 +160,23 @@ class fixedpoint {
             return fixedpoint((((TC)first.buf >> bits_shift_imp_element) * ((TC)second.buf >> bits_shift_norm_element)) >> bits_shift_large_num, true);
         }
 
-        FIXED_POINT_ARITHMETIC_TEMPLATE
-        constexpr friend fixedpoint operator*(const fixedpoint first, const A second) noexcept {
+        FIXED_POINT_INTEGER_TEMPLATE
+        constexpr friend fixedpoint operator*(const fixedpoint first, const I second) noexcept {
+            return fixedpoint(first.buf * (T)second, true);
+        }
+
+        FIXED_POINT_INTEGER_TEMPLATE
+        constexpr friend fixedpoint operator*(const I first, const fixedpoint second) noexcept {
+            return fixedpoint((T)first * second.buf, true);
+        }
+
+        FIXED_POINT_FLOAT_TEMPLATE
+        constexpr friend fixedpoint operator*(const fixedpoint first, const FP second) noexcept {
             return fixedpoint(first.buf * second, true);
         }
 
-        FIXED_POINT_ARITHMETIC_TEMPLATE
-        constexpr friend fixedpoint operator*(const A first, const fixedpoint second) noexcept {
+        FIXED_POINT_FLOAT_TEMPLATE
+        constexpr friend fixedpoint operator*(const FP first, const fixedpoint second) noexcept {
             return fixedpoint(first * second.buf, true);
         }
 
@@ -177,7 +186,7 @@ class fixedpoint {
 
         FIXED_POINT_INTEGER_TEMPLATE
         friend fixedpoint operator/(const fixedpoint first, const I second) noexcept {
-            return fixedpoint(first.buf / second, true);
+            return fixedpoint(first.buf / (T)second, true);
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
@@ -446,7 +455,6 @@ class fixedpoint {
 
         #undef FIXED_POINT_INTEGER_TEMPLATE
         #undef FIXED_POINT_FLOAT_TEMPLATE
-        #undef FIXED_POINT_ARITHMETIC_TEMPLATE
 
     private:
         T buf;
@@ -601,10 +609,10 @@ namespace std {
 }
 
 
-using fixed8 = fixedpoint<std::int8_t, std::int_fast8_t, 3>;
-using fixed16 = fixedpoint<std::int16_t, std::int_fast16_t, 7>;
-using fixed32 = fixedpoint<std::int32_t, std::int_fast32_t, 15>;
-using fixed64 = fixedpoint<std::int64_t, std::int_fast64_t, 31>;
+using fixed8 = fixedpoint<std::int8_t>;
+using fixed16 = fixedpoint<std::int16_t>;
+using fixed32 = fixedpoint<std::int32_t>;
+using fixed64 = fixedpoint<std::int64_t>;
 
 
 #endif
