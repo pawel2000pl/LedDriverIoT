@@ -30,7 +30,7 @@ namespace hardware {
 	}
 
 
-	fraction32 InputHardwareAction::read() const {
+	fixed32 InputHardwareAction::read() const {
 			if (!enabled) return 0;
 			for (auto& pin : hz_pins)
 					pinMode(pin, INPUT);

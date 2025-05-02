@@ -9,9 +9,9 @@
 namespace inputs {
 
     void updateConfiguration(const JsonVariantConst& configuration);
-    void setRGBW(fraction32 r, fraction32 g, fraction32 b, fraction32 w);
-    void setHSVW(fraction32 h, fraction32 s, fraction32 v, fraction32 w);
-    void setHSLW(fraction32 h, fraction32 s, fraction32 l, fraction32 w);
+    void setRGBW(fixed32 r, fixed32 g, fixed32 b, fixed32 w);
+    void setHSVW(fixed32 h, fixed32 s, fixed32 v, fixed32 w);
+    void setHSLW(fixed32 h, fixed32 s, fixed32 l, fixed32 w);
     void setAuto(const String& colorspace, const ColorChannels& color);
 
     ColorChannels getRGBW();
