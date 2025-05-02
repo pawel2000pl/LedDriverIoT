@@ -28,16 +28,53 @@
 #ifndef FIXED_POINT
 #define FIXED_POINT
 
-#include <cstddef>
 #include <limits>
+#include <cstddef>
+#include <cstdint>
 #include <typeindex>
 #include <type_traits>
+
+
+template<typename T>
+struct make_fast_int {
+    using type = T;
+    static_assert(std::numeric_limits<T>::is_integer, "T must be an integer type.");
+};
+
+template<typename T>
+struct make_least_int {
+    using type = T;
+    static_assert(std::numeric_limits<T>::is_integer, "T must be an integer type.");
+};
+
+#define __MAKE_INT_MAPPING(N, PREFIX)                                \
+    template<>                                                       \
+    struct make_##PREFIX##_int<std::int##N##_t> {                    \
+        using type = std::int_##PREFIX##N##_t;                       \
+    };                                                               \
+    template<>                                                       \
+    struct make_##PREFIX##_int<std::uint##N##_t> {                   \
+        using type = std::uint_##PREFIX##N##_t;                      \
+    };
+
+#define __MAKE_INT_TRAITS(PREFIX) \
+    __MAKE_INT_MAPPING(8, PREFIX) \
+    __MAKE_INT_MAPPING(16, PREFIX) \
+    __MAKE_INT_MAPPING(32, PREFIX) \
+    __MAKE_INT_MAPPING(64, PREFIX)
+
+__MAKE_INT_TRAITS(fast)
+__MAKE_INT_TRAITS(least)
+
+#undef __MAKE_INT_TRAITS
+#undef __MAKE_INT_MAPPING
+
 
 // T - type for data storage
 // TC - type used for calculating products and quotients (best is double-sized T)
 // frac_bits - count of fraction bits (bits after point)
 
-template<typename T, typename TC=T, unsigned frac_bits=sizeof(T)*4-1>
+template<typename T, typename TC=typename make_fast_int<T>::type, unsigned frac_bits=sizeof(T)*4-1>
 class fixedpoint {
 
     public:
@@ -562,5 +599,12 @@ namespace std {
     };
 
 }
+
+
+using fixed8 = fixedpoint<std::int8_t, std::int_fast8_t, 3>;
+using fixed16 = fixedpoint<std::int16_t, std::int_fast16_t, 7>;
+using fixed32 = fixedpoint<std::int32_t, std::int_fast32_t, 15>;
+using fixed64 = fixedpoint<std::int64_t, std::int_fast64_t, 31>;
+
 
 #endif

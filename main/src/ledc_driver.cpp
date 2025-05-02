@@ -40,8 +40,8 @@ struct ChannelCache {
 fixed64 addGateLoadingTime(fixed64 value, fixed64 loadingTime) {
 		if (value == 0)
 				return 0;
-		fixed64 offset = loadingTime * fixed64(current_pwm_frequency) * 1e-6;
-		return value / (1.f - offset) + offset;
+		fixed64 offset = loadingTime * current_pwm_frequency / 1000000;
+		return value / (1 - offset) + offset;
 }
 
 

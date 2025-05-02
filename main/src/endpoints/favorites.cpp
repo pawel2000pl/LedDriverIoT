@@ -88,7 +88,7 @@ namespace endpoints {
         const auto& channelsMode = modules::webColorSpace;
         ColorChannels filteredChannels = inputs::getAuto(channelsMode);
 
-        fixed64 r, g, b;
+        fraction32 r, g, b;
         if (channelsMode == "rgb") rgbToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);

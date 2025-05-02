@@ -30,8 +30,8 @@ namespace hardware {
 	}
 
 
-	fixed64 InputHardwareAction::read() const {
-			if (!enabled) return 0.f;
+	fraction32 InputHardwareAction::read() const {
+			if (!enabled) return 0;
 			for (auto& pin : hz_pins)
 					pinMode(pin, INPUT);
 			for (auto& pin : high_pins) {
@@ -44,7 +44,7 @@ namespace hardware {
 			}
 			pinMode(read_pin, INPUT);
 			delayMicroseconds(RELAXATION_DELAY);
-			return avgAnalog(read_pin, 5) / fixed64(ANALOG_READ_MAX);
+			return avgAnalog(read_pin, 5) * (1 / fixed64(ANALOG_READ_MAX));
 	}
 
 

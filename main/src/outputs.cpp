@@ -7,26 +7,26 @@
 #include "filter_functions.h"
 #include "hardware_configuration.h"
 
-std::vector<fixed64> toFloatVector(const JsonVariantConst& source) {
-    std::vector<fixed64> result;
+std::vector<fraction32> toFloatVector(const JsonVariantConst& source) {
+    std::vector<fraction32> result;
     unsigned size = source.size();
     result.reserve(size);
     for (unsigned i=0;i<size;i++)
-        result.push_back(source[i].as<fixed64>());
+        result.push_back(source[i].as<fraction32>());
     return result;
 }
 
 
 namespace outputs {
 
-    fixed64 hue = 0;
-    fixed64 saturation = 0;
-    fixed64 value = 0;
-    fixed64 white = 0;
+    fraction32 hue = 0;
+    fraction32 saturation = 0;
+    fraction32 value = 0;
+    fraction32 white = 0;
 
     bool invertOutputs = 0;
     int phaseMode = 0;
-    fixed64 gateLoadingTime = 0;
+    fraction32 gateLoadingTime = 0;
     ColorChannels scalling = {1.0f, 1.0f, 1.0f, 1.0f};
     std::array<unsigned, 4> transistorConnections;
 
@@ -50,16 +50,16 @@ namespace outputs {
 
         const auto& hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();
-        gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fixed64>();
+        gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fraction32>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
         unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
         checkNewFrequency(outputFrequency);
 
         const auto& scallingJson = configuration["hardware"]["scalling"];
-        scalling[0] = scallingJson["red"].as<fixed64>();
-        scalling[1] = scallingJson["green"].as<fixed64>();
-        scalling[2] = scallingJson["blue"].as<fixed64>();
-        scalling[3] = scallingJson["white"].as<fixed64>();
+        scalling[0] = scallingJson["red"].as<fraction32>();
+        scalling[1] = scallingJson["green"].as<fraction32>();
+        scalling[2] = scallingJson["blue"].as<fraction32>();
+        scalling[3] = scallingJson["white"].as<fraction32>();
 
         const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
@@ -86,11 +86,11 @@ namespace outputs {
 
     ColorChannels getPhases(const ColorChannels& values) {
         ColorChannels phases = {0, 0, 0, 0};
-        fixed64 k = 0;
+        fraction32 k = 0;
         switch (phaseMode) {
             case 1: 
                 for (int i=0;i<4;i++)
-                    phases[i] = (1.f - values[i]) / 2;
+                    phases[i] = (1 - values[i]) / 2;
                 break;
             case 3: 
                 k += values[3];
@@ -99,11 +99,11 @@ namespace outputs {
                 for (int i=0;i<3;i++)
                     k += values[i];
                 if (k == 0) break;
-                k = 1.f / k;
-                fixed64 sum = 0;
+                k = 1 / k;
+                fraction32 sum = 0;
                 for (int i=0;i<4;i++) 
                     if (values[i] != 0) {
-                        sum = fmod(sum, 1.f);
+                        sum = sum % 1;
                         phases[i] = sum;
                         sum += values[i] * k;
                     }
@@ -117,14 +117,14 @@ namespace outputs {
         ColorChannels results;
         for (int i=0;i<4;i++) {
             unsigned tc = transistorConnections[i];
-            results[i] = tc < 4 ? values[tc] : (fixed64)0;
+            results[i] = tc < 4 ? values[tc] : (fraction32)0;
         }
         return results;
     }
 
 
     void writeOutput() {
-        fixed64 r, g, b;
+        fraction32 r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b);        
         ColorChannels filteredValues = {
             filters::outputRed(filters::globalOutput(r)) * scalling[0],
@@ -145,7 +145,7 @@ namespace outputs {
     }
 
 
-    void setColor(fixed64 h, fixed64 s, fixed64 v, fixed64 w) {
+    void setColor(fraction32 h, fraction32 s, fraction32 v, fraction32 w) {
         hue = h;
         saturation = s;
         value = v;
@@ -167,12 +167,12 @@ namespace outputs {
 
 
     ColorChannels getTailoredScalling() {
-        fixed64 r, g, b;
+        fraction32 r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b); 
-        fixed64 scale0 = constrain<fixed64>(filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<fixed64>(filters::outputRed(filters::globalOutput(1)), 1e-6), 0, 1);
-        fixed64 scale1 = constrain<fixed64>(filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<fixed64>(filters::outputGreen(filters::globalOutput(1)), 1e-6), 0, 1);
-        fixed64 scale2 = constrain<fixed64>(filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<fixed64>(filters::outputBlue(filters::globalOutput(1)), 1e-6), 0, 1);
-        fixed64 scale3 = constrain<fixed64>(filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<fixed64>(filters::outputWhite(filters::globalOutput(1)), 1e-6), 0, 1);
+        fraction32 scale0 = constrain<fraction32>(filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<fraction32>(filters::outputRed(filters::globalOutput(1)), std::numeric_limits<fraction32>::min()), 0, 1);
+        fraction32 scale1 = constrain<fraction32>(filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<fraction32>(filters::outputGreen(filters::globalOutput(1)), std::numeric_limits<fraction32>::min()), 0, 1);
+        fraction32 scale2 = constrain<fraction32>(filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<fraction32>(filters::outputBlue(filters::globalOutput(1)), std::numeric_limits<fraction32>::min()), 0, 1);
+        fraction32 scale3 = constrain<fraction32>(filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<fraction32>(filters::outputWhite(filters::globalOutput(1)), std::numeric_limits<fraction32>::min()), 0, 1);
         return {scale0, scale1, scale2, scale3};
     }
 
