@@ -125,7 +125,7 @@ namespace outputs {
 
     void writeOutput() {
         fixed32 r, g, b;
-        hsvToRgb(hue, saturation, value, r, g, b);        
+        hsvToRgb(hue, saturation, value, r, g, b);
         ColorChannels filteredValues = {
             filters::outputRed(filters::globalOutput(r)) * scalling[0],
             filters::outputGreen(filters::globalOutput(g)) * scalling[1],

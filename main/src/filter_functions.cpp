@@ -5,8 +5,8 @@ FloatFunction normalizeFunction(FloatFunction fun, fixed32 min_x, fixed32 max_x)
 	const fixed32 fmin = fun(min_x);
 	const fixed32 fmax = fun(max_x);
 	const fixed32 x_diff = max_x-min_x;
-	const fixed32 minff = min(fmin, fmax);
-	const fixed32 absfdiff = abs(fmax-fmin);
+	const fixed32 minff = std::min(fmin, fmax);
+	const fixed32 absfdiff = std::abs(fmax-fmin);
 	return [=](fixed32 x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
 }
 

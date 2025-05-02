@@ -19,32 +19,19 @@ namespace endpoints {
         return (int)std::round(x * 15.f); 
     };
 
-
-    unsigned fastFractionToStr(float fraction, char* buf) {
-        unsigned value = fraction * 1000000;
-        for (char* it=buf+7;it>buf;it--) {
-            *it = '0' + value % 10;
-            value /= 10;
-        }
-        buf[0] = buf[1];
-        buf[1] = '.'; 
-        return 8;
-    }
-
-
     void getColors(HTTPRequest* req, HTTPResponse* res) {
         std::string colorspace = "";
         ColorChannels channels = inputs::getAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace);
         char buf[64];
         int size = 0;
         buf[size++] = '[';
-        size += fastFractionToStr(channels[0], buf+size);
+        size += channels[0].toCharBuf(buf+size);
         buf[size++] = ',';
-        size += fastFractionToStr(channels[1], buf+size);
+        size += channels[1].toCharBuf(buf+size);
         buf[size++] = ',';
-        size += fastFractionToStr(channels[2], buf+size);
+        size += channels[2].toCharBuf(buf+size);
         buf[size++] = ',';
-        size += fastFractionToStr(channels[3], buf+size);
+        size += channels[3].toCharBuf(buf+size);
         buf[size++] = ']';
         buf[size] = 0;
         char size_str[24];

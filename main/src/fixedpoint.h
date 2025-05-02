@@ -101,11 +101,15 @@ class fixedpoint {
          : buf(another.buf) {}
 
         template<typename T2, typename TC2, unsigned frac_bits2>
-        constexpr fixedpoint(const fixedpoint<T2, TC2, frac_bits2>& another) noexcept
-         : buf((frac_bits > frac_bits2) ? another.buf << (frac_bits - frac_bits2) : another.buf >> (frac_bits2 - frac_bits)) {}
+         fixedpoint(const fixedpoint<T2, TC2, frac_bits2>& another) noexcept
+         : buf((frac_bits > frac_bits2) ? ((T)another.buf << (frac_bits - frac_bits2)) : (another.buf >> (frac_bits2 - frac_bits))) {}
 
         constexpr static fixedpoint buf_cast(const T buf) noexcept {
             return fixedpoint(buf, true);
+        }
+
+        constexpr static fixedpoint fraction(const T& counter, const T& denimonator) noexcept {
+            return  fixedpoint((counter << frac_bits) / denimonator, true);
         }
 
         constexpr friend fixedpoint operator+(const fixedpoint first, const fixedpoint second) noexcept {

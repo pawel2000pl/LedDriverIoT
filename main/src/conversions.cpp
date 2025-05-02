@@ -28,9 +28,9 @@ void rgbToHsl(fixed32 r, fixed32 g, fixed32 b, fixed32& h, fixed32& s, fixed32& 
 fixed32 hue2rgb(fixed32 p, fixed32 q, fixed32 t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
-    if (t < (fixed32)1/6) return p + (q - p) * 6 * t;
-    if (t < (fixed32)1/2) return q;
-    if (t < (fixed32)2/3) return p + (q - p) * ((fixed32)2/3 - t) * 6;
+    if (t < fixed32::fraction(1,6)) return p + (q - p) * 6 * t;
+    if (t < fixed32::fraction(1,2)) return q;
+    if (t < fixed32::fraction(2,3)) return p + (q - p) * (fixed32::fraction(2,3) - t) * 6;
     return p;
 }
 
@@ -40,9 +40,9 @@ void hslToRgb(fixed32 h, fixed32 s, fixed32 l, fixed32& r, fixed32& g, fixed32& 
     } else {
         fixed32 q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         fixed32 p = 2 * l - q;
-        r = hue2rgb(p, q, h + (fixed32)1/3);
+        r = hue2rgb(p, q, h + fixed32::fraction(1,3));
         g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - (fixed32)1/3);
+        b = hue2rgb(p, q, h - fixed32::fraction(1,3));
     }
 }
 
