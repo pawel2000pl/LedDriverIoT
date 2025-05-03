@@ -4,5 +4,5 @@
 #include <cstdint>
 #include <array>
 
-using ColorChannels = std::array<fixed32, 4>;
+using ColorChannels = std::array<fixed64, 4>;
 

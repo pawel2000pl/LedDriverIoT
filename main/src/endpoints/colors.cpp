@@ -25,13 +25,13 @@ namespace endpoints {
         char buf[64];
         int size = 0;
         buf[size++] = '[';
-        size += channels[0].toCharBuf(buf+size);
+        size += channels[0].toCharBuf(buf+size, 10, 9);
         buf[size++] = ',';
-        size += channels[1].toCharBuf(buf+size);
+        size += channels[1].toCharBuf(buf+size, 10, 9);
         buf[size++] = ',';
-        size += channels[2].toCharBuf(buf+size);
+        size += channels[2].toCharBuf(buf+size, 10, 9);
         buf[size++] = ',';
-        size += channels[3].toCharBuf(buf+size);
+        size += channels[3].toCharBuf(buf+size, 10, 9);
         buf[size++] = ']';
         buf[size] = 0;
         char size_str[24];

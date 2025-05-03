@@ -382,7 +382,7 @@ class fixedpoint {
             return (bool)buf;
         }
 
-        unsigned toCharBuf(char* buffer, unsigned char base=10) const {
+        unsigned toCharBuf(char* buffer, unsigned char base=10, unsigned max_frac_digits=(unsigned)(-1)) const {
             char* wbuf = buffer;
             T tmpBuf = buf;
             if (tmpBuf < 0) {
@@ -404,7 +404,7 @@ class fixedpoint {
             }
             if (fracPart) {
                 *(wbuf++) = '.';
-                while (fracPart) {
+                while (fracPart && max_frac_digits--) {
                     fracPart *= 10;
                     T digit = fracPart >> frac_bits;
                     fracPart -= digit << frac_bits;
@@ -443,7 +443,21 @@ class fixedpoint {
             return minus ? -result : result;
         }
 
-        static const unsigned stream_buf_size = 64;
+        // each bit (the lowest base) + sign + point + zero-char + padding
+        static const unsigned stream_buf_size = sizeof(T)*8+4;
+
+        template<class string_type>
+        string_type toString(unsigned char base=10, unsigned max_frac_digits=(unsigned)(-1)) const {
+            char buf[stream_buf_size];
+            unsigned size = toCharBuf(buf, base, max_frac_digits);
+            buf[size] = 0;
+            return string_type((const char*)buf);
+        }
+
+        template<class string_type>
+        static fixedpoint fromString(const string_type& str, unsigned char base=10, unsigned* size=NULL) {
+            return fixedpoint::fromCharBuf(str.c_str(), base, size);
+        }
 
         template<class Stream>
         friend Stream& operator << (Stream& stream, const fixedpoint fp) {

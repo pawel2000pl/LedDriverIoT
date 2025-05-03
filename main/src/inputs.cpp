@@ -7,25 +7,25 @@
 namespace inputs {
 
     namespace filters {
-        FloatFunction inputSaturation;
-        FloatFunction inputHue;
-        FloatFunction inputValue;
-        FloatFunction inputLightness;
-        FloatFunction inputRed;
-        FloatFunction inputGreen;
-        FloatFunction inputBlue;
-        FloatFunction inputWhite;
-        FloatFunction globalInput;
+        ArithmeticFunction inputSaturation;
+        ArithmeticFunction inputHue;
+        ArithmeticFunction inputValue;
+        ArithmeticFunction inputLightness;
+        ArithmeticFunction inputRed;
+        ArithmeticFunction inputGreen;
+        ArithmeticFunction inputBlue;
+        ArithmeticFunction inputWhite;
+        ArithmeticFunction globalInput;
 
-        FloatFunction invertedInputHue;
-        FloatFunction invertedInputSaturation;
-        FloatFunction invertedInputValue;
-        FloatFunction invertedInputLightness;
-        FloatFunction invertedInputRed;
-        FloatFunction invertedInputGreen;
-        FloatFunction invertedInputBlue;
-        FloatFunction invertedInputWhite;
-        FloatFunction invertedGlobalInput;
+        ArithmeticFunction invertedInputHue;
+        ArithmeticFunction invertedInputSaturation;
+        ArithmeticFunction invertedInputValue;
+        ArithmeticFunction invertedInputLightness;
+        ArithmeticFunction invertedInputRed;
+        ArithmeticFunction invertedInputGreen;
+        ArithmeticFunction invertedInputBlue;
+        ArithmeticFunction invertedInputWhite;
+        ArithmeticFunction invertedGlobalInput;
     }
 
 
@@ -55,12 +55,12 @@ namespace inputs {
     }
 
 
-    void setRGBW(fixed32 r, fixed32 g, fixed32 b, fixed32 w) {
+    void setRGBW(fixed64 r, fixed64 g, fixed64 b, fixed64 w) {
         r = filters::globalInput(filters::inputRed(r));
         g = filters::globalInput(filters::inputGreen(g));
         b = filters::globalInput(filters::inputBlue(b));
         w = filters::globalInput(filters::inputWhite(w));
-        fixed32 h, s, v;
+        fixed64 h, s, v;
         rgbToHsv(r, g, b, h, s, v);
         ColorChannels raw = outputs::getColor();
         raw[3] = w;
@@ -74,7 +74,7 @@ namespace inputs {
     }
 
 
-    void setHSVW(fixed32 h, fixed32 s, fixed32 v, fixed32 w) {
+    void setHSVW(fixed64 h, fixed64 s, fixed64 v, fixed64 w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         v = filters::globalInput(filters::inputValue(v));
@@ -83,12 +83,12 @@ namespace inputs {
     }
 
 
-    void setHSLW(fixed32 h, fixed32 s, fixed32 l, fixed32 w) {
+    void setHSLW(fixed64 h, fixed64 s, fixed64 l, fixed64 w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         l = filters::globalInput(filters::inputLightness(l));
         w = filters::globalInput(filters::inputWhite(w));
-        fixed32 hr, sr, vr;
+        fixed64 hr, sr, vr;
         hslToHsv(h, s, l, hr, sr, vr);
         ColorChannels raw = outputs::getColor();
         raw[3] = w;
@@ -110,7 +110,7 @@ namespace inputs {
 
     ColorChannels getRGBW() {
         ColorChannels raw = outputs::getColor();
-        fixed32 r, g, b, w;
+        fixed64 r, g, b, w;
         hsvToRgb(raw[0], raw[1], raw[2], r, g, b);
         r = filters::invertedInputRed(filters::invertedGlobalInput(r));
         g = filters::invertedInputGreen(filters::invertedGlobalInput(g));
@@ -122,7 +122,7 @@ namespace inputs {
 
     ColorChannels getHSVW() {
         ColorChannels raw = outputs::getColor();
-        fixed32 h, s, v, w;
+        fixed64 h, s, v, w;
         h = filters::invertedInputHue(filters::invertedGlobalInput(raw[0]));
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(raw[1]));
         v = filters::invertedInputValue(filters::invertedGlobalInput(raw[2]));
@@ -133,7 +133,7 @@ namespace inputs {
 
     ColorChannels getHSLW() {
         ColorChannels raw = outputs::getColor();
-        fixed32 h, s, l, w;
+        fixed64 h, s, l, w;
         hsvToHsl(raw[0], raw[1], raw[2], h, s, l);
         h = filters::invertedInputHue(filters::invertedGlobalInput(h));
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(s));
@@ -188,7 +188,7 @@ namespace inputs {
         unsigned v = (charToDigit(buf[5]) << 4) | charToDigit(buf[6]);
         unsigned w = (charToDigit(buf[7]) << 4) | charToDigit(buf[8]);
         if (useWhitePtr) *useWhitePtr = useWhite;
-        return {(fixed32)h / 255, (fixed32)s / 255, (fixed32)v / 255,  (fixed32)w / 255};
+        return {(fixed64)h / 255, (fixed64)s / 255, (fixed64)v / 255,  (fixed64)w / 255};
     }
 
 
