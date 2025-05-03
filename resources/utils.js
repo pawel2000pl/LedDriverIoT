@@ -37,14 +37,18 @@ async function fetchVersion() {
 }
 
 
-function updateClientApp() {
-    fetchVersion().then(async ([_1, _2, resources])=>{
-        let version = resources;
-        if (localStorage.version === undefined)
-            localStorage.version = version;
-        else if (localStorage.version !== version)
-            window.location = '/invalidate_cache';
-    });
+async function updateClientApp() {
+    [_1, _2, resources] = await fetchVersion();
+    let version = resources;
+    if (localStorage.version === undefined) {
+        localStorage.version = version;
+        return false;
+    } else if (localStorage.version !== version) {
+        window.location = '/invalidate_cache';
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
