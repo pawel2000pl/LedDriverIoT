@@ -65,20 +65,18 @@ namespace taylor {
 
 
     template<typename T>
-    T sqrt(T x) {
-        T test = 1;
-        if (test < x) while (test * test < x) test *= 2;
-        T result = 0;
-        while (test > 0) {
-            T new_result = result + test;
-            T new_result_sqr = new_result * new_result;
-            if (new_result_sqr == x)
-                return new_result;
-            if (new_result_sqr < x)
-                result = new_result;
-            test /= 2;
-        }
-        return result;
+    T sqrt(T s) {
+        if (s == 0) return T(0);
+        T x = (s < 1) ? (s * 2) : (s / 2);
+        T dsx = 0;
+        T k = 1;
+        const T epsilon = std::numeric_limits<T>::min();
+        do {
+            dsx = s / x;
+            x = (x + dsx*k) / (1+k);
+            k *= 0.99;
+        } while (std::abs(dsx - x) > epsilon && k != 0);
+        return x;
     }
 
 
@@ -145,7 +143,7 @@ namespace taylor {
 
 
     template<typename T>
-    T ln1(T x) {
+    T ln_small(T x) {
         x -= 1;
         T poly = x;
         T result = 0;
@@ -161,25 +159,31 @@ namespace taylor {
     }
 
 
-    template<typename T>
-    T ln_part2(T x) {
-        x -= 1;
-        T poly = x;
-        T result = 0;
-        unsigned i = 1;
-        while (1) {
-            T part = 1 / (poly * i);
-            T new_result = (++i & 1) ? (result + part) : (result - part);
-            if (__glibc_unlikely(result == new_result)) return result;
-            result = new_result;
-            poly *= x;
-        }
-    }
+    // template<typename T>
+    // T ln_part2(T x) {
+    //     x -= 1;
+    //     T poly = x;
+    //     T result = 0;
+    //     unsigned i = 1;
+    //     while (1) {
+    //         T part = 1 / (poly * i);
+    //         T new_result = (++i & 1) ? (result + part) : (result - part);
+    //         if (__glibc_unlikely(result == new_result)) return result;
+    //         result = new_result;
+    //         poly *= x;
+    //     }
+    // }
 
 
     template<typename T>
     T ln(T x) {
-        return (x < 2) ? ln1<T>(x) : (ln<T>(x-1) - ln_part2<T>(x));
+        return (x < 2) ? ln_small<T>(x) : 2*ln(sqrt<T>(x)); //(ln<T>(x-1) - ln_part2<T>(x));
+    }
+
+
+    template<typename T>
+    T log(T x) {
+        return ln<T>(x);
     }
 
 
