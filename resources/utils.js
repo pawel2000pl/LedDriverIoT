@@ -38,7 +38,7 @@ async function fetchVersion() {
 
 
 async function updateClientApp() {
-    [_1, _2, resources] = await fetchVersion();
+    let resources = (await fetchVersion())[2];
     let version = resources;
     if (localStorage.version === undefined) {
         localStorage.version = version;
