@@ -16,7 +16,7 @@
 
 namespace endpoints {
 
-    int fixedpointFilter15(fixed64 x) { 
+    int fixedpointFilter15(fixed32_c x) { 
         return (int)std::round(x * 15); 
     };
 
@@ -26,13 +26,13 @@ namespace endpoints {
         char buf[64];
         int size = 0;
         buf[size++] = '[';
-        size += channels[0].toCharBuf(buf+size, 10, 9);
+        size += channels[0].toCharBuf(buf+size, 10, 12);
         buf[size++] = ',';
-        size += channels[1].toCharBuf(buf+size, 10, 9);
+        size += channels[1].toCharBuf(buf+size, 10, 12);
         buf[size++] = ',';
-        size += channels[2].toCharBuf(buf+size, 10, 9);
+        size += channels[2].toCharBuf(buf+size, 10, 12);
         buf[size++] = ',';
-        size += channels[3].toCharBuf(buf+size, 10, 9);
+        size += channels[3].toCharBuf(buf+size, 10, 12);
         buf[size++] = ']';
         buf[size] = 0;
         char size_str[24];
@@ -47,7 +47,7 @@ namespace endpoints {
         JsonDocument data;
         if (!server::readJson(req, res, data)) return;
         std::string colorspace = "";
-        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<fixed64>(), data[1].as<fixed64>(), data[2].as<fixed64>(), data[3].as<fixed64>()});
+        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<fixed32_c>(), data[1].as<fixed32_c>(), data[2].as<fixed32_c>(), data[3].as<fixed32_c>()});
         outputs::writeOutput();
         knobs::turnOff();
         server::sendOk(res);   
@@ -60,7 +60,7 @@ namespace endpoints {
             auto fun = [=](std::string name) {
                 std::string param = "0000";
                 params->getQueryParameter(name, param);
-                return constrain<fixed64>(fixed64::fromCharBuf(param.c_str())/15, 0, 1);
+                return constrain<fixed32_c>(fixed32_c::fromCharBuf(param.c_str())/15, 0, 1);
             };    
             ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
             knobs::turnOff();

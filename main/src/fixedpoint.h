@@ -670,5 +670,10 @@ using fixed16 = fixedpoint<std::int16_t>;
 using fixed32 = fixedpoint<std::int32_t>;
 using fixed64 = fixedpoint<std::int64_t>;
 
+using fixed8_a = fixedpoint<std::int8_t, make_fast_int<std::int16_t>::type>;
+using fixed16_a = fixedpoint<std::int16_t, make_fast_int<std::int32_t>::type>;
+using fixed32_a = fixedpoint<std::int32_t, make_fast_int<std::int64_t>::type>;
+using fixed64_a = fixed64;
+
 
 #endif

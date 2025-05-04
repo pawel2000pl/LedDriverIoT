@@ -7,12 +7,12 @@
 
 #include "common_types.h"
 
-using ArithmeticFunction = std::function<fixed64(fixed64)>;
+using ArithmeticFunction = std::function<fixed32_f(fixed32_f)>;
 extern const std::vector<ArithmeticFunction> filterFunctions;
 
-ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed64 min_x=0, fixed64 max_x=1);
-ArithmeticFunction constrainFunction(ArithmeticFunction fun, fixed64 min_y=0, fixed64 max_y=1);
+ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed32_f min_x=0, fixed32_f max_x=1);
+ArithmeticFunction constrainFunction(ArithmeticFunction fun, fixed32_f min_y=0, fixed32_f max_y=1);
 ArithmeticFunction symFunction(ArithmeticFunction fun);
-ArithmeticFunction mixFilterFunctions(const std::vector<fixed64> filters);
-ArithmeticFunction createInverseFunction(ArithmeticFunction originalFunction, fixed64 epsilon=std::numeric_limits<fixed64>::min());
+ArithmeticFunction mixFilterFunctions(const std::vector<fixed32_f> filters);
+ArithmeticFunction createInverseFunction(ArithmeticFunction originalFunction, fixed32_f epsilon=std::numeric_limits<fixed32_f>::min());
 ArithmeticFunction periodizeFunction(ArithmeticFunction originalFunction, unsigned count);

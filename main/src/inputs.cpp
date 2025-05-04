@@ -55,12 +55,12 @@ namespace inputs {
     }
 
 
-    void setRGBW(fixed64 r, fixed64 g, fixed64 b, fixed64 w) {
+    void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w) {
         r = filters::globalInput(filters::inputRed(r));
         g = filters::globalInput(filters::inputGreen(g));
         b = filters::globalInput(filters::inputBlue(b));
         w = filters::globalInput(filters::inputWhite(w));
-        fixed64 h, s, v;
+        fixed32_c h, s, v;
         rgbToHsv(r, g, b, h, s, v);
         ColorChannels raw = outputs::getColor();
         raw[3] = w;
@@ -74,7 +74,7 @@ namespace inputs {
     }
 
 
-    void setHSVW(fixed64 h, fixed64 s, fixed64 v, fixed64 w) {
+    void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         v = filters::globalInput(filters::inputValue(v));
@@ -83,12 +83,12 @@ namespace inputs {
     }
 
 
-    void setHSLW(fixed64 h, fixed64 s, fixed64 l, fixed64 w) {
+    void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         l = filters::globalInput(filters::inputLightness(l));
         w = filters::globalInput(filters::inputWhite(w));
-        fixed64 hr, sr, vr;
+        fixed32_c hr, sr, vr;
         hslToHsv(h, s, l, hr, sr, vr);
         ColorChannels raw = outputs::getColor();
         raw[3] = w;
@@ -110,7 +110,7 @@ namespace inputs {
 
     ColorChannels getRGBW() {
         ColorChannels raw = outputs::getColor();
-        fixed64 r, g, b, w;
+        fixed32_c r, g, b, w;
         hsvToRgb(raw[0], raw[1], raw[2], r, g, b);
         r = filters::invertedInputRed(filters::invertedGlobalInput(r));
         g = filters::invertedInputGreen(filters::invertedGlobalInput(g));
@@ -122,7 +122,7 @@ namespace inputs {
 
     ColorChannels getHSVW() {
         ColorChannels raw = outputs::getColor();
-        fixed64 h, s, v, w;
+        fixed32_c h, s, v, w;
         h = filters::invertedInputHue(filters::invertedGlobalInput(raw[0]));
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(raw[1]));
         v = filters::invertedInputValue(filters::invertedGlobalInput(raw[2]));
@@ -133,7 +133,7 @@ namespace inputs {
 
     ColorChannels getHSLW() {
         ColorChannels raw = outputs::getColor();
-        fixed64 h, s, l, w;
+        fixed32_c h, s, l, w;
         hsvToHsl(raw[0], raw[1], raw[2], h, s, l);
         h = filters::invertedInputHue(filters::invertedGlobalInput(h));
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(s));
@@ -188,7 +188,7 @@ namespace inputs {
         unsigned v = (charToDigit(buf[5]) << 4) | charToDigit(buf[6]);
         unsigned w = (charToDigit(buf[7]) << 4) | charToDigit(buf[8]);
         if (useWhitePtr) *useWhitePtr = useWhite;
-        return {(fixed64)h / 255, (fixed64)s / 255, (fixed64)v / 255,  (fixed64)w / 255};
+        return {(fixed32_c)h / 255, (fixed32_c)s / 255, (fixed32_c)v / 255,  (fixed32_c)w / 255};
     }
 
 

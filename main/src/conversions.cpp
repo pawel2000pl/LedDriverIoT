@@ -6,16 +6,16 @@
 
 #include "conversions.h"
 
-void rgbToHsl(fixed64 r, fixed64 g, fixed64 b, fixed64& h, fixed64& s, fixed64& l) {
-    fixed64 maxVal = std::max(std::max(r, g), b);
-    fixed64 minVal = std::min(std::min(r, g), b);
+void rgbToHsl(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& h, fixed32_c& s, fixed32_c& l) {
+    fixed32_c maxVal = std::max(std::max(r, g), b);
+    fixed32_c minVal = std::min(std::min(r, g), b);
     h = 0; s = 0; l = (maxVal + minVal) / 2;
 
     if (maxVal == minVal) {
         h = 0; 
         s = 0;
     } else {
-        fixed64 d = maxVal - minVal;
+        fixed32_c d = maxVal - minVal;
         s = l > 0.5 ? d / (2 - maxVal - minVal) : d / (maxVal + minVal);
 
         if (maxVal == r) h = (g - b) / d + (g < b ? 6 : 0);
@@ -25,33 +25,33 @@ void rgbToHsl(fixed64 r, fixed64 g, fixed64 b, fixed64& h, fixed64& s, fixed64& 
     }
 }
 
-fixed64 hue2rgb(fixed64 p, fixed64 q, fixed64 t) {
+fixed32_c hue2rgb(fixed32_c p, fixed32_c q, fixed32_c t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
-    if (t < fixed64::fraction(1,6)) return p + (q - p) * 6 * t;
-    if (t < fixed64::fraction(1,2)) return q;
-    if (t < fixed64::fraction(2,3)) return p + (q - p) * (fixed64::fraction(2,3) - t) * 6;
+    if (t < fixed32_c::fraction(1,6)) return p + (q - p) * 6 * t;
+    if (t < fixed32_c::fraction(1,2)) return q;
+    if (t < fixed32_c::fraction(2,3)) return p + (q - p) * (fixed32_c::fraction(2,3) - t) * 6;
     return p;
 }
 
-void hslToRgb(fixed64 h, fixed64 s, fixed64 l, fixed64& r, fixed64& g, fixed64& b) {
+void hslToRgb(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c& r, fixed32_c& g, fixed32_c& b) {
     if (s == 0) {
         r = g = b = l; 
     } else {
-        fixed64 q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        fixed64 p = 2 * l - q;
-        r = hue2rgb(p, q, h + fixed64::fraction(1,3));
+        fixed32_c q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        fixed32_c p = 2 * l - q;
+        r = hue2rgb(p, q, h + fixed32_c::fraction(1,3));
         g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - fixed64::fraction(1,3));
+        b = hue2rgb(p, q, h - fixed32_c::fraction(1,3));
     }
 }
 
-void rgbToHsv(fixed64 r, fixed64 g, fixed64 b, fixed64& h, fixed64& s, fixed64& v) {
-    fixed64 maxVal = std::max(std::max(r, g), b);
-    fixed64 minVal = std::min(std::min(r, g), b);
+void rgbToHsv(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& h, fixed32_c& s, fixed32_c& v) {
+    fixed32_c maxVal = std::max(std::max(r, g), b);
+    fixed32_c minVal = std::min(std::min(r, g), b);
     h = 0, s = 0, v = maxVal;
-    fixed64 d = maxVal - minVal;
-    s = maxVal == 0 ? (fixed64)0 : d / maxVal;
+    fixed32_c d = maxVal - minVal;
+    s = maxVal == 0 ? (fixed32_c)0 : d / maxVal;
 
     if (maxVal == minVal) {
         h = 0; 
@@ -63,12 +63,12 @@ void rgbToHsv(fixed64 r, fixed64 g, fixed64 b, fixed64& h, fixed64& s, fixed64& 
     }
 }
 
-void hsvToRgb(fixed64 h, fixed64 s, fixed64 v, fixed64& r, fixed64& g, fixed64& b) {
+void hsvToRgb(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c& r, fixed32_c& g, fixed32_c& b) {
     int i = std::floor(h * 6);
-    fixed64 f = h * 6 - i;
-    fixed64 p = v * (1 - s);
-    fixed64 q = v * (1 - f * s);
-    fixed64 t = v * (1 - (1 - f) * s);
+    fixed32_c f = h * 6 - i;
+    fixed32_c p = v * (1 - s);
+    fixed32_c q = v * (1 - f * s);
+    fixed32_c t = v * (1 - (1 - f) * s);
 
     switch (i % 6) {
         case 0: r = v; g = t; b = p; break;
@@ -80,34 +80,34 @@ void hsvToRgb(fixed64 h, fixed64 s, fixed64 v, fixed64& r, fixed64& g, fixed64& 
     }
 }
 
-void hslToHsv(fixed64 h, fixed64 s_l, fixed64 l, fixed64& h_out, fixed64& s_v_out, fixed64& v_out) {
+void hslToHsv(fixed32_c h, fixed32_c s_l, fixed32_c l, fixed32_c& h_out, fixed32_c& s_v_out, fixed32_c& v_out) {
     h_out = h;
-    fixed64 v = l + s_l * std::min(l, 1 - l);
-    s_v_out = (v == 0) ? (fixed64)0 : 2 * (1 - l / v);
+    fixed32_c v = l + s_l * std::min(l, 1 - l);
+    s_v_out = (v == 0) ? (fixed32_c)0 : 2 * (1 - l / v);
     v_out = v;
 }
 
-void hsvToHsl(fixed64 h, fixed64 s_v, fixed64 v, fixed64& h_out, fixed64 & s_l_out, fixed64& l_out) {
+void hsvToHsl(fixed32_c h, fixed32_c s_v, fixed32_c v, fixed32_c& h_out, fixed32_c & s_l_out, fixed32_c& l_out) {
     h_out = h;
-    fixed64 l = v * (1 - s_v / 2);
-    fixed64 m = std::min(l, 1 - l);
-    s_l_out = (m == 0) ? (fixed64)0 : (v - l) / m;
+    fixed32_c l = v * (1 - s_v / 2);
+    fixed32_c m = std::min(l, 1 - l);
+    s_l_out = (m == 0) ? (fixed32_c)0 : (v - l) / m;
     l_out = l;
 }
 
-void rgbToRgb(fixed64 r, fixed64 g, fixed64 b, fixed64& outR, fixed64& outG, fixed64& outB) {
+void rgbToRgb(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& outR, fixed32_c& outG, fixed32_c& outB) {
     outR = r;
     outG = g;
     outB = b;
 }
 
-void hslToHsl(fixed64 h, fixed64 s, fixed64 l, fixed64& outH, fixed64& outS, fixed64& outL) {
+void hslToHsl(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c& outH, fixed32_c& outS, fixed32_c& outL) {
     outH = h;
     outS = s;
     outL = l;
 }
 
-void hsvToHsv(fixed64 h, fixed64 s, fixed64 v, fixed64& outH, fixed64& outS, fixed64& outV) {
+void hsvToHsv(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c& outH, fixed32_c& outS, fixed32_c& outV) {
     outH = h;
     outS = s;
     outV = v;

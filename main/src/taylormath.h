@@ -67,18 +67,12 @@ namespace taylor {
     template<typename T>
     T sqrt(T s) {
         if (s == 0) return T(0);
-        T x = (s < 1) ? (s * 2) : (s / 2);
-        T dsx = 0;
-        T k = 1;
-        constexpr static unsigned max_iter = sizeof(T)*8;
-        constexpr static const T k_mul = T(0.7071067811865475f);
-        const T epsilon = std::numeric_limits<T>::min();
-        unsigned i=0;
-        do {
-            dsx = s / x;
-            x = (x + dsx*k) / (1+k);
-            k *= k_mul;
-        } while (std::abs(dsx - x) > epsilon && k != 0 && ++i < max_iter);
+        constexpr static const unsigned max_iter = std::round(std::sqrt(sizeof(T)*4));     
+        constexpr static const T half = 0.5;        
+        T x = (s < 1) ? 2*s : (((s-1) * half)+1);
+        for (unsigned i=0;i<max_iter;i++) {
+            x = (x + s / x)*half;
+        };
         return x;
     }
 
@@ -102,10 +96,10 @@ namespace taylor {
 
     template<typename T>
     T base_asin2(T x) {
-        constexpr static T pi2 = M_PI / 2;
+        constexpr const static T pi2 = M_PI / 2;
         x = 1-x;
         T result = 0;
-        T coeff = sqrt(2*x);
+        T coeff = sqrt<T>(2*x);
         T poly = 1;
         for (unsigned i=0;i<18;i++) {
             T part = (T)pochhammer_counters[i] / (1ULL << (i<<1)) * poly / (gamma_tab[i] + 2 * i * gamma_tab[i]);
@@ -120,21 +114,25 @@ namespace taylor {
 
 
     template<typename T>
-    T base_asin_pos(T x) {
-        static T half = 0;
-        if (__glibc_unlikely(half == 0)) {
-            T test = 1;
+    T calculate_asin_half() {
+        T test = 1;
+        test /= 2;
+        T half = test;
+        while (test > 0) {
             test /= 2;
-            half = test;
-            while (test > 0) {
-                test /= 2;
-                T test_half1 = half + test;
-                T test_half2 = half - test;
-                T diff1 = base_asin2<T>(test_half1) - base_asin1<T>(test_half1);
-                T diff2 = base_asin2<T>(test_half2) - base_asin1<T>(test_half2);
-                half = (diff1 < diff2) ? test_half1 : test_half2;
-            }
+            T test_half1 = half + test;
+            T test_half2 = half - test;
+            T diff1 = base_asin2<T>(test_half1) - base_asin1<T>(test_half1);
+            T diff2 = base_asin2<T>(test_half2) - base_asin1<T>(test_half2);
+            half = (diff1 < diff2) ? test_half1 : test_half2;
         }
+        return half;
+    }
+
+
+    template<typename T>
+    T base_asin_pos(T x) {
+        const static T half = calculate_asin_half<T>();
         return (x < half) ? base_asin1<T>(x) : base_asin2<T>(x);
     }
 

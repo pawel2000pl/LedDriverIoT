@@ -4,5 +4,7 @@
 #include <cstdint>
 #include <array>
 
-using ColorChannels = std::array<fixed64, 4>;
+using fixed32_c = fixedpoint<std::int32_t, std::int32_t, 16>;
+using fixed32_f = fixedpoint<std::int32_t, std::int64_t, 26>;
+using ColorChannels = std::array<fixed32_c, 4>;
 

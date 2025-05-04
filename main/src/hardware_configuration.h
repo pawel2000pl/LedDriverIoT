@@ -21,7 +21,7 @@ namespace hardware {
 		std::vector<int> hz_pins;
 		std::vector<int> low_pins;
 		std::vector<int> high_pins;
-		fixed64 read() const;
+		fixed32_c read() const;
 
 		int getPin(int disabledValue=31) const;
 	};

@@ -7,26 +7,26 @@
 #include "filter_functions.h"
 #include "hardware_configuration.h"
 
-std::vector<fixed64> toFixedpointVector(const JsonVariantConst& source) {
-    std::vector<fixed64> result;
+std::vector<fixed32_f> toFixedpointVector(const JsonVariantConst& source) {
+    std::vector<fixed32_f> result;
     unsigned size = source.size();
     result.reserve(size);
     for (unsigned i=0;i<size;i++)
-        result.push_back(source[i].as<fixed64>());
+        result.push_back(source[i].as<fixed32_f>());
     return result;
 }
 
 
 namespace outputs {
 
-    fixed64 hue = 0;
-    fixed64 saturation = 0;
-    fixed64 value = 0;
-    fixed64 white = 0;
+    fixed32_c hue = 0;
+    fixed32_c saturation = 0;
+    fixed32_c value = 0;
+    fixed32_c white = 0;
 
     bool invertOutputs = 0;
     int phaseMode = 0;
-    fixed64 gateLoadingTime = 0;
+    fixed32_c gateLoadingTime = 0;
     ColorChannels scalling = {1.0f, 1.0f, 1.0f, 1.0f};
     std::array<unsigned, 4> transistorConnections;
 
@@ -50,16 +50,16 @@ namespace outputs {
 
         const auto& hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();
-        gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fixed64>();
+        gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fixed32_c>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
         unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
         checkNewFrequency(outputFrequency);
 
         const auto& scallingJson = configuration["hardware"]["scalling"];
-        scalling[0] = scallingJson["red"].as<fixed64>();
-        scalling[1] = scallingJson["green"].as<fixed64>();
-        scalling[2] = scallingJson["blue"].as<fixed64>();
-        scalling[3] = scallingJson["white"].as<fixed64>();
+        scalling[0] = scallingJson["red"].as<fixed32_c>();
+        scalling[1] = scallingJson["green"].as<fixed32_c>();
+        scalling[2] = scallingJson["blue"].as<fixed32_c>();
+        scalling[3] = scallingJson["white"].as<fixed32_c>();
 
         const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
@@ -86,7 +86,7 @@ namespace outputs {
 
     ColorChannels getPhases(const ColorChannels& values) {
         ColorChannels phases = {0, 0, 0, 0};
-        fixed64 k = 0;
+        fixed32_c k = 0;
         switch (phaseMode) {
             case 1: 
                 for (int i=0;i<4;i++)
@@ -100,7 +100,7 @@ namespace outputs {
                     k += values[i];
                 if (k == 0) break;
                 k = 1 / k;
-                fixed64 sum = 0;
+                fixed32_c sum = 0;
                 for (int i=0;i<4;i++) 
                     if (values[i] != 0) {
                         sum %= 1;
@@ -117,20 +117,20 @@ namespace outputs {
         ColorChannels results;
         for (int i=0;i<4;i++) {
             unsigned tc = transistorConnections[i];
-            results[i] = tc < 4 ? values[tc] : (fixed64)0;
+            results[i] = tc < 4 ? values[tc] : (fixed32_c)0;
         }
         return results;
     }
 
 
     void writeOutput() {
-        fixed64 r, g, b;
+        fixed32_c r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b);
         ColorChannels filteredValues = {
-            filters::outputRed(filters::globalOutput(r)) * scalling[0],
-            filters::outputGreen(filters::globalOutput(g)) * scalling[1],
-            filters::outputBlue(filters::globalOutput(b)) * scalling[2],
-            filters::outputWhite(filters::globalOutput(white)) * scalling[3]
+            (fixed32_c)filters::outputRed(filters::globalOutput(r)) * scalling[0],
+            (fixed32_c)filters::outputGreen(filters::globalOutput(g)) * scalling[1],
+            (fixed32_c)filters::outputBlue(filters::globalOutput(b)) * scalling[2],
+            (fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3]
         };
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
@@ -145,7 +145,7 @@ namespace outputs {
     }
 
 
-    void setColor(fixed64 h, fixed64 s, fixed64 v, fixed64 w) {
+    void setColor(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
         hue = h;
         saturation = s;
         value = v;
@@ -167,12 +167,12 @@ namespace outputs {
 
 
     ColorChannels getTailoredScalling() {
-        fixed64 r, g, b;
+        fixed32_c r, g, b;
         hsvToRgb(hue, saturation, value, r, g, b); 
-        fixed64 scale0 = constrain<fixed64>(filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<fixed64>(filters::outputRed(filters::globalOutput(1)), std::numeric_limits<fixed64>::min()), 0, 1);
-        fixed64 scale1 = constrain<fixed64>(filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<fixed64>(filters::outputGreen(filters::globalOutput(1)), std::numeric_limits<fixed64>::min()), 0, 1);
-        fixed64 scale2 = constrain<fixed64>(filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<fixed64>(filters::outputBlue(filters::globalOutput(1)), std::numeric_limits<fixed64>::min()), 0, 1);
-        fixed64 scale3 = constrain<fixed64>(filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<fixed64>(filters::outputWhite(filters::globalOutput(1)), std::numeric_limits<fixed64>::min()), 0, 1);
+        fixed32_c scale0 = constrain<fixed32_c>((fixed32_c)filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<fixed32_c>(filters::outputRed(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);
+        fixed32_c scale1 = constrain<fixed32_c>((fixed32_c)filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<fixed32_c>(filters::outputGreen(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);
+        fixed32_c scale2 = constrain<fixed32_c>((fixed32_c)filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<fixed32_c>(filters::outputBlue(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);
+        fixed32_c scale3 = constrain<fixed32_c>((fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3] / max<fixed32_c>(filters::outputWhite(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);
         return {scale0, scale1, scale2, scale3};
     }
 
