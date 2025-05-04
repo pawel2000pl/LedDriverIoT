@@ -11,26 +11,14 @@
 #include "../outputs.h"
 #include "../modules.h"
 #include "../constrain.h"
+#include "../common_types.h"
 #include "../configuration.h"
 
 namespace endpoints {
 
-    int floatFilter15(float x) { 
-        return (int)round(x * 15.f); 
+    int fixedpointFilter15(fixed32_c x) { 
+        return (int)std::round(x * 15); 
     };
-
-
-    unsigned fastFractionToStr(float fraction, char* buf) {
-        unsigned value = fraction * 1000000;
-        for (char* it=buf+7;it>buf;it--) {
-            *it = '0' + value % 10;
-            value /= 10;
-        }
-        buf[0] = buf[1];
-        buf[1] = '.'; 
-        return 8;
-    }
-
 
     void getColors(HTTPRequest* req, HTTPResponse* res) {
         std::string colorspace = "";
@@ -38,13 +26,13 @@ namespace endpoints {
         char buf[64];
         int size = 0;
         buf[size++] = '[';
-        size += fastFractionToStr(channels[0], buf+size);
+        size += channels[0].toCharBuf(buf+size, 10, 12);
         buf[size++] = ',';
-        size += fastFractionToStr(channels[1], buf+size);
+        size += channels[1].toCharBuf(buf+size, 10, 12);
         buf[size++] = ',';
-        size += fastFractionToStr(channels[2], buf+size);
+        size += channels[2].toCharBuf(buf+size, 10, 12);
         buf[size++] = ',';
-        size += fastFractionToStr(channels[3], buf+size);
+        size += channels[3].toCharBuf(buf+size, 10, 12);
         buf[size++] = ']';
         buf[size] = 0;
         char size_str[24];
@@ -59,7 +47,7 @@ namespace endpoints {
         JsonDocument data;
         if (!server::readJson(req, res, data)) return;
         std::string colorspace = "";
-        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<fixed32_c>(), data[1].as<fixed32_c>(), data[2].as<fixed32_c>(), data[3].as<fixed32_c>()});
         outputs::writeOutput();
         knobs::turnOff();
         server::sendOk(res);   
@@ -72,7 +60,7 @@ namespace endpoints {
             auto fun = [=](std::string name) {
                 std::string param = "0000";
                 params->getQueryParameter(name, param);
-                return constrain<float>((float)atoi(param.c_str())/15.f, 0, 1);
+                return constrain<fixed32_c>(fixed32_c::fromCharBuf(param.c_str())/15, 0, 1);
             };    
             ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
             knobs::turnOff();
@@ -93,14 +81,14 @@ namespace endpoints {
             render_buffer, templateStr.c_str(), 
             modules::colorKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[0],
-            floatFilter15(filteredChannels[0]),
+            fixedpointFilter15(filteredChannels[0]),
             channelsInCurrentColorspace[1],
-            floatFilter15(filteredChannels[1]),
+            fixedpointFilter15(filteredChannels[1]),
             channelsInCurrentColorspace[2],
-            floatFilter15(filteredChannels[2]),
+            fixedpointFilter15(filteredChannels[2]),
             modules::whiteKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[3],
-            floatFilter15(filteredChannels[3])
+            fixedpointFilter15(filteredChannels[3])
         );
         render_buffer[size] = 0;
         char size_str[24];

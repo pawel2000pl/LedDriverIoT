@@ -2,14 +2,16 @@
 #include <ArduinoJson.h>
 #include <array>
 
-using ColorChannels = std::array<float, 4>;
+#include "common_types.h"
+#include "json_utils.h"
+
 
 namespace inputs {
 
     void updateConfiguration(const JsonVariantConst& configuration);
-    void setRGBW(float r, float g, float b, float w);
-    void setHSVW(float h, float s, float v, float w);
-    void setHSLW(float h, float s, float l, float w);
+    void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w);
+    void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w);
+    void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w);
     void setAuto(const String& colorspace, const ColorChannels& color);
 
     ColorChannels getRGBW();

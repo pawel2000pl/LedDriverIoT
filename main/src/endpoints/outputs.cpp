@@ -7,12 +7,16 @@ namespace endpoints {
     void getTailoredScalling(HTTPRequest* req, HTTPResponse* res) {
         ColorChannels scalling = outputs::getTailoredScalling();
         char buf[64];
-        int size = sprintf(buf, "[%f, %f, %f, %f]", 
-            scalling[0],
-            scalling[1],
-            scalling[2],
-            scalling[3]
-        );
+        int size = 0;
+        buf[size++] = '[';
+        size += scalling[0].toCharBuf(buf+size, 10, 12);
+        buf[size++] = ',';
+        size += scalling[1].toCharBuf(buf+size, 10, 12);
+        buf[size++] = ',';
+        size += scalling[2].toCharBuf(buf+size, 10, 12);
+        buf[size++] = ',';
+        size += scalling[3].toCharBuf(buf+size, 10, 12);
+        buf[size++] = ']';
         buf[size] = 0;
         char size_str[24];
         res->setHeader("Cache-Control", "no-cache");
