@@ -33,15 +33,15 @@ namespace inputs {
         const auto& filters = configuration["filters"];
         const auto& inputFilters = filters["inputFilters"];
                 
-        filters::inputSaturation = mixFilterFunctions(toFloatVector(inputFilters["saturation"]));
-        filters::inputHue = periodizeFunction(mixFilterFunctions(toFloatVector(inputFilters["hue"])), 6);
-        filters::inputValue = mixFilterFunctions(toFloatVector(inputFilters["value"]));
-        filters::inputLightness = mixFilterFunctions(toFloatVector(inputFilters["lightness"]));
-        filters::inputRed = mixFilterFunctions(toFloatVector(inputFilters["red"]));
-        filters::inputGreen = mixFilterFunctions(toFloatVector(inputFilters["green"]));
-        filters::inputBlue = mixFilterFunctions(toFloatVector(inputFilters["blue"]));
-        filters::inputWhite = mixFilterFunctions(toFloatVector(inputFilters["white"]));
-        filters::globalInput = mixFilterFunctions(toFloatVector(filters["globalInputFilters"]));  
+        filters::inputSaturation = mixFilterFunctions(toFixedpointVector(inputFilters["saturation"]));
+        filters::inputHue = periodizeFunction(mixFilterFunctions(toFixedpointVector(inputFilters["hue"])), 6);
+        filters::inputValue = mixFilterFunctions(toFixedpointVector(inputFilters["value"]));
+        filters::inputLightness = mixFilterFunctions(toFixedpointVector(inputFilters["lightness"]));
+        filters::inputRed = mixFilterFunctions(toFixedpointVector(inputFilters["red"]));
+        filters::inputGreen = mixFilterFunctions(toFixedpointVector(inputFilters["green"]));
+        filters::inputBlue = mixFilterFunctions(toFixedpointVector(inputFilters["blue"]));
+        filters::inputWhite = mixFilterFunctions(toFixedpointVector(inputFilters["white"]));
+        filters::globalInput = mixFilterFunctions(toFixedpointVector(filters["globalInputFilters"]));  
 
         filters::invertedInputHue = createInverseFunction(filters::inputHue);
         filters::invertedInputSaturation = createInverseFunction(filters::inputSaturation);

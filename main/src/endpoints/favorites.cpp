@@ -42,13 +42,19 @@ namespace endpoints {
         bool useWhite = white != "0";
         String dumped = inputs::dumpFavoriteColor(useWhite);
         ColorChannels channels = inputs::getAuto(modules::webColorSpace);
+        String channels_str[4] = {
+            channels[0].toString<String>(10, 9), 
+            channels[1].toString<String>(10, 9), 
+            channels[2].toString<String>(10, 9),
+            channels[3].toString<String>(10, 9)
+        };
         char buf[128];
-        int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%f, %f, %f, %f]}", 
+        int size = sprintf(buf, "{\"code\": \"%s\", \"color\": [%s, %s, %s, %s]}", 
             dumped.c_str(),
-            (float)channels[0],
-            (float)channels[1],
-            (float)channels[2],
-            (float)channels[3]
+            channels_str[0].c_str(),
+            channels_str[1].c_str(),
+            channels_str[2].c_str(),
+            channels_str[3].c_str()
         );
         buf[size] = 0;
         char size_str[24];

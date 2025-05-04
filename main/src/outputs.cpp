@@ -7,7 +7,7 @@
 #include "filter_functions.h"
 #include "hardware_configuration.h"
 
-std::vector<fixed64> toFloatVector(const JsonVariantConst& source) {
+std::vector<fixed64> toFixedpointVector(const JsonVariantConst& source) {
     std::vector<fixed64> result;
     unsigned size = source.size();
     result.reserve(size);
@@ -42,11 +42,11 @@ namespace outputs {
         const auto& filters = configuration["filters"];
         const auto& outputFilters = filters["outputFilters"];
 
-        filters::outputRed = mixFilterFunctions(toFloatVector(outputFilters["red"]));
-        filters::outputGreen = mixFilterFunctions(toFloatVector(outputFilters["green"]));
-        filters::outputBlue = mixFilterFunctions(toFloatVector(outputFilters["blue"]));
-        filters::outputWhite = mixFilterFunctions(toFloatVector(outputFilters["white"]));   
-        filters::globalOutput = mixFilterFunctions(toFloatVector(filters["globalOutputFilters"])); 
+        filters::outputRed = mixFilterFunctions(toFixedpointVector(outputFilters["red"]));
+        filters::outputGreen = mixFilterFunctions(toFixedpointVector(outputFilters["green"]));
+        filters::outputBlue = mixFilterFunctions(toFixedpointVector(outputFilters["blue"]));
+        filters::outputWhite = mixFilterFunctions(toFixedpointVector(outputFilters["white"]));   
+        filters::globalOutput = mixFilterFunctions(toFixedpointVector(filters["globalOutputFilters"])); 
 
         const auto& hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();

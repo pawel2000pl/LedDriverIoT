@@ -16,7 +16,7 @@
 
 namespace endpoints {
 
-    int floatFilter15(fixed64 x) { 
+    int fixedpointFilter15(fixed64 x) { 
         return (int)std::round(x * 15); 
     };
 
@@ -47,7 +47,7 @@ namespace endpoints {
         JsonDocument data;
         if (!server::readJson(req, res, data)) return;
         std::string colorspace = "";
-        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<float>(), data[1].as<float>(), data[2].as<float>(), data[3].as<float>()});
+        inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<fixed64>(), data[1].as<fixed64>(), data[2].as<fixed64>(), data[3].as<fixed64>()});
         outputs::writeOutput();
         knobs::turnOff();
         server::sendOk(res);   
@@ -60,7 +60,7 @@ namespace endpoints {
             auto fun = [=](std::string name) {
                 std::string param = "0000";
                 params->getQueryParameter(name, param);
-                return constrain<float>((float)atoi(param.c_str())/15.f, 0, 1);
+                return constrain<fixed64>(fixed64::fromCharBuf(param.c_str())/15, 0, 1);
             };    
             ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
             knobs::turnOff();
@@ -81,14 +81,14 @@ namespace endpoints {
             render_buffer, templateStr.c_str(), 
             modules::colorKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[0],
-            floatFilter15(filteredChannels[0]),
+            fixedpointFilter15(filteredChannels[0]),
             channelsInCurrentColorspace[1],
-            floatFilter15(filteredChannels[1]),
+            fixedpointFilter15(filteredChannels[1]),
             channelsInCurrentColorspace[2],
-            floatFilter15(filteredChannels[2]),
+            fixedpointFilter15(filteredChannels[2]),
             modules::whiteKnobEnabled ? "" : "style=\"display: none;\"",
             channelsInCurrentColorspace[3],
-            floatFilter15(filteredChannels[3])
+            fixedpointFilter15(filteredChannels[3])
         );
         render_buffer[size] = 0;
         char size_str[24];

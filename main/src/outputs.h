@@ -5,7 +5,7 @@
 #include "common_types.h"
 #include "json_utils.h"
 
-std::vector<fixed64> toFloatVector(const JsonVariantConst& source);
+std::vector<fixed64> toFixedpointVector(const JsonVariantConst& source);
 
 namespace outputs {
 
