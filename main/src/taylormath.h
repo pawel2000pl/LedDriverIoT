@@ -70,12 +70,15 @@ namespace taylor {
         T x = (s < 1) ? (s * 2) : (s / 2);
         T dsx = 0;
         T k = 1;
+        constexpr static unsigned max_iter = sizeof(T)*8;
+        constexpr static const T k_mul = T(0.7071067811865475f);
         const T epsilon = std::numeric_limits<T>::min();
+        unsigned i=0;
         do {
             dsx = s / x;
             x = (x + dsx*k) / (1+k);
-            k *= 0.99;
-        } while (std::abs(dsx - x) > epsilon && k != 0);
+            k *= k_mul;
+        } while (std::abs(dsx - x) > epsilon && k != 0 && ++i < max_iter);
         return x;
     }
 
