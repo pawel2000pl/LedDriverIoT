@@ -2,12 +2,74 @@
 
 namespace taylor {
 
-    std::uint64_t gamma_tab[21] = {
-        1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000, 121645100408832000, 2432902008176640000
-    };
+    const std::size_t max_constant_tab_size = 32;
 
-    std::uint64_t pochhammer_counters[18] = {
-        1, 1, 3, 15, 105, 945, 10395, 135135, 2027025, 34459425, 654729075, 13749310575, 316234143225, 7905853580625, 213458046676875, 6190283353629375, 191898783962510625, 6332659870762850625
-    };
+    std::size_t gamma_tab_size = 0;
+    std::uint64_t gamma_tab[max_constant_tab_size];
+
+    std::size_t asin_divisors_tab_size = 0;
+    std::uint64_t asin_divisors_tab[max_constant_tab_size];
+
+    std::size_t pochhammer_counters_size = 0;
+    std::uint64_t pochhammer_counters[max_constant_tab_size];
+
+
+    void generate_gamma_tab() {
+        gamma_tab_size = 0;
+        gamma_tab[gamma_tab_size++] = 1;
+        while (gamma_tab_size < max_constant_tab_size) {
+            std::uint64_t new_value = gamma_tab[gamma_tab_size-1] * gamma_tab_size;
+            if (new_value / gamma_tab_size != gamma_tab[gamma_tab_size-1]) break;
+            gamma_tab[gamma_tab_size++] = new_value;
+        }
+    }
+
+
+    void generate_asin_divisors_tab() {
+        for (unsigned i=0;i<gamma_tab_size;i++) {
+            asin_divisors_tab[i] = gamma_tab[i] + gamma_tab[i] * (i << 1);
+            if ((asin_divisors_tab[i] - gamma_tab[i]) / gamma_tab[i] != (i << 1)) {
+                asin_divisors_tab_size = i;
+                return;
+            }
+        }
+        asin_divisors_tab_size = gamma_tab_size;
+    }
+
+
+
+    void generate_pochhammer_counters() {
+        std::size_t double_factorial_tab_size = 0;
+        std::uint64_t double_factorial_tab[max_constant_tab_size*2];
+
+        double_factorial_tab_size = 0;
+        double_factorial_tab[double_factorial_tab_size++] = 1;
+        double_factorial_tab[double_factorial_tab_size++] = 1;
+        while (double_factorial_tab_size < max_constant_tab_size*2) {
+            std::uint64_t new_value = double_factorial_tab[double_factorial_tab_size-2] * double_factorial_tab_size;
+            if (new_value / double_factorial_tab_size != double_factorial_tab[double_factorial_tab_size-2]) break;
+            double_factorial_tab[double_factorial_tab_size++] = new_value;
+        }
+
+        pochhammer_counters_size = 0;
+        pochhammer_counters[pochhammer_counters_size++] = 1;
+        while (1) {
+            unsigned n = (pochhammer_counters_size << 1) - 1;
+            if (n >= double_factorial_tab_size) break;
+            pochhammer_counters[pochhammer_counters_size++] = double_factorial_tab[n];
+        }
+    }
+
+
+    bool initialize_constants() {
+        generate_gamma_tab();
+        generate_asin_divisors_tab();
+        generate_pochhammer_counters();
+        return 1;
+    }
+
+    
+    bool constants_initilized = initialize_constants();
+
 
 }

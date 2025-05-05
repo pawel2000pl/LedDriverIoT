@@ -34,7 +34,6 @@
 #include <typeindex>
 #include <type_traits>
 
-
 template<typename T>
 struct make_fast_int {
     using type = T;
@@ -185,17 +184,31 @@ class fixedpoint {
         }
 
         constexpr friend fixedpoint operator/(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint((((TC)first.buf << bits_shift_large_num) / ((TC)second.buf >> bits_shift_norm_element)) << bits_shift_imp_element, true);
+            TC divisor = second.buf >> bits_shift_norm_element;
+            if (bits_shift_norm_element) {
+                if (!~divisor)
+                    return (first.buf < 0) ? std::numeric_limits<fixedpoint>::max() : std::numeric_limits<fixedpoint>::lowest();
+                if (!divisor)
+                    return (first.buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max();
+            }            
+            return fixedpoint((((TC)first.buf << bits_shift_large_num) / divisor) << bits_shift_imp_element, true);
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
-        friend fixedpoint operator/(const fixedpoint first, const I second) noexcept {
+        constexpr friend fixedpoint operator/(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf / (T)second, true);
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator/(const I first, const fixedpoint second) noexcept {
-            return fixedpoint((((TC)first << (bits_shift_large_num + frac_bits)) / ((TC)second.buf >> bits_shift_norm_element)) << bits_shift_imp_element, true);
+        constexpr friend fixedpoint operator/(const I first, const fixedpoint second) noexcept {            
+            TC divisor = second.buf >> bits_shift_norm_element;
+            if (bits_shift_norm_element) {
+                if (!~divisor)
+                    return (first < 0) ? std::numeric_limits<fixedpoint>::max() : std::numeric_limits<fixedpoint>::lowest();
+                if (!divisor)
+                    return (first < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max();
+            }   
+            return fixedpoint((((TC)first << (bits_shift_large_num + frac_bits)) / divisor) << bits_shift_imp_element, true);
         }
 
         FIXED_POINT_FLOAT_TEMPLATE
@@ -297,8 +310,19 @@ class fixedpoint {
             buf *= another;
         }
 
-        void operator/=(const fixedpoint another) noexcept {
-            buf = (((TC)buf << bits_shift_large_num) / (TC)(another.buf >> bits_shift_norm_element)) << bits_shift_imp_element;
+        void operator/=(const fixedpoint another) noexcept {            
+            TC divisor = another.buf >> bits_shift_norm_element;            
+            if (bits_shift_norm_element) {
+                if (!~divisor) {
+                    buf = (buf < 0) ? std::numeric_limits<fixedpoint>::max() : std::numeric_limits<fixedpoint>::lowest();
+                    return;
+                }
+                if (!divisor) {
+                    buf = (buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max();
+                    return;
+                }
+            }
+            buf = (((TC)buf << bits_shift_large_num) / divisor) << bits_shift_imp_element;                      
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
@@ -388,6 +412,14 @@ class fixedpoint {
             if (tmpBuf < 0) {
                 *(wbuf++) = '-';
                 tmpBuf = -tmpBuf;
+                if (tmpBuf < 0) {
+                    *(wbuf++) = '-';
+                    *(wbuf++) = 'i';
+                    *(wbuf++) = 'n';
+                    *(wbuf++) = 'f';
+                    *wbuf = 0;
+                    return wbuf - buffer;
+                }
             }
             T intPart = tmpBuf >> frac_bits;
             T fracPart = tmpBuf - (intPart << frac_bits);
@@ -411,6 +443,7 @@ class fixedpoint {
                     *(wbuf++) = num2chr(digit);
                 }
             }
+            *wbuf = 0;
             return wbuf - buffer;
         }
 
@@ -449,8 +482,7 @@ class fixedpoint {
         template<class string_type>
         string_type toString(unsigned char base=10, unsigned max_frac_digits=(unsigned)(-1)) const {
             char buf[stream_buf_size];
-            unsigned size = toCharBuf(buf, base, max_frac_digits);
-            buf[size] = 0;
+            toCharBuf(buf, base, max_frac_digits);
             return string_type((const char*)buf);
         }
 
@@ -462,8 +494,7 @@ class fixedpoint {
         template<class Stream>
         friend Stream& operator << (Stream& stream, const fixedpoint fp) {
             char buf[stream_buf_size];
-            unsigned size = fp.toCharBuf(buf);
-            buf[size] = 0;
+            fp.toCharBuf(buf);
             stream << buf;
             return stream;
         }
@@ -492,7 +523,7 @@ class fixedpoint {
             buf[position++] = 0;
             fp = fixedpoint::fromCharBuf(buf);
             return stream;
-        }
+        }        
 
         friend struct std::numeric_limits<fixedpoint<T, TC, frac_bits>>;
 
@@ -664,16 +695,39 @@ namespace std {
 
 }
 
-
+// standard types
 using fixed8 = fixedpoint<std::int8_t>;
 using fixed16 = fixedpoint<std::int16_t>;
 using fixed32 = fixedpoint<std::int32_t>;
 using fixed64 = fixedpoint<std::int64_t>;
 
+using ufixed8 = fixedpoint<std::uint8_t>;
+using ufixed16 = fixedpoint<std::uint16_t>;
+using ufixed32 = fixedpoint<std::uint32_t>;
+using ufixed64 = fixedpoint<std::uint64_t>;
+
+// accurate types - multiplication with larger int - if it is possible
 using fixed8_a = fixedpoint<std::int8_t, make_fast_int<std::int16_t>::type>;
 using fixed16_a = fixedpoint<std::int16_t, make_fast_int<std::int32_t>::type>;
 using fixed32_a = fixedpoint<std::int32_t, make_fast_int<std::int64_t>::type>;
 using fixed64_a = fixed64;
+
+using ufixed8_a = fixedpoint<std::uint8_t, make_fast_int<std::uint16_t>::type>;
+using ufixed16_a = fixedpoint<std::uint16_t, make_fast_int<std::uint32_t>::type>;
+using ufixed32_a = fixedpoint<std::uint32_t, make_fast_int<std::uint64_t>::type>;
+using ufixed64_a = ufixed64;
+
+// simple types - multiplication with the same size of int
+using fixed8_s = fixedpoint<std::int8_t, std::int8_t>;
+using fixed16_s = fixedpoint<std::int16_t, std::int16_t>;
+using fixed32_s = fixedpoint<std::int32_t, std::int32_t>;
+using fixed64_s = fixedpoint<std::int64_t, std::int64_t>;
+
+using ufixed8_s = fixedpoint<std::uint8_t, std::uint8_t>;
+using ufixed16_s = fixedpoint<std::uint16_t, std::uint16_t>;
+using ufixed32_s = fixedpoint<std::uint32_t, std::uint32_t>;
+using ufixed64_s = fixedpoint<std::uint64_t, std::uint64_t>;
+
 
 
 #endif
