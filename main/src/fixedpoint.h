@@ -34,6 +34,7 @@
 #include <typeindex>
 #include <type_traits>
 
+
 template<typename T>
 struct make_fast_int {
     using type = T;
@@ -78,7 +79,8 @@ class fixedpoint {
 
     public:
 
-        #define FIXED_POINT_INTEGER_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value, I>::type* = nullptr>
+        #define FIXED_POINT_BOOL_TEMPLATE template<typename B, typename std::enable_if<std::is_same<B, bool>::value, B>::type* = nullptr>
+        #define FIXED_POINT_INTEGER_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value && !std::is_same<I, bool>::value, I>::type* = nullptr>
         #define FIXED_POINT_FLOAT_TEMPLATE template<typename FP, typename std::enable_if<std::is_floating_point<FP>::value, FP>::type* = nullptr>
 
         FIXED_POINT_INTEGER_TEMPLATE
@@ -369,13 +371,18 @@ class fixedpoint {
 
         FIXED_POINT_FLOAT_TEMPLATE
         constexpr operator FP() const noexcept {
-            constexpr FP k = ((FP)1) / ((FP)((T)1 << frac_bits));
+            constexpr const FP k = ((FP)1) / ((FP)((T)1 << frac_bits));
             return (FP)buf * k;
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
         constexpr operator I() const noexcept {
             return buf >> frac_bits;
+        }
+        
+        FIXED_POINT_BOOL_TEMPLATE
+        constexpr operator B() noexcept {
+            return (B)buf;
         }
 
         constexpr T getBuf() const noexcept {
@@ -400,10 +407,6 @@ class fixedpoint {
 
         constexpr T getfrac() const noexcept {
             return buf & (((T)1 << frac_bits) - 1);
-        }
-
-        constexpr operator bool() noexcept {
-            return (bool)buf;
         }
 
         unsigned toCharBuf(char* buffer, unsigned char base=10, unsigned max_frac_digits=(unsigned)(-1)) const {
@@ -540,6 +543,7 @@ class fixedpoint {
         static_assert(sizeof(T) * 8 - std::is_signed<T>::value > frac_bits, "There must be less fraction bits than number of bits in the buf type.");
         static_assert(sizeof(T) <= sizeof(TC), "Type for multiplication must be equal or greater than buf type.");
 
+        #undef FIXED_POINT_BOOL_TEMPLATE
         #undef FIXED_POINT_INTEGER_TEMPLATE
         #undef FIXED_POINT_FLOAT_TEMPLATE
 
@@ -727,7 +731,6 @@ using ufixed8_s = fixedpoint<std::uint8_t, std::uint8_t>;
 using ufixed16_s = fixedpoint<std::uint16_t, std::uint16_t>;
 using ufixed32_s = fixedpoint<std::uint32_t, std::uint32_t>;
 using ufixed64_s = fixedpoint<std::uint64_t, std::uint64_t>;
-
 
 
 #endif

@@ -37,26 +37,16 @@ namespace taylor {
     }
 
 
-
     void generate_pochhammer_counters() {
-        std::size_t double_factorial_tab_size = 0;
-        std::uint64_t double_factorial_tab[max_constant_tab_size*2];
-
-        double_factorial_tab_size = 0;
-        double_factorial_tab[double_factorial_tab_size++] = 1;
-        double_factorial_tab[double_factorial_tab_size++] = 1;
-        while (double_factorial_tab_size < max_constant_tab_size*2) {
-            std::uint64_t new_value = double_factorial_tab[double_factorial_tab_size-2] * double_factorial_tab_size;
-            if (new_value / double_factorial_tab_size != double_factorial_tab[double_factorial_tab_size-2]) break;
-            double_factorial_tab[double_factorial_tab_size++] = new_value;
-        }
-
         pochhammer_counters_size = 0;
+        std::uint64_t factorial = 1;
         pochhammer_counters[pochhammer_counters_size++] = 1;
-        while (1) {
+        while (pochhammer_counters_size < max_constant_tab_size) {
             unsigned n = (pochhammer_counters_size << 1) - 1;
-            if (n >= double_factorial_tab_size) break;
-            pochhammer_counters[pochhammer_counters_size++] = double_factorial_tab[n];
+            std::uint64_t new_factorial = factorial * (std::uint64_t)n;
+            if (new_factorial / n != factorial) break;
+            factorial = new_factorial;
+            pochhammer_counters[pochhammer_counters_size++] = new_factorial;
         }
     }
 

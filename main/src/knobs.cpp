@@ -7,6 +7,7 @@
 #include "outputs.h"
 #include "hardware_configuration.h"
 #include "common_types.h"
+#include "taylormath.h"
 
 namespace knobs {
 
@@ -47,7 +48,7 @@ namespace knobs {
         fixed32_c biasUp = bias["up"].as<fixed32_c>();
         fixed32_c biasDown = bias["down"].as<fixed32_c>();
         epsilon = configuration["hardware"]["knobActivateDelta"].as<fixed32_c>();
-        reduction = exp(-abs(configuration["hardware"]["knobsNoisesReduction"].as<fixed32_c>()));
+        reduction = taylor::exp(-std::abs(configuration["hardware"]["knobsNoisesReduction"].as<fixed32_c>()));
         applyBias = [=](fixed32_c x) { return constrain<fixed32_c>((x - biasDown) / (1 - biasUp - biasDown), 0, 1); };
         knobColorspace = channelsJson["knobMode"].as<String>();
         const char** channelsInCurrentColorspace = channels[0];

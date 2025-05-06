@@ -149,15 +149,16 @@ namespace taylor {
 
     template<typename T>
     T sqrt(T s) {
-        if (s == 0) return T(0);
+        if (s == 0 || s == 1) return T(s);
         static const unsigned max_iter = std::round(std::sqrt(
             (std::log2((double)std::numeric_limits<T>::max()) - std::log2((double)std::numeric_limits<T>::min())) / 2
         ));   
         constexpr static const T third = (T)1 / 3;   
+        bool ps = s > 1;
         T x = (s < third) ? mul_by_pow2<T>(s, 1) : (div_by_pow2<T>(s - 1, 1) + 1);
         for (unsigned i=0;i<max_iter;i++) {
             T nx = div_by_pow2<T>(x + s / x, 1);
-            if ((s > 1 ? nx > s : nx < s)) break;
+            if ((ps ? nx > s : nx < s)) break;
             x = nx;
         };
         return x;
