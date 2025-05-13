@@ -11,6 +11,7 @@
 #include <HTTPResponse.hpp>
 
 #include "resources.h"
+#include "json_utils.h"
 
 #define MAX_POST_SIZE (16*1024-1)
 

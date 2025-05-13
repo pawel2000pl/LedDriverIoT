@@ -5,13 +5,14 @@
 #include <cmath>
 #include <functional>
 
+#include "common_types.h"
 
-using FloatFunction = std::function<float(float)>;
-extern const std::vector<FloatFunction> filterFunctions;
+using ArithmeticFunction = std::function<fixed32_f(fixed32_f)>;
+extern const std::vector<ArithmeticFunction> filterFunctions;
 
-FloatFunction normalizeFunction(FloatFunction fun, float min_x=0, float max_x=1);
-FloatFunction constrainFunction(FloatFunction fun, float min_y=0, float max_y=1);
-FloatFunction symFunction(FloatFunction fun);
-FloatFunction mixFilterFunctions(const std::vector<float> filters);
-FloatFunction createInverseFunction(FloatFunction originalFunction, float epsilon=1e-6f);
-FloatFunction periodizeFunction(FloatFunction originalFunction, unsigned count);
+ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed32_f min_x=0, fixed32_f max_x=1);
+ArithmeticFunction constrainFunction(ArithmeticFunction fun, fixed32_f min_y=0, fixed32_f max_y=1);
+ArithmeticFunction symFunction(ArithmeticFunction fun);
+ArithmeticFunction mixFilterFunctions(const std::vector<fixed32_f> filters);
+ArithmeticFunction createInverseFunction(ArithmeticFunction originalFunction, fixed32_f epsilon=std::numeric_limits<fixed32_f>::min());
+ArithmeticFunction periodizeFunction(ArithmeticFunction originalFunction, unsigned count);

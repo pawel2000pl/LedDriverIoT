@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "json_utils.h"
 
 namespace knobs {
     

@@ -30,7 +30,10 @@ namespace temperature {
         temperature_sensor_config_t temp_sensor = {
                 .range_min = 20,
                 .range_max = 100,
-                .clk_src = TEMPERATURE_SENSOR_CLK_SRC_DEFAULT
+                .clk_src = TEMPERATURE_SENSOR_CLK_SRC_DEFAULT,
+                .flags = {
+                    .allow_pd = 0
+                }
         };
         temperature_sensor_install(&temp_sensor, &temp_handle);
     }

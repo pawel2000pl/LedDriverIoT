@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <vector>
+#include "json_utils.h"
 
 namespace wifi {
 

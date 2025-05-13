@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 #include <vector>
 #include "resources.h"
+#include "json_utils.h"
 
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 #define JSON_FAVORITES_BUF_SIZE (64*64)

@@ -2,6 +2,8 @@
 
 #include <array>
 
+#include "common_types.h"
+
 #define RESTART_TEMP 85
 #define ALLOW_ON_MAX_TEMP 75
 #define ALLOW_ON_MIN_TEMP -30

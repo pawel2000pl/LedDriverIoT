@@ -19,7 +19,7 @@ async function setColors(c1, c2, c3, w) {
 
 async function getColors() {
     const response = await fetch('/color.json');
-    return await response.json();
+    return (await response.json()).map(x=>Math.round(x*1e4)*1e-4);
 }
 
 const colorPromise = getColors();
