@@ -99,20 +99,16 @@ namespace taylor {
     }
 
 
-    template<typename T>
-    T base_trig_pos(T x, bool sine) {
+    template<typename T, bool sine>
+    T base_trig_pos(T x) {
         T result = 0;
         T poly = sine ? x : (T)1;
         T x2 = x*x;
-        unsigned add_gamma = sine ? 1 : 0;
-        unsigned i = 0;
-        while (1) {
-            unsigned j = (i<<1)|add_gamma;
-            if (j >= gamma_tab_size) break;
-            T part = poly / gamma_tab[j];
-            if (__glibc_unlikely(part <= 0)) return result;
-            T new_result = (++i & 1) ? (result + part) : (result - part);
-            if (__glibc_unlikely(result == new_result)) return result;
+        for (unsigned i=sine;i<gamma_tab_size;i+=2) {
+            if (__glibc_unlikely(poly <= 0)) break;
+            T part = poly / gamma_tab[i];
+            T new_result = (i & 2) ? (result - part) : (result + part);
+            if (__glibc_unlikely(result == new_result)) break;
             result = new_result;
             poly *= x2;
         }
@@ -121,7 +117,7 @@ namespace taylor {
 
 
     template<typename T>
-    T base_trig(T x) {
+    T base_cos(T x) {
         if (x < 0) x = -x;
         constexpr static T pi2 = M_PI / 2;
         constexpr static T pi4 = M_PI / 4;
@@ -129,7 +125,7 @@ namespace taylor {
         T rest = x - n * pi2;
         n &= 3;
         if (n & 1) rest = pi2 - rest;
-        T result = (rest > pi4) ? base_trig_pos<T>(pi2 - rest, true) : base_trig_pos<T>(rest, false);
+        T result = (rest > pi4) ? base_trig_pos<T, true>(pi2 - rest) : base_trig_pos<T, false>(rest);
         return (n == 1 || n == 2) ? -result : result;
     }
 
@@ -137,13 +133,13 @@ namespace taylor {
     template<typename T>
     T sin(T x) {
         constexpr static T pi2 = M_PI / 2;
-        return base_trig<T>(x - pi2);
+        return base_cos<T>(x - pi2);
     }
 
 
     template<typename T>
     T cos(T x) {
-        return base_trig<T>(x);
+        return base_cos<T>(x);
     }
 
 
@@ -158,7 +154,7 @@ namespace taylor {
         T x = (s < third) ? mul_by_pow2<T>(s, 1) : (div_by_pow2<T>(s - 1, 1) + 1);
         for (unsigned i=0;i<max_iter;i++) {
             T nx = div_by_pow2<T>(x + s / x, 1);
-            if ((ps ? nx > s : nx < s)) break;
+            if (__glibc_unlikely(ps != (nx < s))) break;
             x = nx;
         };
         return x;

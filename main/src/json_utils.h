@@ -14,7 +14,7 @@ namespace ArduinoJson {
         }
 
         static FP fromJson(JsonVariantConst src) {
-            return (FP)src.as<float>();
+            return FP::from_float(src.as<float>());
         }
 
         static bool checkJson(JsonVariantConst src) {
