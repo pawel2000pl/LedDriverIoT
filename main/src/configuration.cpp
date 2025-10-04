@@ -153,13 +153,57 @@ namespace configuration {
     }
     
 
-    void init() {
-	    SPIFFS.begin(true);
+    void rewriteFilesystem() {
+        std::vector<unsigned char>* configuration = SPIFFS.exists(CONFIGURATION_FILENAME) ? getFileBin(CONFIGURATION_FILENAME) : NULL;
+        std::vector<unsigned char>* favorites = SPIFFS.exists(FAVORITES_FILENAME) ? getFileBin(FAVORITES_FILENAME) : NULL;
+        std::vector<unsigned char>* cert_key = SPIFFS.exists(CERT_KEY_FILE_NAME) ? getFileBin(CERT_KEY_FILE_NAME) : NULL;
+        std::vector<unsigned char>* cert_pub = SPIFFS.exists(CERT_PUB_FILE_NAME) ? getFileBin(CERT_PUB_FILE_NAME) : NULL;        
+        
+        SPIFFS.format();
+
+        if (configuration) saveFile(CONFIGURATION_FILENAME, configuration->data(), configuration->size());
+        if (favorites) saveFile(FAVORITES_FILENAME, favorites->data(), favorites->size());
+        if (cert_key) saveFile(CERT_KEY_FILE_NAME, cert_key->data(), cert_key->size());
+        if (cert_pub) saveFile(CERT_PUB_FILE_NAME, cert_pub->data(), cert_pub->size());
+        
+        if (configuration) delete configuration;
+        if (favorites) delete favorites;
+        if (cert_key) delete cert_key;
+        if (cert_pub) delete cert_pub;
+    }
+
+
+    void mountFileSystem() {
+        bool success_read = false;
+        bool many_trials = false;
+        for (int i=0;i<16;i++) {
+	        if (SPIFFS.begin(false)) {
+                success_read = true;
+                break;
+            }
+            many_trials = true;
+            delay(100);
+        }
+        if (!success_read) {
+            SPIFFS.begin(true);
+        } else if (many_trials) {
+            rewriteFilesystem();
+        }
+    }
+
+
+    void loadConfiguration() {
         JsonDocument config = getConfiguration();
         if (assertConfiguration(config).length())
             setConfiguration(getDefautltConfiguration());
         else
             setConfiguration(config);
+    }
+
+
+    void init() {
+        mountFileSystem();
+        loadConfiguration();
     }
 
 

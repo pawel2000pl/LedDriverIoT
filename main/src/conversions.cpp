@@ -63,10 +63,12 @@ void rgbToHsv(float r, float g, float b, float& h, float& s, float& v) {
 
 void hsvToRgb(float h, float s, float v, float& r, float& g, float& b) {
     int i = floor(h * 6);
+    float vs = v * s;
     float f = h * 6 - i;
-    float p = v * (1 - s);
-    float q = v * (1 - f * s);
-    float t = v * (1 - (1 - f) * s);
+    float vsf = vs * f;
+    float p = v - vs;
+    float q = v - vsf;
+    float t = v - vs - vsf;
 
     switch (i % 6) {
         case 0: r = v, g = t, b = p; break;
