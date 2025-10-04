@@ -133,8 +133,8 @@ function fillConfig(config) {
 }
 
 
-$id('save-settings-btn').addEventListener('click', ()=>{config = dumpConfig(); saveConfig();});
-$id('revert-settings-btn').addEventListener('click', ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));});
+$id('save-settings-btn').addEventListener('click', async ()=>{ await configPromise; config = dumpConfig(); saveConfig(); });
+$id('revert-settings-btn').addEventListener('click', async ()=>{ configPromise = refreshConfig(); await configPromise; fillConfig(config); });
 $id('default-settings-btn').addEventListener('click', async ()=>{
     if (confirm("All settings "+"(wifi credentials, filters, etc)"+" will be reverted to default values."+" "+"Are you sure you want to continue?")) {
         await refreshConfig(true);

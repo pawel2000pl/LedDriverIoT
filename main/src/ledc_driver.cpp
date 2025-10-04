@@ -14,7 +14,7 @@ void initLedC(void) {
 		.timer_num        = LEDC_TIMER,
 		.freq_hz          = current_pwm_frequency,  
 		.clk_cfg          = LEDC_AUTO_CLK,
-		.deconfigure	  = false // TODO: CHECK
+		.deconfigure	  = false
 	};
 	// screw errors, it works fine
 	ledc_timer_config(&ledc_timer);

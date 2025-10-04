@@ -43,4 +43,4 @@ RUN date > /var/www/build/timestamp.txt
 RUN cp -r /app/resources/version.json /var/www/build/version.json
 
 EXPOSE 8000
-CMD python3 -m http.server --directory /var/www
+CMD ["python3", "-m", "http.server", "--directory", "/var/www"]
