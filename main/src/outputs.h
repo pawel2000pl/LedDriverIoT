@@ -2,15 +2,16 @@
 #include <ArduinoJson.h>
 #include <array>
 
-using ColorChannels = std::array<float, 4>;
+#include "common_types.h"
+#include "json_utils.h"
 
-std::vector<float> toFloatVector(const JsonVariantConst& source);
+std::vector<fixed32_f> toFixedpointVector(const JsonVariantConst& source);
 
 namespace outputs {
 
     void updateConfiguration(const JsonVariantConst& configuration);
     void writeOutput();
-    void setColor(float h, float s, float v, float w);
+    void setColor(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w);
     void setColor(const ColorChannels& channels);
     ColorChannels getColor();
     ColorChannels getTailoredScalling();

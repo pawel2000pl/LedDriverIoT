@@ -22,16 +22,16 @@ namespace hardware {
 	};
 
 
-	float avgAnalog(int pin, unsigned count) {
+	fixed32_c avgAnalog(int pin, unsigned count) {
 		unsigned long sum = 0;
 		for (unsigned i=0;i<count;i++)
 			sum += analogRead(pin);
-		return (float)sum / (float)count;
+		return (fixed64)sum / count;
 	}
 
 
-	float InputHardwareAction::read() const {
-			if (!enabled) return 0.f;
+	fixed32_c InputHardwareAction::read() const {
+			if (!enabled) return 0;
 			for (auto& pin : hz_pins)
 					pinMode(pin, INPUT);
 			for (auto& pin : high_pins) {
@@ -44,7 +44,7 @@ namespace hardware {
 			}
 			pinMode(read_pin, INPUT);
 			delayMicroseconds(RELAXATION_DELAY);
-			return avgAnalog(read_pin, 5) / float(ANALOG_READ_MAX);
+			return avgAnalog(read_pin, 5) * (1 / fixed32_c(ANALOG_READ_MAX));
 	}
 
 
