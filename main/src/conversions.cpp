@@ -70,7 +70,7 @@ void hsvToRgb(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c& r, fixed32_c& g,
     fixed32_c vsf = vs * f;
     fixed32_c p = v - vs;
     fixed32_c q = v - vsf;
-    fixed32_c t = v - vs - vsf;
+    fixed32_c t = v - vs + vsf;
 
     switch (i % 6) {
         case 0: r = v; g = t; b = p; break;

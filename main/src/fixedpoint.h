@@ -98,7 +98,7 @@ class fixedpoint {
 
         template<typename T2, typename TC2>
         constexpr fixedpoint(const fixedpoint<T2, TC2, frac_bits>& another) noexcept
-            : buf(another.buf) {} 
+            : buf(another.buf) {}
 
         template<typename T2, typename TC2, unsigned frac_bits2>
         constexpr fixedpoint(const fixedpoint<T2, TC2, frac_bits2>& another) noexcept
@@ -157,7 +157,7 @@ class fixedpoint {
         static constexpr T buf_from_ieee754(double x) {
             return buf_from_ieee754_generic<double, 8, 52, 11, std::uint64_t>(x);
         }
-    
+
     public:
 
         static constexpr fixedpoint from_ieee754(float x) {
@@ -269,30 +269,30 @@ class fixedpoint {
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator/(const I first, const fixedpoint second) noexcept {            
-            T divisor = second.buf >> bits_shift_norm_element::value;            
+        constexpr friend fixedpoint operator/(const I first, const fixedpoint second) noexcept {
+            T divisor = second.buf >> bits_shift_norm_element::value;
             return (divisor) ?
-                fixedpoint((((TC)first << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value, true) :
+                fixedpoint((((TC)first << (bits_shift_large_num::value + frac_bits)) / (TC)divisor) << bits_shift_imp_element::value, true) :
                 ((first < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-       
+
         }
 
         FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator/(const fixedpoint first, const FP second) noexcept {            
-            TC divisor = (TC)(second * ((TC)1 << (frac_bits - bits_shift_norm_element::value)));                        
+        constexpr friend fixedpoint operator/(const fixedpoint first, const FP second) noexcept {
+            TC divisor = (TC)(second * ((TC)1 << (frac_bits - bits_shift_norm_element::value)));
             return (divisor) ?
                 fixedpoint((((TC)first.buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value, true) :
                 ((first.buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-       
+
         }
 
         FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator/(const FP first, const fixedpoint second) noexcept {            
-            T divisor = second.buf >> bits_shift_norm_element::value;       
+        constexpr friend fixedpoint operator/(const FP first, const fixedpoint second) noexcept {
+            T divisor = second.buf >> bits_shift_norm_element::value;
             return (divisor) ?
-                fixedpoint(((first.buf * (1 << (bits_shift_large_num::value + frac_bits))) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((first.buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-       
+                fixedpoint(((TC)(first * ((TC)1 << (bits_shift_large_num::value + frac_bits))) / (TC)divisor) << bits_shift_imp_element::value, true) :
+                ((first < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
+
         }
 
         constexpr friend fixedpoint operator%(const fixedpoint first, const fixedpoint second) noexcept {
@@ -384,12 +384,12 @@ class fixedpoint {
             buf *= another;
         }
 
-        void operator/=(const fixedpoint another) noexcept {                 
+        void operator/=(const fixedpoint another) noexcept {
             T divisor = another.buf >> bits_shift_norm_element::value;
             buf = (divisor) ?
-                fixedpoint((((TC)buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-       
+                (((TC)buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value :
+                ((buf < 0) ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
+
         }
 
         FIXED_POINT_INTEGER_TEMPLATE
@@ -401,9 +401,9 @@ class fixedpoint {
         void operator/=(const FP another) noexcept {
             TC divisor = (TC)(another * ((TC)1 << (frac_bits - bits_shift_norm_element::value)));;
             buf = (divisor) ?
-                fixedpoint((((TC)buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-       
+                (((TC)buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value :
+                ((buf < 0) ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
+
         }
 
         void operator%=(const fixedpoint another) noexcept {
@@ -448,7 +448,7 @@ class fixedpoint {
         constexpr operator I() const noexcept {
             return buf >> frac_bits;
         }
-        
+
         FIXED_POINT_BOOL_TEMPLATE
         constexpr operator B() noexcept {
             return (B)buf;
@@ -595,7 +595,7 @@ class fixedpoint {
             buf[position++] = 0;
             fp = fixedpoint::fromCharBuf(buf);
             return stream;
-        }        
+        }
 
         friend struct std::numeric_limits<fixedpoint<T, TC, frac_bits>>;
 
@@ -610,7 +610,7 @@ class fixedpoint {
         static_assert(std::numeric_limits<TC>::is_integer, "Type for multiplication must be an integer type.");
         static_assert(std::is_signed<T>::value == std::is_signed<TC>::value, "T and TC must be both signed or unsigned.");
         static_assert(sizeof(T) * 8 - std::is_signed<T>::value > frac_bits, "There must be less fraction bits than number of bits in the buf type.");
-        static_assert(sizeof(T) <= sizeof(TC), "Type for multiplication must be equal or greater than buf type.");        
+        static_assert(sizeof(T) <= sizeof(TC), "Type for multiplication must be equal or greater than buf type.");
 
         #undef FIXED_POINT_BOOL_TEMPLATE
         #undef FIXED_POINT_INTEGER_TEMPLATE
