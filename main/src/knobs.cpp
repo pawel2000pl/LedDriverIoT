@@ -8,6 +8,7 @@
 #include "hardware_configuration.h"
 #include "common_types.h"
 #include "taylormath.h"
+#include "timer_shutdown.h"
 
 namespace knobs {
 
@@ -28,17 +29,9 @@ namespace knobs {
     bool enableDefaultColor = false;
     ColorChannels defaultColor = {0,0,0,0};
 
-    bool settingsInLock = false;
-        
-    hw_timer_t * timer = NULL;
 
     void turnOff() {
         knobMode = false;
-    }
-
-
-    void setLock(bool lockState) {
-        settingsInLock = lockState;
     }
 
 
@@ -74,6 +67,7 @@ namespace knobs {
         if (!enableDefaultColor) return;
         delay(100); // let timer do some iterations
         knobMode = false;
+        timer_shutdown::resetTimer();
         inputs::setHSVW(defaultColor[0], defaultColor[1], defaultColor[2], defaultColor[3]);
         outputs::writeOutput();
     }
@@ -83,7 +77,7 @@ namespace knobs {
         const fixed32_c fixedValues[6] = {applyBias(values[0]), applyBias(values[1]), applyBias(values[2]), applyBias(values[3]), 0, 1};
         ColorChannels outputChannels;
         for (int i=0;i<4;i++)
-            outputChannels[i] = potentionemterMapping[i] < 6 ? fixedValues[potentionemterMapping[i]] : (fixed32_c)0;
+            outputChannels[i] = potentionemterMapping[i] < 6 ? fixedValues[potentionemterMapping[i]] : (fixed32_c)0;        
         inputs::setAuto(knobColorspace, outputChannels);
         outputs::writeOutput();
     }
@@ -102,7 +96,10 @@ namespace knobs {
 
     void checkIfKnobsMoved(const ColorChannels& values, bool force) {
         fixed32_c md = maxAbsDifference(values, lastKnobValues);
-        if (md > epsilon || (knobMode && md > analogResolution) || force) {
+        bool largeChange = md > epsilon;
+        if (largeChange || force)
+            timer_shutdown::resetTimer();
+        if (largeChange || (knobMode && md > analogResolution) || force) {
             knobMode = true;
             for (int i=0;i<4;i++)
                 lastKnobValues[i] = values[i];
@@ -120,17 +117,9 @@ namespace knobs {
     }
 
 
-    void ARDUINO_ISR_ATTR timerCheck() {
-        if (settingsInLock) return;
+    void checkTimer() {
         check(false);
     }
 
-
-    void attachTimer() {
-        if (timer) return;
-        timer = timerBegin(1000000);
-        timerAttachInterrupt(timer, &timerCheck);
-        timerAlarm(timer, 16667, true, 0);
-    }
 
 }

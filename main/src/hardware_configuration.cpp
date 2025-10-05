@@ -1,5 +1,6 @@
 #include "hardware_configuration.h"
 
+#include <cstdint>
 
 namespace hardware {
 	const int CLOCK_32_PINS[] = {0, 1};
@@ -22,11 +23,11 @@ namespace hardware {
 	};
 
 
-	fixed32_c avgAnalog(int pin, unsigned count) {
-		unsigned long sum = 0;
+	fixed64 avgAnalog(int pin, unsigned count) {
+		std::uint64_t sum = 0;
 		for (unsigned i=0;i<count;i++)
 			sum += analogRead(pin);
-		return (fixed64)sum / count;
+		return fixed64::fraction(sum, count);
 	}
 
 
@@ -44,7 +45,7 @@ namespace hardware {
 			}
 			pinMode(read_pin, INPUT);
 			delayMicroseconds(RELAXATION_DELAY);
-			return avgAnalog(read_pin, 5) * (1 / fixed32_c(ANALOG_READ_MAX));
+			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
 	}
 
 

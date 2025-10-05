@@ -13,6 +13,7 @@
 #include "../constrain.h"
 #include "../common_types.h"
 #include "../configuration.h"
+#include "../timer_shutdown.h"
 
 namespace endpoints {
 
@@ -48,8 +49,9 @@ namespace endpoints {
         if (!server::readJson(req, res, data)) return;
         std::string colorspace = "";
         inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<fixed32_c>(), data[1].as<fixed32_c>(), data[2].as<fixed32_c>(), data[3].as<fixed32_c>()});
-        outputs::writeOutput();
         knobs::turnOff();
+        timer_shutdown::resetTimer();
+        outputs::writeOutput();
         server::sendOk(res);   
     }
 
@@ -64,6 +66,7 @@ namespace endpoints {
             };    
             ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
             knobs::turnOff();
+            timer_shutdown::resetTimer();
             inputs::setAuto(modules::webColorSpace, channels);
             outputs::writeOutput();
         }

@@ -1,6 +1,5 @@
 #pragma once
 #include <ArduinoJson.h>
-#include <array>
 
 #include "common_types.h"
 #include "json_utils.h"

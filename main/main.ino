@@ -4,6 +4,7 @@
 #include "src/knobs.h"
 #include "src/server.h"
 #include "src/modules.h"
+#include "src/timer_mgr.h"
 #include "src/ledc_driver.h"
 #include "src/temperature.h"
 #include "src/configuration.h"
@@ -36,6 +37,7 @@ void checkReset() {
 
 
 void setup() {
+	delay(50); // await for stable voltage in peripherals
 	Serial.begin(115200);  
 	Serial.println("Initialization");
 	randomSeed(29615);
@@ -47,7 +49,7 @@ void setup() {
 	modules::updateModules();
 	wifi::fastInit();
 	knobs::check(true);
-	knobs::attachTimer();
+	timer_mgr::attachTimer();
 	endpoints::configureServer();
 	knobs::setDefaultColor();
 }

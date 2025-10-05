@@ -50,6 +50,21 @@
                                 <button onclick="setDefaultsWhite()">Set white</button>
                             </p>
                         </p>
+                        <p>
+                            Shutdown timeout:
+                            <p>
+                                <input id="enable-shutdown-timeout" type="checkbox">
+                                <label for="enable-shutdown-timeout">Enable shutdown timeout</label>
+                            </p>
+                            <p>
+                                <span>Shutdown timeout [hours:minutes:seconds]: </span>
+                                <input type="time" min="00:00:01" max="23:59:00" id="shutdown-timeout">
+                            </p>
+                            <p>
+                                <span>Fadeout-time [hours:minutes:seconds]: </span>
+                                <input type="time" min="00:00:00" max="02:00:00" id="fadeout-time">
+                            </p>
+                        </p>
                         
                         <details class="info-div">
                             <summary class="prevent-select">Description</summary>

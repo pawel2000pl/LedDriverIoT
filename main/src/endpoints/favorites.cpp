@@ -12,6 +12,7 @@
 #include "../modules.h"
 #include "../conversions.h"
 #include "../configuration.h"
+#include "../timer_shutdown.h"
 
 namespace endpoints {
 
@@ -77,6 +78,7 @@ namespace endpoints {
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
         knobs::turnOff();
+        timer_shutdown::resetTimer();
         inputs::applyFavoriteColor(String(code.c_str()));
         outputs::writeOutput();
         server::sendOk(res);
@@ -88,8 +90,9 @@ namespace endpoints {
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
         inputs::applyFavoriteColor(String(code.c_str()));
-        outputs::writeOutput();
         knobs::turnOff();
+        timer_shutdown::resetTimer();
+        outputs::writeOutput();
 
         const auto& channelsMode = modules::webColorSpace;
         ColorChannels filteredChannels = inputs::getAuto(channelsMode);

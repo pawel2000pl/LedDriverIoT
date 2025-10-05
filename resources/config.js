@@ -1,6 +1,28 @@
 "use strict";
 
 
+function time2sec(time_str) {
+    const parts = time_str.split(':');
+    return Number(parts[2]) + Number(parts[1]) * 60 + Number(parts[0]) * 3600;
+}
+
+
+function to_digits(num, digits=2) {
+    let s = num.toString();
+    while (s.length < digits)
+        s = '0' + s;
+    return s;
+}
+
+
+function sec2time(time_as_seconds) {
+    const hours = Math.floor(time_as_seconds / 3600);
+    const minutes = Math.floor(time_as_seconds % 3600 / 60);
+    const seconds = Math.floor(time_as_seconds % 60);
+    return to_digits(hours) + ':' + to_digits(minutes) + ':' + to_digits(seconds);
+}
+
+
 function dumpConfig() {
     return {
         "wifi": {
@@ -27,6 +49,11 @@ function dumpConfig() {
                 "saturation": Number($id('default-color-saturation').value),
                 "value": Number($id('default-color-value').value),
                 "white": Number($id('default-color-white').value)
+            },
+            "autoShutdown": {
+                "enabled": $id('enable-shutdown-timeout').checked,
+                "timeout": time2sec($id('shutdown-timeout').value),
+                "fadeOutTime": time2sec($id('fadeout-time').value)
             }
         },
         "filters": {
@@ -95,6 +122,9 @@ function fillConfig(config) {
     $id('default-color-saturation').value = config.channels.defaultColor.saturation;
     $id('default-color-value').value = config.channels.defaultColor.value;
     $id('default-color-white').value = config.channels.defaultColor.white;
+    $id('enable-shutdown-timeout').checked = config.channels.autoShutdown.enabled;
+    $id('shutdown-timeout').value = sec2time(config.channels.autoShutdown.timeout);
+    $id('fadeout-time').value = sec2time(config.channels.autoShutdown.fadeOutTime);
 
     $id('input-hue').setValues(config.filters.inputFilters.hue);
     $id('input-saturation').setValues(config.filters.inputFilters.saturation);

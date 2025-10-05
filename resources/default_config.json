@@ -29,6 +29,11 @@
             "saturation": 0,
             "value": 0,
             "white": 0
+        },
+        "autoShutdown": {
+            "enabled": false,
+            "timeout": 21600,
+            "fadeOutTime": 10
         }
     },
     "filters": {

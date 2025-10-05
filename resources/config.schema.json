@@ -73,7 +73,8 @@
             "webMode": "channel-setting",
             "knobMode": "channel-setting",
             "defaultColorEnabled": "bool",
-            "defaultColor": "hsvw-color"
+            "defaultColor": "hsvw-color",
+            "autoShutdown": "auto-shutdown-settings"
         }
     },
     "channel-setting": {
@@ -215,5 +216,21 @@
         "saturation": "fraction",
         "value": "fraction",
         "white": "fraction"
+    },
+    "auto-shutdown-settings": {
+        "type": "object",
+        "fields": {
+            "enabled": "bool",
+            "timeout": {
+                "type": "integer",
+                "min_value": 1,
+                "max_value": 31536000
+            },
+            "fadeOutTime": {
+                "type": "integer",
+                "min_value": 0,
+                "max_value": 7200
+            }
+        }
     }
 }
