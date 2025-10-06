@@ -28,6 +28,7 @@ namespace outputs {
     int phaseMode = 0;
     fixed32_c gateLoadingTime = 0;
     ColorChannels scalling = {1.0f, 1.0f, 1.0f, 1.0f};
+    fixed32_c fadeoutScalling = 1;
     std::array<unsigned, 4> transistorConnections;
 
     namespace filters {
@@ -74,6 +75,10 @@ namespace outputs {
         writeOutput();
     }
 
+
+    void setFadeoutScalling(fixed32_c value) {
+        fadeoutScalling = value;
+    }
 
 
     ColorChannels getPeriods(const ColorChannels& values) {
@@ -125,12 +130,12 @@ namespace outputs {
 
     void writeOutput() {
         fixed32_c r, g, b;
-        hsvToRgb(hue, saturation, value, r, g, b);
+        hsvToRgb(hue, saturation, value * fadeoutScalling, r, g, b);
         ColorChannels filteredValues = {
             (fixed32_c)filters::outputRed(filters::globalOutput(r)) * scalling[0],
             (fixed32_c)filters::outputGreen(filters::globalOutput(g)) * scalling[1],
             (fixed32_c)filters::outputBlue(filters::globalOutput(b)) * scalling[2],
-            (fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3]
+            (fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3] * fadeoutScalling
         };
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));

@@ -7,7 +7,7 @@ namespace timer_mgr {
     
     hw_timer_t * timer = NULL;
     bool settingsInLock = false;
-
+    bool timerExecution = false;
 
     void setLock(bool lockState) {
         settingsInLock = lockState;
@@ -15,9 +15,15 @@ namespace timer_mgr {
 
 
     void ARDUINO_ISR_ATTR timerCheck60() {
-        if (settingsInLock) return;
-        knobs::checkTimer();
-        timer_shutdown::checkTimer();
+        if (settingsInLock || timerExecution) return;
+        timerExecution = true;
+        try {
+            knobs::checkTimer();
+            timer_shutdown::checkTimer();
+            timerExecution = false;
+        } catch (...) {
+            timerExecution = false;
+        }
     }
 
 
@@ -25,7 +31,7 @@ namespace timer_mgr {
         if (timer) return;
         timer = timerBegin(1000000);
         timerAttachInterrupt(timer, &timerCheck60);
-        timerAlarm(timer, 16667, true, 0);
+        timerAlarm(timer, 20000, true, 0);
     }
 
 }

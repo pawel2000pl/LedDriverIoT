@@ -9,7 +9,6 @@ namespace timer_shutdown {
     std::uint64_t shutdown_time = 0;
     std::uint64_t timeout_value = 21600000;
     std::uint64_t fade_out_time = 10000;
-    ColorChannels fading_out_initial_colors = {0, 0, 0, 0};
     bool fading_out = false;
     bool timer_shutdown_enabled = false;
 
@@ -26,6 +25,7 @@ namespace timer_shutdown {
     void resetTimer() {
         shutdown_time = millis() + timeout_value;
         fading_out = false;
+        outputs::setFadeoutScalling(1);
     }
 
 
@@ -37,30 +37,21 @@ namespace timer_shutdown {
         if (ctime > shutdown_time) {
             if (!fading_out) {
                 knobs::turnOff();
-                fading_out_initial_colors = outputs::getColor();
                 fading_out = true;
             }
             std::int64_t diff = ctime - shutdown_time;
             if (diff < fade_out_time) {
-                fixed64 fade_part = fixed64::fraction(fade_out_time - diff, fade_out_time);
-                fixed32_c fraction = fade_part * fade_part;
-                ColorChannels color;
-                color[0] = fading_out_initial_colors[0];
-                color[1] = fading_out_initial_colors[1];
-                color[2] = fading_out_initial_colors[2] * fraction;
-                color[3] = fading_out_initial_colors[3] * fraction;
-                outputs::setColor(color);
+                fixed64 fade_part = fixed64::fraction(fade_out_time - diff, fade_out_time);                
+                outputs::setFadeoutScalling(fade_part * fade_part);
                 outputs::writeOutput();
             } else if (diff < fade_out_time + 1000) {
-                ColorChannels color;
-                color[0] = fading_out_initial_colors[0];
-                color[1] = fading_out_initial_colors[1];
-                color[2] = 0;
-                color[3] = 0;
-                outputs::setColor(color);
+                outputs::setFadeoutScalling(0);
                 outputs::writeOutput();
             }
-        } else fading_out = false;
+        } else {
+            fading_out = false;
+            outputs::setFadeoutScalling(1);
+        } 
     }
 
 }
