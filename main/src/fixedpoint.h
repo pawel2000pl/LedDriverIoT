@@ -34,59 +34,334 @@
 #include <typeindex>
 #include <type_traits>
 
-template<typename T>
-struct make_fast_int {
-    using type = T;
-    static_assert(std::numeric_limits<T>::is_integer, "T must be an integer type.");
-};
-
-template<typename T>
-struct make_least_int {
-    using type = T;
-    static_assert(std::numeric_limits<T>::is_integer, "T must be an integer type.");
-};
-
-#define __MAKE_INT_MAPPING(N, PREFIX)                                \
-    template<>                                                       \
-    struct make_##PREFIX##_int<std::int##N##_t> {                    \
-        using type = std::int_##PREFIX##N##_t;                       \
-    };                                                               \
-    template<>                                                       \
-    struct make_##PREFIX##_int<std::uint##N##_t> {                   \
-        using type = std::uint_##PREFIX##N##_t;                      \
-    };
-
-#define __MAKE_INT_TRAITS(PREFIX) \
-    __MAKE_INT_MAPPING(8, PREFIX) \
-    __MAKE_INT_MAPPING(16, PREFIX) \
-    __MAKE_INT_MAPPING(32, PREFIX) \
-    __MAKE_INT_MAPPING(64, PREFIX)
-
-__MAKE_INT_TRAITS(fast)
-__MAKE_INT_TRAITS(least)
-
-#undef __MAKE_INT_TRAITS
-#undef __MAKE_INT_MAPPING
-
 
 // T - type for data storage
 // TC - type used for calculating products and quotients (best is double-sized T)
 // frac_bits - count of fraction bits (bits after point)
+template<typename T, typename TC, unsigned frac_bits> class fixedpoint;
 
-template<typename T, typename TC=typename make_fast_int<T>::type, unsigned frac_bits=sizeof(T)*4-1>
+
+namespace fixedpoint_helpers {
+
+    template<typename T>
+    struct make_fast_int {
+        using type = T;
+        static_assert(std::numeric_limits<T>::is_integer, "T must be an integer type.");
+    };
+
+    template<typename T>
+    struct make_least_int {
+        using type = T;
+        static_assert(std::numeric_limits<T>::is_integer, "T must be an integer type.");
+    };
+
+    #define __MAKE_INT_MAPPING(N, PREFIX)                                \
+        template<>                                                       \
+        struct make_##PREFIX##_int<std::int##N##_t> {                    \
+            using type = std::int_##PREFIX##N##_t;                       \
+        };                                                               \
+        template<>                                                       \
+        struct make_##PREFIX##_int<std::uint##N##_t> {                   \
+            using type = std::uint_##PREFIX##N##_t;                      \
+        };
+
+    #define __MAKE_INT_TRAITS(PREFIX) \
+        __MAKE_INT_MAPPING(8, PREFIX) \
+        __MAKE_INT_MAPPING(16, PREFIX) \
+        __MAKE_INT_MAPPING(32, PREFIX) \
+        __MAKE_INT_MAPPING(64, PREFIX)
+
+    __MAKE_INT_TRAITS(fast)
+    __MAKE_INT_TRAITS(least)
+
+    #undef __MAKE_INT_TRAITS
+    #undef __MAKE_INT_MAPPING
+
+    #ifndef FORCE_INLINE
+    #define FORCE_INLINE __attribute__((always_inline)) inline
+    #endif
+
+    template<typename U>
+    struct is_fixedpoint : std::false_type {};
+
+    template<typename T, typename TC, unsigned frac_bits>
+    struct is_fixedpoint<fixedpoint<T, TC, frac_bits>> : std::true_type {};
+
+    template<typename T, int default_accuracy>
+    struct static_accuracy {
+        private:
+            template<typename U> static constexpr typename std::enable_if<std::is_integral<U>::value, int>::type test(bool) {return 0;}
+            template<typename U> static constexpr typename std::enable_if<std::is_floating_point<U>::value, int>::type test(int) {return default_accuracy;}
+            template<typename U> static constexpr typename std::enable_if<is_fixedpoint<U>::value, int>::type test(long) {return U::fraction_bits;}
+        public:
+            static constexpr const int value = test<T>(0);
+    };
+
+
+    template<typename T, int value> FORCE_INLINE
+    static constexpr typename std::enable_if<value == 0, T>::type static_signed_shl(T x) noexcept {
+        return x;
+    }
+
+    template<typename T, int value> FORCE_INLINE
+    static constexpr typename std::enable_if<(value < 0), T>::type static_signed_shl(T x) noexcept {
+        return x >> (-value);
+    }
+
+    template<typename T, int value> FORCE_INLINE
+    static constexpr typename std::enable_if<(value > 0), T>::type static_signed_shl(T x) noexcept {
+        return x << value;
+    }
+
+
+    #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    using is_little_endian = std::integral_constant<bool, __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__>;
+    #else
+    using is_little_endian = std::integral_constant<bool, false>;
+    #endif
+
+    #if defined(__cplusplus) && __cplusplus == __ORDER_LITTLE_ENDIAN__
+    using cpp_version = std::integral_constant<long, __cplusplus / 100>;
+    #else
+    using cpp_version = std::integral_constant<long, 0>;
+    #endif
+
+    template<typename F, typename I>
+    struct Union2 {
+        constexpr Union2(F x) : data{.x{x}} {}
+        constexpr Union2(I i) : data{.i{i}} {}
+        union {F x; I i;} data;
+    };
+
+    #ifdef FIXED_POINT_IEEE754_ALWAYS_MULTIPLICATE
+    template<typename F, int expected_size>
+    struct ieee754_to_fraction_use_cheat : std::integral_constant<bool, false> {};
+    #else
+    template<typename F, int expected_size>
+    struct ieee754_to_fraction_use_cheat : std::integral_constant<bool, std::numeric_limits<F>::is_iec559 && sizeof(F) == expected_size && is_little_endian::value && (cpp_version::value > 11)> {};
+    #endif
+
+    template<typename R, typename F, unsigned expected_size, unsigned fraction, unsigned exponents, int accuracy, typename int_buf = typename std::conditional<fraction <= 32, std::uint32_t, std::uint64_t>::type>
+    static constexpr typename std::enable_if<ieee754_to_fraction_use_cheat<F, expected_size>::value, R>::type
+    buf_from_ieee754_generic(Union2<F, typename std::make_unsigned<int_buf>::type> input) noexcept {
+        using u_int_buf = typename std::make_unsigned<int_buf>::type;
+        using s_int_buf = typename std::make_signed<int_buf>::type;
+        using exp_mask = std::integral_constant<u_int_buf, (((u_int_buf)1 << exponents) - 1) << fraction>;
+        using exp_offset = std::integral_constant<s_int_buf, ((s_int_buf)1 << (exponents-1)) - 1 + fraction - accuracy>;
+        using frac_one = std::integral_constant<u_int_buf, ((u_int_buf)1 << fraction)>;
+        using frac_mask = std::integral_constant<u_int_buf, ((u_int_buf)1 << fraction) - 1>;
+        using sign_mask = std::integral_constant<u_int_buf, (u_int_buf)1 << (fraction+exponents)>;
+        s_int_buf exp_bits = (input.data.i & exp_mask::value) >> fraction;
+        u_int_buf y = (input.data.i & frac_mask::value) | (exp_bits ? frac_one::value : 0);
+        s_int_buf exp = exp_offset::value - exp_bits;
+        R z = (exp < 0) ? y << (-exp) : y >> (exp);
+        return (input.data.i & sign_mask::value) ? -z : z;
+    }
+
+    template<typename R, typename F, unsigned expected_size, unsigned fraction, unsigned exponents, int accuracy, typename int_buf = typename std::conditional<fraction <= 32, std::uint32_t, std::uint64_t>::type>
+    static constexpr typename std::enable_if<!ieee754_to_fraction_use_cheat<F, expected_size>::value, R>::type
+    buf_from_ieee754_generic(F x) noexcept {
+        return x * ((R)1 << accuracy);
+    }
+
+    template<typename R, int accuracy>
+    static constexpr R buf_from_ieee754(float x) noexcept {
+        return buf_from_ieee754_generic<R, float, 4, 23, 8, accuracy, std::uint32_t>(x);
+    }
+
+    template<typename R, int accuracy>
+    static constexpr R buf_from_ieee754(double x) noexcept {
+        return buf_from_ieee754_generic<R, double, 8, 52, 11, accuracy, std::uint64_t>(x);
+    }
+
+
+    template<typename T, typename RESULT_TYPE, int offset=0> FORCE_INLINE
+    static constexpr typename std::enable_if<std::is_floating_point<T>::value, RESULT_TYPE>::type
+    make_buf(T x) noexcept {
+        return buf_from_ieee754<RESULT_TYPE, offset>(x);
+    }
+
+
+    template<typename T, typename RESULT_TYPE, int offset=0> FORCE_INLINE
+    static constexpr typename std::enable_if<is_fixedpoint<T>::value, RESULT_TYPE>::type
+    make_buf(T x) noexcept {
+        return static_signed_shl<RESULT_TYPE, offset - (int)T::fraction_bits>(x.getBuf());
+    }
+
+
+    template<typename T, typename RESULT_TYPE, int offset=0> FORCE_INLINE
+    static constexpr typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value, RESULT_TYPE>::type
+    make_buf(T x) noexcept {
+        return static_signed_shl<RESULT_TYPE, offset>(x);
+    }
+
+    FORCE_INLINE
+    static constexpr int max(int a, int b) noexcept {
+        return (a > b) ? a : b;
+    }
+
+    FORCE_INLINE
+    static constexpr int min(int a, int b) noexcept {
+        return (a < b) ? a : b;
+    }
+
+    template<bool sign, typename U>
+    struct set_sign : std::conditional<sign, typename std::make_signed<U>::type, typename std::make_unsigned<U>::type> {};
+
+
+    using fixed_t = fixedpoint<std::make_signed<std::size_t>::type, fixedpoint_helpers::make_fast_int<typename std::make_signed<std::size_t>::type>::type, sizeof(std::size_t) * 4 - 1>;
+    using ufixed_t = fixedpoint<std::make_unsigned<std::size_t>::type, fixedpoint_helpers::make_fast_int<typename std::make_unsigned<std::size_t>::type>::type, sizeof(std::size_t) * 4 - 1>;
+
+    template<typename T, typename T2=void, typename DEFAULT_TYPE=fixed_t, typename std::enable_if<is_fixedpoint<DEFAULT_TYPE>::value, void>::type* = nullptr>
+    struct as_fixed : std::conditional<is_fixedpoint<T>::value, T, typename std::conditional<is_fixedpoint<T2>::value, T2, DEFAULT_TYPE>::type>::type {};
+
+    template<typename A, typename B>
+    struct result_type {
+        constexpr const static bool is_signed = std::is_signed<A>::value || std::is_signed<B>::value;
+        using a_fixed = as_fixed<A, B, fixed_t>;
+        using b_fixed = as_fixed<B, A, fixed_t>;
+        using larger_base_type = typename set_sign<is_signed, typename std::conditional<(sizeof(typename a_fixed::BUF_TYPE) > sizeof(typename b_fixed::BUF_TYPE)), typename a_fixed::BUF_TYPE, typename b_fixed::BUF_TYPE>::type>::type;
+        using larger_operational_type = typename set_sign<is_signed, typename std::conditional<(sizeof(typename a_fixed::CALCULATE_TYPE) > sizeof(typename b_fixed::CALCULATE_TYPE)), typename a_fixed::CALCULATE_TYPE, typename b_fixed::CALCULATE_TYPE>::type>::type;
+        using type = fixedpoint<larger_base_type, larger_operational_type, max(a_fixed::fraction_bits, b_fixed::fraction_bits)>;
+    };
+
+
+    template<typename BASE, typename ARG>
+    struct result_type_base {
+        constexpr const static bool is_signed = std::is_signed<BASE>::value || std::is_signed<ARG>::value;
+        using base_fixed = as_fixed<BASE, ARG, fixed_t>;
+        using arg_fixed = as_fixed<ARG, BASE, fixed_t>;
+        using larger_operational_type = typename set_sign<is_signed, typename std::conditional<(sizeof(typename base_fixed::CALCULATE_TYPE) > sizeof(typename arg_fixed::CALCULATE_TYPE)), typename base_fixed::CALCULATE_TYPE, typename arg_fixed::CALCULATE_TYPE>::type>::type;
+        using type = fixedpoint<typename base_fixed::BUF_TYPE, larger_operational_type, base_fixed::fraction_bits>;
+    };
+
+    template<typename T, T value, T ap, T bp>
+    struct value_splitter_a_floor {
+        constexpr const static T a_value = value * ap / (ap + bp);
+        constexpr const static T b_value = value - a_value;
+    };
+
+    template<typename T, T value, T ap, T bp>
+    struct value_splitter_b_floor {
+        using a_floor_inv = value_splitter_a_floor<T, value, bp, ap>;
+        constexpr const static T a_value = a_floor_inv::b_value;
+        constexpr const static T b_value = a_floor_inv::a_value;
+    };
+
+    template<typename T, T value, T ap, T bp>
+    struct value_splitter : std::conditional<((ap + bp) > (value * ap) % (ap + bp) * 2), value_splitter_a_floor<T, value, ap, bp>, value_splitter_b_floor<T, value, ap, bp>>::type {};
+
+
+    template<typename A, typename B, typename C = typename fixedpoint_helpers::result_type<A, B>::type, typename std::enable_if<is_fixedpoint<C>::value, void*>::type = nullptr>
+    struct fixed_operations {
+
+        template<typename U> FORCE_INLINE constexpr static typename C::BUF_TYPE make_c_buf(const U x) noexcept {
+            return make_buf<U, typename C::BUF_TYPE, C::fraction_bits>(x);
+        }
+
+        FORCE_INLINE
+        constexpr static C add(const A a, const B b) noexcept {
+            return C::buf_cast(make_c_buf<A>(a) + make_c_buf<B>(b));
+        }
+
+        FORCE_INLINE
+        constexpr static C sub(const A a, const B b) noexcept {
+            return C::buf_cast(make_c_buf<A>(a) - make_c_buf<B>(b));
+        }
+
+        #define FIXED_OPERATIONS_OPERATOR_MAKER(name, operator)            \
+        FORCE_INLINE                                                       \
+        constexpr static bool name(const A a, const B b) noexcept {        \
+            return make_c_buf<A>(a) operator make_c_buf<B>(b);             \
+        }
+
+        FIXED_OPERATIONS_OPERATOR_MAKER(eq, ==)
+        FIXED_OPERATIONS_OPERATOR_MAKER(neq, !=)
+        FIXED_OPERATIONS_OPERATOR_MAKER(lss, <)
+        FIXED_OPERATIONS_OPERATOR_MAKER(leq, <=)
+        FIXED_OPERATIONS_OPERATOR_MAKER(gtr, >)
+        FIXED_OPERATIONS_OPERATOR_MAKER(geq, >=)
+
+        #undef FIXED_OPERATIONS_OPERATOR_MAKER
+
+        constexpr const static int a_acc = static_accuracy<A, C::fraction_bits>::value;
+        constexpr const static int b_acc = static_accuracy<B, C::fraction_bits>::value;
+        constexpr const static int c_acc = C::fraction_bits;
+
+        constexpr const static int mul_raw_accuracy = a_acc + b_acc;
+        constexpr const static int mul_accuracy_decrease = mul_raw_accuracy - c_acc;
+        constexpr const static int mul_max_result_decrease = (sizeof(typename C::CALCULATE_TYPE) - sizeof(typename C::BUF_TYPE)) * 8;
+        constexpr const static int mul_c_decrease = min(mul_max_result_decrease, mul_accuracy_decrease);
+        constexpr const static int mul_ab_decrease = mul_accuracy_decrease - mul_c_decrease;
+        constexpr const static int mul_a_decrease = value_splitter<int, mul_ab_decrease, a_acc, b_acc>::a_value;
+        constexpr const static int mul_b_decrease = value_splitter<int, mul_ab_decrease, a_acc, b_acc>::b_value;
+
+        using multiple_operational_type = typename std::conditional<mul_accuracy_decrease == 0, typename C::BUF_TYPE, typename C::CALCULATE_TYPE>::type;
+
+        FORCE_INLINE
+        constexpr static C multiple(const A a, const B b) noexcept {
+            return C::buf_cast(static_signed_shl<multiple_operational_type, -mul_c_decrease>(make_buf<A, multiple_operational_type, a_acc - mul_a_decrease>(a) * make_buf<B, multiple_operational_type, b_acc - mul_b_decrease>(b)));
+        }
+
+
+        constexpr const static int div_raw_accuracy = a_acc - b_acc;
+        constexpr const static int div_accuracy_increase = c_acc - div_raw_accuracy;
+        constexpr const static int div_max_a_increase = max(0, ((int)sizeof(typename C::CALCULATE_TYPE) - (int)sizeof(typename as_fixed<C>::BUF_TYPE)) * 8);
+        constexpr const static int div_a_increase = min(max(div_max_a_increase, c_acc - a_acc), div_accuracy_increase);
+        constexpr const static int div_bc_change = div_accuracy_increase - div_a_increase;
+        constexpr const static int div_b_decrease = value_splitter_a_floor<int, div_bc_change, b_acc, c_acc>::a_value;
+        constexpr const static int div_c_increase = value_splitter_a_floor<int, div_bc_change, b_acc, c_acc>::b_value;
+
+        using division_operational_type = typename std::conditional<div_a_increase == 0 && div_c_increase == 0, typename C::BUF_TYPE, typename C::CALCULATE_TYPE>::type;
+
+        template<int B_DEC>
+        FORCE_INLINE constexpr static typename std::enable_if<B_DEC != 0, C>::type
+        __divide(const A a, const B b) noexcept {
+            typename C::BUF_TYPE divisor = make_buf<B, typename C::BUF_TYPE, b_acc - div_b_decrease>(b);
+            return (divisor) ?
+                C::buf_cast(static_signed_shl<division_operational_type, div_c_increase>(make_buf<A, division_operational_type, a_acc + div_a_increase>(a) / divisor)) :
+                ((a < 0) ? std::numeric_limits<C>::lowest() : std::numeric_limits<C>::max());
+        }
+
+        template<int B_DEC>
+        FORCE_INLINE constexpr static typename std::enable_if<B_DEC == 0, C>::type
+        __divide(const A a, const B b) noexcept {
+            return C::buf_cast(static_signed_shl<division_operational_type, div_c_increase>(make_buf<A, division_operational_type, a_acc + div_a_increase>(a) / make_buf<B, typename C::BUF_TYPE, b_acc - div_b_decrease>(b)));
+        }
+
+        FORCE_INLINE
+        constexpr static C divide(const A a, const B b) noexcept {
+            return __divide<div_b_decrease>(a, b);
+        }
+
+
+        FORCE_INLINE
+        constexpr static C modulo(const A a, const B b) noexcept {
+            return C::buf_cast(make_buf<A, typename C::BUF_TYPE, c_acc>(a) % make_buf<B, typename C::BUF_TYPE, c_acc>(b));
+        }
+
+    };
+
+
+}
+
+
+#define FIXED_POINT_BOOL_TEMPLATE template<typename B, typename std::enable_if<std::is_same<B, bool>::value, B>::type* = nullptr>
+#define FIXED_POINT_INTEGER_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value && !std::is_same<I, bool>::value, I>::type* = nullptr>
+#define FIXED_POINT_FLOAT_TEMPLATE template<typename FP, typename std::enable_if<std::is_floating_point<FP>::value, FP>::type* = nullptr>
+
+
+template<typename T, typename TC=typename fixedpoint_helpers::make_fast_int<T>::type, unsigned frac_bits=sizeof(T)*4-1>
 class fixedpoint {
 
     public:
 
-        #define FIXED_POINT_BOOL_TEMPLATE template<typename B, typename std::enable_if<std::is_same<B, bool>::value, B>::type* = nullptr>
-        #define FIXED_POINT_INTEGER_TEMPLATE template<typename I, typename std::enable_if<std::is_integral<I>::value && !std::is_same<I, bool>::value, I>::type* = nullptr>
-        #define FIXED_POINT_FLOAT_TEMPLATE template<typename FP, typename std::enable_if<std::is_floating_point<FP>::value, FP>::type* = nullptr>
+        using BUF_TYPE = T;
+        using CALCULATE_TYPE = TC;
+        constexpr static const unsigned fraction_bits = frac_bits;
 
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr fixedpoint(const I value) noexcept : buf((T)value << frac_bits) {}
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr fixedpoint(const FP value) noexcept : buf(value * ((T)1 << frac_bits)) {}
+        template<typename N, typename std::enable_if<std::is_floating_point<N>::value || fixedpoint_helpers::is_fixedpoint<N>::value || (std::is_integral<N>::value && !std::is_same<bool, N>::value), N>::type* = nullptr>
+        constexpr fixedpoint(const N value) noexcept : buf(fixedpoint_helpers::make_buf<N, T, frac_bits>(value)) {}
 
         constexpr fixedpoint() noexcept : buf(0) {}
 
@@ -104,328 +379,69 @@ class fixedpoint {
         constexpr fixedpoint(const fixedpoint<T2, TC2, frac_bits2>& another) noexcept
             : buf((frac_bits > frac_bits2) ? ((T)another.buf << (frac_bits - frac_bits2)) : (another.buf >> (frac_bits2 - frac_bits))) {}
 
-
-    private:
-
-        template<typename U, U a, U b>
-        struct static_min : std::conditional<(a < b), std::integral_constant<U, a>, std::integral_constant<U, b>>::type {};
-
-        using bits_shift_large_num = std::integral_constant<std::size_t, static_min<std::size_t, (sizeof(TC) - sizeof(T)) * 4, frac_bits>::value>;
-        using bits_shift_norm_element = std::integral_constant<std::size_t, ((frac_bits - bits_shift_large_num::value) >> 1)>;
-        using bits_shift_imp_element = std::integral_constant<std::size_t, frac_bits - bits_shift_large_num::value - bits_shift_norm_element::value>;
-
-        #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-        using is_little_endian = std::integral_constant<bool, __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__>;
-        #else
-        using is_little_endian = std::integral_constant<bool, false>;
-        #endif
-
-        template<typename F, typename I>
-        struct Union2 {
-            constexpr Union2(F x) : data{.x{x}} {}
-            constexpr Union2(I i) : data{.i{i}} {}
-            union {F x; I i;} data;
-        };
-
-        template<typename F, unsigned expected_size, unsigned fraction, unsigned exponents, typename int_buf = typename std::conditional<fraction <= 32, std::uint32_t, std::uint64_t>::type>
-        static constexpr typename std::enable_if<std::numeric_limits<F>::is_iec559 && sizeof(F) == expected_size && is_little_endian::value, T>::type
-        buf_from_ieee754_generic(Union2<F, typename std::make_unsigned<int_buf>::type> input) {
-            using u_int_buf = typename std::make_unsigned<int_buf>::type;
-            using s_int_buf = typename std::make_signed<int_buf>::type;
-            using exp_mask = std::integral_constant<u_int_buf, (((u_int_buf)1 << exponents) - 1) << fraction>;
-            using exp_offset = std::integral_constant<s_int_buf, ((s_int_buf)1 << (exponents-1)) - 1 + fraction - frac_bits>;
-            using frac_one = std::integral_constant<u_int_buf, ((u_int_buf)1 << fraction)>;
-            using frac_mask = std::integral_constant<u_int_buf, ((u_int_buf)1 << fraction) - 1>;
-            using sign_mask = std::integral_constant<u_int_buf, (u_int_buf)1 << (fraction+exponents)>;
-            s_int_buf exp_bits = (input.data.i & exp_mask::value) >> fraction;
-            u_int_buf y = (input.data.i & frac_mask::value) | (exp_bits ? frac_one::value : 0);
-            s_int_buf exp = exp_offset::value - exp_bits;
-            T z = (exp < 0) ? y << (-exp) : y >> (exp);
-            return (input.data.i & sign_mask::value) ? -z : z;
-        }
-
-        template<typename F, unsigned expected_size, unsigned fraction, unsigned exponents, typename int_buf = typename std::conditional<fraction <= 32, std::uint32_t, std::uint64_t>::type>
-        static constexpr typename std::enable_if<!(std::numeric_limits<F>::is_iec559 && sizeof(F) == expected_size && is_little_endian::value), T>::type
-        buf_from_ieee754_generic(F x) {
-            return x * ((T)1 << frac_bits);
-        }
-
-        static constexpr T buf_from_ieee754(float x) {
-            return buf_from_ieee754_generic<float, 4, 23, 8, std::uint32_t>(x);
-        }
-
-        static constexpr T buf_from_ieee754(double x) {
-            return buf_from_ieee754_generic<double, 8, 52, 11, std::uint64_t>(x);
-        }
-
-    public:
-
-        static constexpr fixedpoint from_ieee754(float x) {
-            return fixedpoint(buf_from_ieee754(x), true);
-        }
-
-        static constexpr fixedpoint from_ieee754(double x) {
-            return fixedpoint(buf_from_ieee754(x), true);
-        }
-
         static fixedpoint from_float(float x) {
-            return fixedpoint(buf_from_ieee754(x), true);
+            return fixedpoint(fixedpoint_helpers::buf_from_ieee754<BUF_TYPE, frac_bits>(x), true);
         }
 
         static fixedpoint from_double(double x) {
-            return fixedpoint(buf_from_ieee754(x), true);
+            return fixedpoint(fixedpoint_helpers::buf_from_ieee754<BUF_TYPE, frac_bits>(x), true);
         }
 
+        static fixedpoint from_ieee754(float x) {
+            return from_float(x);
+        }
+
+        static fixedpoint from_ieee754(double x) {
+            return from_double(x);
+        }
+
+        FIXED_POINT_FLOAT_TEMPLATE
+        static fixedpoint from_ieee754_stable(FP x) {
+            return fixedpoint(x * (1 << frac_bits), true);
+        }
+
+        static fixedpoint from_float_stable(float x) {
+            return from_ieee754_stable<float>(x);
+        }
+
+        static fixedpoint from_double_stable(double x) {
+            return from_ieee754_stable<double>(x);
+        }
+
+
+        FORCE_INLINE
         constexpr static fixedpoint buf_cast(const T buf) noexcept {
             return fixedpoint(buf, true);
         }
 
+        FORCE_INLINE
         constexpr static fixedpoint fraction(const T& counter, const T& denimonator) noexcept {
             return  fixedpoint((counter << frac_bits) / denimonator, true);
         }
 
-        constexpr friend fixedpoint operator+(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint(first.buf + second.buf, true);
-        }
 
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator+(const fixedpoint first, const I second) noexcept {
-            return fixedpoint(first.buf + ((T)second << frac_bits), true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator+(const I first, const fixedpoint second) noexcept {
-            return fixedpoint(((T)first << frac_bits) + second.buf, true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator+(const fixedpoint first, const FP second) noexcept {
-            return fixedpoint(first.buf + second * ((T)1 << frac_bits), true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator+(const FP first, const fixedpoint second) noexcept {
-            return fixedpoint(first * ((T)1 << frac_bits) + second.buf, true);
-        }
-
-        constexpr friend fixedpoint operator-(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint(first.buf - second.buf, true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator-(const fixedpoint first, const I second) noexcept  {
-            return fixedpoint(first.buf - ((T)second << frac_bits), true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator-(const I first, const fixedpoint second) noexcept {
-            return fixedpoint(((T)first << frac_bits) - second.buf, true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator-(const fixedpoint first, const FP second) noexcept {
-            return fixedpoint(first.buf - second * ((T)1 << frac_bits), true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator-(const FP first, const fixedpoint second) noexcept {
-            return fixedpoint(first * ((T)1 << frac_bits) - second.buf, true);
-        }
-
-        constexpr friend fixedpoint operator*(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint((((TC)first.buf >> bits_shift_imp_element::value) * ((TC)second.buf >> bits_shift_norm_element::value)) >> bits_shift_large_num::value, true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator*(const fixedpoint first, const I second) noexcept {
-            return fixedpoint(first.buf * (T)second, true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator*(const I first, const fixedpoint second) noexcept {
-            return fixedpoint((T)first * second.buf, true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator*(const fixedpoint first, const FP second) noexcept {
-            return fixedpoint(first.buf * second, true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator*(const FP first, const fixedpoint second) noexcept {
-            return fixedpoint(first * second.buf, true);
-        }
-
-        constexpr friend fixedpoint operator/(const fixedpoint first, const fixedpoint second) noexcept {
-            T divisor = second.buf >> bits_shift_norm_element::value;
-            return (divisor) ?
-                fixedpoint((((TC)first.buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((first.buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator/(const fixedpoint first, const I second) noexcept {
-            return fixedpoint(first.buf / (T)second, true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        constexpr friend fixedpoint operator/(const I first, const fixedpoint second) noexcept {
-            T divisor = second.buf >> bits_shift_norm_element::value;
-            return (divisor) ?
-                fixedpoint((((TC)first << (bits_shift_large_num::value + frac_bits)) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((first < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator/(const fixedpoint first, const FP second) noexcept {
-            TC divisor = (TC)(second * ((TC)1 << (frac_bits - bits_shift_norm_element::value)));
-            return (divisor) ?
-                fixedpoint((((TC)first.buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((first.buf < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator/(const FP first, const fixedpoint second) noexcept {
-            T divisor = second.buf >> bits_shift_norm_element::value;
-            return (divisor) ?
-                fixedpoint(((TC)(first * ((TC)1 << (bits_shift_large_num::value + frac_bits))) / (TC)divisor) << bits_shift_imp_element::value, true) :
-                ((first < 0) ? std::numeric_limits<fixedpoint>::lowest() : std::numeric_limits<fixedpoint>::max());
-
-        }
-
-        constexpr friend fixedpoint operator%(const fixedpoint first, const fixedpoint second) noexcept {
-            return fixedpoint(first.buf % second.buf, true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        friend fixedpoint operator%(const fixedpoint first, const I second) noexcept {
-            return fixedpoint(first.buf % ((T)second << frac_bits), true);
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        constexpr friend fixedpoint operator%(const fixedpoint first, const FP second) noexcept {
-            return fixedpoint(first.buf % (second * ((T)1 << frac_bits)), true);
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE FORCE_INLINE
         constexpr friend fixedpoint operator<<(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf << second, true);
         }
 
-        FIXED_POINT_INTEGER_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE FORCE_INLINE
         constexpr friend fixedpoint operator>>(const fixedpoint first, const I second) noexcept {
             return fixedpoint(first.buf >> second, true);
         }
 
-        #define FixedPointOperatorMaker(oper, type1, param1, type2, param2) \
-        FIXED_POINT_TEMPLATE_DECLARATION \
-        constexpr friend bool operator oper (const type1 first, const type2 second) noexcept { \
-            return (param1) oper (param2); \
-        }
-
-        #define FixedPointOperatorsMaker(type1, param1, type2, param2) \
-        FixedPointOperatorMaker(==, type1, param1, type2, param2) \
-        FixedPointOperatorMaker(!=, type1, param1, type2, param2) \
-        FixedPointOperatorMaker(<, type1, param1, type2, param2) \
-        FixedPointOperatorMaker(>, type1, param1, type2, param2) \
-        FixedPointOperatorMaker(<=, type1, param1, type2, param2) \
-        FixedPointOperatorMaker(>=, type1, param1, type2, param2)
-
-        #define FIXED_POINT_TEMPLATE_DECLARATION
-        FixedPointOperatorsMaker(fixedpoint, first.buf, fixedpoint, second.buf)
-        #undef FIXED_POINT_TEMPLATE_DECLARATION
-        #define FIXED_POINT_TEMPLATE_DECLARATION FIXED_POINT_INTEGER_TEMPLATE
-        FixedPointOperatorsMaker(fixedpoint, first.buf, I, (T)second << frac_bits)
-        FixedPointOperatorsMaker(I, (T)first << frac_bits, fixedpoint, second.buf)
-        #undef FIXED_POINT_TEMPLATE_DECLARATION
-        #define FIXED_POINT_TEMPLATE_DECLARATION FIXED_POINT_FLOAT_TEMPLATE
-        FixedPointOperatorsMaker(fixedpoint, first.buf, FP, second * ((T)1 << frac_bits))
-        FixedPointOperatorsMaker(FP, first * ((T)1 << frac_bits), fixedpoint, second.buf)
-        #undef FIXED_POINT_TEMPLATE_DECLARATION
-
-        #undef FixedPointOperatorsMaker
-        #undef FixedPointOperatorMaker
 
         fixedpoint& operator=(const fixedpoint&) = default;
 
         fixedpoint& operator=(fixedpoint&& other) = default;
 
-        void operator+=(const fixedpoint another) noexcept {
-            buf += another.buf;
-        }
 
-        FIXED_POINT_INTEGER_TEMPLATE
-        void operator+=(const I another) noexcept {
-            buf += (T)another << frac_bits;
-        }
-
-        void operator-=(const fixedpoint another) noexcept {
-            buf -= another.buf;
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        void operator-=(const I another) noexcept {
-            buf -= (T)another << frac_bits;
-        }
-
-        void operator*=(const fixedpoint another) noexcept {
-            buf = (((TC)buf >> bits_shift_imp_element::value) * ((TC)another.buf >> bits_shift_norm_element::value)) >> bits_shift_large_num::value;
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        void operator*=(const I another) {
-            buf *= (T)another;
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        void operator*=(const FP another) {
-            buf *= another;
-        }
-
-        void operator/=(const fixedpoint another) noexcept {
-            T divisor = another.buf >> bits_shift_norm_element::value;
-            buf = (divisor) ?
-                (((TC)buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value :
-                ((buf < 0) ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
-
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        void operator/=(const I another) noexcept {
-            buf /= (T)another;
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        void operator/=(const FP another) noexcept {
-            TC divisor = (TC)(another * ((TC)1 << (frac_bits - bits_shift_norm_element::value)));;
-            buf = (divisor) ?
-                (((TC)buf << bits_shift_large_num::value) / (TC)divisor) << bits_shift_imp_element::value :
-                ((buf < 0) ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max());
-
-        }
-
-        void operator%=(const fixedpoint another) noexcept {
-            buf %= another.buf;
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
-        void operator%=(const I another) noexcept {
-            buf %= (T)another;
-        }
-
-        FIXED_POINT_FLOAT_TEMPLATE
-        void operator%=(const FP another) noexcept {
-            buf %= another;
-        }
-
-        FIXED_POINT_INTEGER_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE FORCE_INLINE
         void operator<<=(const I another) noexcept {
             buf <<= another;
         }
 
-        FIXED_POINT_INTEGER_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE FORCE_INLINE
         void operator>>=(const I another) noexcept {
             buf >>= another;
         }
@@ -444,36 +460,42 @@ class fixedpoint {
             return (FP)buf * k;
         }
 
-        FIXED_POINT_INTEGER_TEMPLATE
+        FIXED_POINT_INTEGER_TEMPLATE FORCE_INLINE
         constexpr operator I() const noexcept {
             return buf >> frac_bits;
         }
 
-        FIXED_POINT_BOOL_TEMPLATE
+        FIXED_POINT_BOOL_TEMPLATE FORCE_INLINE
         constexpr operator B() noexcept {
             return (B)buf;
         }
 
+        FORCE_INLINE
         constexpr T getBuf() const noexcept {
             return buf;
         }
 
+        FORCE_INLINE
         constexpr bool isNeg() const noexcept {
             return buf < 0;
         }
 
+        FORCE_INLINE
         constexpr bool isPos() const noexcept {
             return buf > 0;
         }
 
+        FORCE_INLINE
         constexpr bool isZero() const noexcept {
             return buf == 0;
         }
 
+        FORCE_INLINE
         constexpr bool isNotZero() const noexcept {
             return buf != 0;
         }
 
+        FORCE_INLINE
         constexpr T getfrac() const noexcept {
             return buf & (((T)1 << frac_bits) - 1);
         }
@@ -621,15 +643,84 @@ class fixedpoint {
 
         constexpr fixedpoint(const T new_buf, bool) noexcept : buf(new_buf) {}
 
+        FORCE_INLINE
         static constexpr unsigned char num2chr(unsigned char num) noexcept {
             return (num <= 9) ? ('0' + num) : (('a' - 10) + num);
         }
 
+        FORCE_INLINE
         static constexpr unsigned char chr2num(unsigned char chr) noexcept {
             return (chr <= '9') ? (chr - '0') : (chr >= 'a') ? (chr - ('a' - 10)) : (chr - ('A' - 10));
         }
 
 };
+
+
+#define FIXED_POINT_OPERATOR_PREFIX \
+    template<typename A, typename B, typename std::enable_if<fixedpoint_helpers::is_fixedpoint<A>::value || fixedpoint_helpers::is_fixedpoint<B>::value, void*>::type = nullptr> \
+    FORCE_INLINE constexpr typename fixedpoint_helpers::result_type<A, B>::type
+
+FIXED_POINT_OPERATOR_PREFIX operator+(const A a, const B b) noexcept {
+    return fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type<A, B>::type>::add(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator-(const A a, const B b) noexcept {
+    return fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type<A, B>::type>::sub(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator*(const A a, const B b) noexcept {
+    return fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type<A, B>::type>::multiple(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator/(const A a, const B b) noexcept {
+    return fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type<A, B>::type>::divide(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator%(const A a, const B b) noexcept {
+    return fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type<A, B>::type>::modulo(a, b);
+}
+
+
+#define FIXED_POINT_OPERATOR_MAKER(oper, name)                                                                                                                                  \
+template<typename A, typename B, typename std::enable_if<fixedpoint_helpers::is_fixedpoint<A>::value || fixedpoint_helpers::is_fixedpoint<B>::value, void*>::type = nullptr>    \
+FORCE_INLINE constexpr bool operator oper(const A a, const B b) noexcept {                                                                                                      \
+    return fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type<A, B>::type>::name(a, b);                                                        \
+}
+
+FIXED_POINT_OPERATOR_MAKER(==, eq)
+FIXED_POINT_OPERATOR_MAKER(!=, neq)
+FIXED_POINT_OPERATOR_MAKER(<=, leq)
+FIXED_POINT_OPERATOR_MAKER(>=, geq)
+FIXED_POINT_OPERATOR_MAKER(<, lss)
+FIXED_POINT_OPERATOR_MAKER(>, gtr)
+#undef FIXED_POINT_OPERATOR_MAKER
+
+#undef FIXED_POINT_OPERATOR_PREFIX
+#define FIXED_POINT_OPERATOR_PREFIX \
+    template<typename A, typename B, typename std::enable_if<fixedpoint_helpers::is_fixedpoint<A>::value, void*>::type = nullptr> \
+    FORCE_INLINE constexpr void
+
+FIXED_POINT_OPERATOR_PREFIX operator+=(A& a, const B b) noexcept {
+    a = fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type_base<A, B>::type>::add(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator-=(A& a, const B b) noexcept {
+    a = fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type_base<A, B>::type>::sub(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator*=(A& a, const B b) noexcept {
+    a = fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type_base<A, B>::type>::multiple(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator/=(A& a, const B b) noexcept {
+    a = fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type_base<A, B>::type>::divide(a, b);
+}
+
+FIXED_POINT_OPERATOR_PREFIX operator%=(A& a, const B b) noexcept {
+    a = fixedpoint_helpers::fixed_operations<A, B, typename fixedpoint_helpers::result_type_base<A, B>::type>::modulo(a, b);
+}
+
+#undef FIXED_POINT_OPERATOR_PREFIX
 
 
 namespace std {
@@ -772,14 +863,14 @@ using ufixed32 = fixedpoint<std::uint32_t>;
 using ufixed64 = fixedpoint<std::uint64_t>;
 
 // accurate types - multiplication with larger int - if it is possible
-using fixed8_a = fixedpoint<std::int8_t, make_fast_int<std::int16_t>::type>;
-using fixed16_a = fixedpoint<std::int16_t, make_fast_int<std::int32_t>::type>;
-using fixed32_a = fixedpoint<std::int32_t, make_fast_int<std::int64_t>::type>;
+using fixed8_a = fixedpoint<std::int8_t, fixedpoint_helpers::make_fast_int<std::int16_t>::type>;
+using fixed16_a = fixedpoint<std::int16_t, fixedpoint_helpers::make_fast_int<std::int32_t>::type>;
+using fixed32_a = fixedpoint<std::int32_t, fixedpoint_helpers::make_fast_int<std::int64_t>::type>;
 using fixed64_a = fixed64;
 
-using ufixed8_a = fixedpoint<std::uint8_t, make_fast_int<std::uint16_t>::type>;
-using ufixed16_a = fixedpoint<std::uint16_t, make_fast_int<std::uint32_t>::type>;
-using ufixed32_a = fixedpoint<std::uint32_t, make_fast_int<std::uint64_t>::type>;
+using ufixed8_a = fixedpoint<std::uint8_t, fixedpoint_helpers::make_fast_int<std::uint16_t>::type>;
+using ufixed16_a = fixedpoint<std::uint16_t, fixedpoint_helpers::make_fast_int<std::uint32_t>::type>;
+using ufixed32_a = fixedpoint<std::uint32_t, fixedpoint_helpers::make_fast_int<std::uint64_t>::type>;
 using ufixed64_a = ufixed64;
 
 // simple types - multiplication with the same size of int
@@ -792,6 +883,10 @@ using ufixed8_s = fixedpoint<std::uint8_t, std::uint8_t>;
 using ufixed16_s = fixedpoint<std::uint16_t, std::uint16_t>;
 using ufixed32_s = fixedpoint<std::uint32_t, std::uint32_t>;
 using ufixed64_s = fixedpoint<std::uint64_t, std::uint64_t>;
+
+// other types
+using fixed_t = fixedpoint_helpers::fixed_t;
+using ufixed_t = fixedpoint_helpers::ufixed_t;
 
 
 #endif

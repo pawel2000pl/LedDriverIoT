@@ -175,7 +175,7 @@ namespace wifi {
         WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4);
         dnsServer.start();
         updateConnectionStats();
-        void configureMDNS();
+        configureMDNS();
     }
 
 

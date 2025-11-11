@@ -13,6 +13,7 @@ namespace taylor {
     std::size_t pochhammer_counters_size = 0;
     std::uint64_t pochhammer_counters[max_constant_tab_size];
 
+    std::size_t loop_counter = 0;
 
     void generate_gamma_tab() {
         gamma_tab_size = 0;
@@ -58,7 +59,7 @@ namespace taylor {
         return 1;
     }
 
-    
+
     bool constants_initilized = initialize_constants();
 
 
