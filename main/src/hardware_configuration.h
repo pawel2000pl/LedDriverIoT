@@ -45,8 +45,16 @@ namespace hardware {
 		std::vector<int> analogSelect;
 		int fanPinMain;
 		int fanPinAlt;
+
+		// when no multiplexer connect to FAN 
+		// to select alt reset and alt output
+		int altOutputsPin;
+
 		std::vector<int> outputs;
 		int resetPin;
+
+		std::vector<int> outputsAlt;
+		int resetPinAlt;
 		
 		bool multiplexerAvailable() const;
 		void setAnalog(int x) const;

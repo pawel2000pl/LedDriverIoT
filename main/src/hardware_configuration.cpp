@@ -17,9 +17,12 @@ namespace hardware {
 		.analogReadSecondary = {2, 3, 4},
 		.analogSelect = {6, 7, 21},
 		.fanPinMain = 4,
-		.fanPinAlt = 6,
+		.fanPinAlt = 21,
+		.altResetPin = 10,
 		.outputs = {20, 8, 9, 10},
-		.resetPin = 5
+		.resetPin = 5,
+		.outputsAlt = {5, 6, 7, 8},
+		.resetPinAlt = 9
 	};
 
 
@@ -83,19 +86,50 @@ namespace hardware {
 	}
 
 
+	bool pinsAreConnected(int a, int b) {
+		pinMode(a, INPUT_PULLUP);
+		pinMode(b, INPUT_PULLUP);
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+		bool v1a = !digitalRead(a);
+		bool v1b = !digitalRead(b);
+
+		pinMode(a, INPUT_PULLDOWN);
+		pinMode(b, INPUT_PULLDOWN);
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+		bool v2a = digitalRead(a);
+		bool v2b = digitalRead(b);
+
+		bool result = false;
+
+		if (v1a && v2a) { // if pin a has HZ
+			pinMode(a, OUTPUT);
+			digitalWrite(a, LOW);
+			delayMicroseconds(RELAXATION_PULL_DELAY);
+			result = digitalRead(b);
+		} else if (v1b && v2b) { // if pin b has HZ
+			pinMode(b, OUTPUT);
+			digitalWrite(b, LOW);
+			delayMicroseconds(RELAXATION_PULL_DELAY);
+			result = digitalRead(a);
+		}
+
+		pinMode(a, INPUT);
+		pinMode(b, INPUT);
+
+		return result;
+	}
+
+
+	bool pinsAreDisconnected(int a, int b) {
+		return !pinsAreConnected(a, b);
+	}
+
+
 	bool PinSets::multiplexerAvailable() const {
-		pinMode(analogSelect[0], INPUT_PULLUP);
-		pinMode(analogSelect[1], INPUT_PULLDOWN);
-		pinMode(analogSelect[2], OUTPUT);
-		digitalWrite(analogSelect[2], HIGH);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		int v1 = digitalRead(analogSelect[0]);
-		int v2 = digitalRead(analogSelect[1]);
-		digitalWrite(analogSelect[2], LOW);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		int v3 = !digitalRead(analogSelect[0]);
-		int v4 = !digitalRead(analogSelect[1]);
-		return !(v1 && v2 && v3 && v4);
+		return pinsAreDisconnected(analogSelect[0], analogSelect[1])
+			&& pinsAreDisconnected(analogSelect[1], analogSelect[2])
+			&& pinsAreDisconnected(analogSelect[0], analogSelect[2])
+			&& pinsAreDisconnected(altOutputsPin, analogSelect[2]);
 	}
 
 
@@ -182,14 +216,20 @@ namespace hardware {
 				pinMode(analogSelect[i], INPUT);
 		}
 
-		result.resetPin = resetPin;
+		if (pinsAreConnected(altOutputsPin, result.fanPin)) { // reset && outputs alt
+			result.resetPin = resetPinAlt;
+			for (unsigned i=0;i<4;i++)
+				result.outputs[i] = outputsAlt[i];
+		} else { // reset && outputs main
+			result.resetPin = resetPin;
+			for (unsigned i=0;i<4;i++)
+				result.outputs[i] = outputs[i];
+		}
+
 		pinMode(result.resetPin, INPUT_PULLUP);
 		pinMode(result.fanPin, OUTPUT);
 		digitalWrite(result.fanPin, LOW);
 		delayMicroseconds(RELAXATION_DELAY);
-
-		for (unsigned i=0;i<4;i++)
-			result.outputs[i] = outputs[i];
 
 		return result;
 	}
