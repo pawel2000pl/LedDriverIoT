@@ -1,4 +1,4 @@
-FROM debian:12
+FROM debian:12-slim
 
 RUN apt update
 RUN apt install -y curl git python3 python3-pip python3-serial
@@ -26,7 +26,7 @@ RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp `find /
 RUN ./validate_configuration
 RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
-RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -MMD -c" --output-dir /tmp/app-build ./main.ino 2>&1
+RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -MMD -felide-constructors -c" --output-dir /tmp/app-build ./main.ino 2>&1
 
 RUN mkdir -p /var/www/build
 RUN cp /tmp/app-build/main* /var/www/build/
