@@ -14,7 +14,7 @@ void initLedC(void) {
 		.timer_num        = LEDC_TIMER,
 		.freq_hz          = current_pwm_frequency,  
 		.clk_cfg          = LEDC_AUTO_CLK,
-		.deconfigure	  = false
+		// .deconfigure	  = false
 	};
 	// screw errors, it works fine
 	ledc_timer_config(&ledc_timer);
@@ -64,7 +64,7 @@ void setLedC(int gpio, unsigned channel, fixed64 value, fixed64 phase, bool inve
 		.timer_sel      = LEDC_TIMER,
 		.duty           = duty,
 		.hpoint         = hpoint,
-		.sleep_mode		= LEDC_SLEEP_MODE_KEEP_ALIVE,
+		// .sleep_mode		= LEDC_SLEEP_MODE_KEEP_ALIVE,
 		.flags          = { .output_invert = (invert ? 1u : 0u) }
 	};
 	ledc_channel_config(&ledc_channel);
