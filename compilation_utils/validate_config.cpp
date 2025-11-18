@@ -4,8 +4,8 @@
 
 #include "../main/src/validate_json.h"
 
-//BASE_PATH -> path to ArduinoJson library
-//g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp `find $BASE_PATH -type d -exec echo -I{} -L{} \;` && ./a.out
+//run from main project directory:
+//g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp -o validate_configuration
 
 #define JSON_CONFIG_BUF_SIZE (16*1024)
 

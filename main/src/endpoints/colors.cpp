@@ -3,7 +3,8 @@
 #include <list>
 #include <string>
 #include <Arduino.h>
-#include <ArduinoJson.h>
+
+#include "../lib/ArduinoJson/ArduinoJson.h"
 
 #include "../knobs.h"
 #include "../server.h"

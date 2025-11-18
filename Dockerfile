@@ -1,4 +1,4 @@
-FROM debian:12
+FROM debian:12-slim
 
 RUN apt update
 RUN apt install -y curl git python3 python3-pip python3-serial
@@ -10,8 +10,6 @@ RUN arduino-cli config add board_manager.additional_urls https://raw.githubuserc
 RUN arduino-cli core update-index
 RUN arduino-cli board listall
 RUN arduino-cli core install esp32:esp32
-RUN arduino-cli lib install ArduinoJson
-RUN git clone https://github.com/meshtastic/esp32_https_server /root/Arduino/libraries/esp32_https_server
 
 RUN mkdir -p /app
 COPY compilation_utils /app/compilation_utils
@@ -22,11 +20,11 @@ COPY License.txt /app/License.txt
 WORKDIR /app
 RUN python3 compilation_utils/validate_json.py /app/resources/default_config.json /app/resources/config.schema.json
 RUN python3 compilation_utils/compile_resources.py
-RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp `find /root/Arduino/libraries/ArduinoJson -type d -exec echo -I{} -L{} \;` -o validate_configuration
+RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp -o validate_configuration
 RUN ./validate_configuration
 RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
-RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -MMD -c" --output-dir /tmp/app-build ./main.ino 2>&1
+RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -felide-constructors -MMD -c" --output-dir /tmp/app-build ./main.ino 2>&1
 
 RUN mkdir -p /var/www/build
 RUN cp /tmp/app-build/main* /var/www/build/
