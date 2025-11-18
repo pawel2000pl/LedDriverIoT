@@ -3,15 +3,19 @@
 <html>
 
     <head>
-        <link rel="stylesheet" href="/styles.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="stylesheet" href="/styles.css" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8" />
     </head>
     
-    <body>
-        <p class="configure-button" onclick="window.location = '/config.html';">Configure</p>
-        
-        
-        <div id="color-knob" style="width: 100%;"></div>
+    <body></body>
+        <p class="upper-menu">
+            <button class="main-page-button link-button" link="/favorites.html">Favorites</button>
+            <button class="main-page-button link-button" link="/config.html">Configure</button>            
+        </p>
+        <div id="color-knob" class="hide-with-favorites"></div>
         
         <noscript>
             <p>
@@ -21,11 +25,13 @@
             </p>
         </noscript>
         
-        <script src="/knob.js"></script>
-        <script src="/conversions.js"></script>
-        <script src="/knobPanels.js"></script>
-        <script src="/config_fetcher.js"></script>
-        <script src="/main.js"></script>
+
+        <script src="/utils.js" defer></script>
+        <script src="/conversions.js" defer></script>
+        <script src="/knobPanels.js" defer></script>
+        <script src="/config_fetcher.js" defer></script>
+        <script src="/knob.js" defer></script>
+        <script src="/main.js" defer></script>
         
     </body>
 

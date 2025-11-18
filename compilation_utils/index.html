@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+        body {
+            background: #f7f7f4;
+            text-align: center;
+        }
+
+        table, tr, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+
+        table {
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        a {
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+        }
+
+        tr:nth-child(2n) {
+            background: white;
+        }
+
+        tr:nth-child(2n+1) {
+            background: #f0f5e9;
+        }
+
+        thead td {
+            background: #317c2b;
+            color: white;
+        }
+
+        #download-btn {
+            display: inline-block;
+            background: #0341fc;
+            padding: 10px;
+            color: white;
+            font-family: sans-serif;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: large;
+        }
+
+        #download-btn:hover {
+            background: #0037dc;
+        }
+
+        td {
+            padding: 5px;
+        }
+    </style>
+
+</head>
+
+</body>
+    <div>
+        <h1>Led driver</h1>
+        <h2>Software update</h2>
+
+        <a id="download-btn" href="/build/main.ino.bin">Download update</a>
+        <p>Current version: <span id="update-span"></span> [<span id="timestamp-span"></span>]</p>
+
+        <p>All downloads</p>
+        <table id="file-table">
+            <thead>
+                <tr>
+                    <td>File name</td>
+                    <td>Checksum</td>
+                    <td>Size</td>
+                </tr>
+            </thead>
+
+            <tbody id='file-table-body'>
+
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+
+        fetch('/build/version.json').then(async (response)=>{
+           document.getElementById('update-span').textContent = (await response.json()).version;
+        });
+        fetch('/build/timestamp.txt').then(async (response)=>{
+           document.getElementById('timestamp-span').textContent = (await response.text());
+        });
+        
+        function wrapInA(text, href) {
+            const a = document.createElement('a');
+            a.href = href;
+            a.textContent = text;
+            return a;
+        }
+
+        async function addFile(filename) {
+            const promise_md5 = fetch('/build/'+filename+'.md5');
+            const promise_size = fetch('/build/'+filename+'.size');
+            const response_md5 = await promise_md5;
+            const response_size = await promise_size;
+            const tr = document.createElement('tr');
+            const td_name = document.createElement('td');
+            const td_checksum = document.createElement('td');
+            const td_size = document.createElement('td');
+            td_name.appendChild(wrapInA(filename, '/build/'+filename));
+            td_checksum.appendChild(wrapInA(await response_md5.text(), '/build/'+filename+'.md5'));
+            td_size.appendChild(wrapInA((await response_size.text()) + 'kB', '/build/'+filename+'.size'));
+            tr.appendChild(td_name);
+            tr.appendChild(td_checksum);
+            tr.appendChild(td_size);
+            document.getElementById('file-table-body').appendChild(tr);
+        }
+
+        ['main.ino.bin', 'main.ino.bootloader.bin', 'main.ino.elf', 'main.ino.map', 'main.ino.partitions.bin', 'license.txt'].forEach(addFile);
+    </script>
+
+</body>
+
+</html>

@@ -10,15 +10,18 @@ const filterNames = [
     "LIN", "SQR", "SQRT", "EXP", "ASIN", "COS", "XSQR", "XSQRT", "XEXP"
 ];
 
+
 function normalizeFunction(fun, min=0, max=1) {
     const fmin = fun(min);
     const fmax = fun(max);
     return (x)=>(fun(x*(max-min)+min)-Math.min(fmax, fmin)) / Math.abs(fmax-fmin);
 }
 
+
 function symFunction(fun) {
     return (x) => 1-fun(1-x);
 }
+
 
 const filterFunctions = [
     x=>x,
@@ -29,9 +32,11 @@ const filterFunctions = [
     normalizeFunction(x=>Math.cos((x - 1) * Math.PI))
 ];
 
+
 filterFunctions.push(symFunction(filterFunctions[1]));
 filterFunctions.push(symFunction(filterFunctions[2]));
 filterFunctions.push(symFunction(filterFunctions[3]));
+
 
 function constrainFunction(fun, min_y=0, max_y=1) {
     return (x)=>{
@@ -39,6 +44,7 @@ function constrainFunction(fun, min_y=0, max_y=1) {
         return (y < min_y) ? min_y : (y > max_y) ? max_y : y;
     };
 }
+
 
 function mixFilterFunctions(filters) {
     let values = [];
@@ -50,7 +56,8 @@ function mixFilterFunctions(filters) {
         sum += values[i] * filterFunctions[i](x);
       return sum;
     }));
-};
+}
+
 
 function createInverseFunction(originalFunction) {
     const minus = originalFunction(0) > originalFunction(1);
@@ -78,7 +85,9 @@ const channelsInModes = {
     rgb: ["red", "green", "blue"],
 };
 
+
 var config = null;
+
 
 async function refreshConfig(defaults = false) {
     try {
@@ -90,12 +99,15 @@ async function refreshConfig(defaults = false) {
             const response = await fetch('/default_config.json');
             config = await response.json();
         }
+        return config;
     } catch {
         return alert('Error occured. Please refresh page or restart device.');
     }
 }
 
+
 var configPromise = refreshConfig();
+
 
 async function saveConfig() {
     try {

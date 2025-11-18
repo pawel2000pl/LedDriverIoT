@@ -4,16 +4,24 @@ function screenIsLandscape() {
     return screen.orientation.type.search("landscape") >= 0;
 }
 
-function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults = [0, 0, 0]) {
+
+function defaultResizeFunction(clientWidth, clientHeight) {
+    if (screenIsLandscape())
+        return clientWidth / 8 - 1;
+    return Math.max(clientWidth / 5 - 1, clientHeight / (config.hardware.enableWhiteKnob ? 10 : 8) - 1);
+}
+
+
+function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults=[0, 0, 0], resizeFunction=defaultResizeFunction) {
     
     const mainDiv = document.createElement('div'); 
     mainDiv.className = 'knob-div';
+    if (!visible) mainDiv.style.display = 'none';
     
     const knobs = [null, null, null];
 
     const resize = ()=>{
-        const clientWidth = parent.clientWidth;
-        const ray = screenIsLandscape() ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
+        const ray = resizeFunction(parent.clientWidth, parent.clientHeight);
         for (let i=0;i<3;i++)
             knobs[i].setSize(ray, ray / 4, ray / 3);
     };
@@ -53,25 +61,26 @@ function createTriColorPanel(parent, converter, ranges = [1, 1, 1], gradientPart
     }
     
     parent.appendChild(mainDiv);  
-    return {
+    const functions = {
         set: function(channels) {
             for (let i=0;i<3;i++)
                 knobs[i].value = channels[i];
         },
         get: ()=>knobs.map((knob)=>knob.value)
     };
+    mainDiv.state = functions;
+    return functions;
 }
 
 
-function createWhiteKnob(parent, visible=true, changeEvent=()=>{}) {     
+function createWhiteKnob(parent, visible=true, changeEvent=()=>{}, resizeFunction=defaultResizeFunction) {     
     const wDiv = document.createElement('div');
     if (!visible) wDiv.style.display = 'none';
     wDiv.className = 'knob-div';
     const whiteKnob = new Knob();
     whiteKnob.onChangeValue = changeEvent;
     const resize = ()=>{
-        const clientWidth = parent.clientWidth;
-        const ray = screenIsLandscape() ? (clientWidth / 8 - 1)  : (clientWidth / 5 - 1);
+        const ray = resizeFunction(parent.clientWidth, parent.clientHeight);
         whiteKnob.setSize(ray, ray / 4, ray / 3);
     };
     resize();
@@ -82,10 +91,12 @@ function createWhiteKnob(parent, visible=true, changeEvent=()=>{}) {
     wDiv.appendChild(whiteKnob);
     parent.appendChild(wDiv);     
 
-    return {
+    const functions = {
         set: (value)=>{
             whiteKnob.value = value;
         },
         get: ()=>whiteKnob.value
     };
+    wDiv.state = functions;
+    return functions;
 }

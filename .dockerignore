@@ -1,0 +1,15 @@
+*.so
+*__pycache__*
+.directory
+a.out
+main/src/resources.h
+main/src/resources.cpp
+compile_with_docker.sh
+*.bkp
+components
+build
+managed_components
+main.ino.bin
+doc/pinout-usage.csv
+doc/pinout-usage.md
+logs.txt

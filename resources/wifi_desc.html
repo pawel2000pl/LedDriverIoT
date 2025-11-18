@@ -1,4 +1,19 @@
 <p>
+    Hostname and MDNS
+</p>
+<p>
+    Hostname is used for finding this device on a device list in your router.
+    You can also use mDNS to discover the IP address of this driver. 
+    One example of an application that supports mDNS discovery is the "mDNS Discovery" app, available for Android.
+    Afetr installing the application, open it and search for "http" or "https" service type. 
+    Ensure that there is checked "TCP" below the search bar. 
+    That is everything that you need to find all led drivers available in the same network as your phone.
+    Once you see the driver in the list, long-press it to open the driver's web panel in your default browser.
+    If you do not see the led driver, ensure check if the driver is connected to the same network as your phone.
+    Some systems might also detect IP of the driver when you enter <i>hostname</i>.local into an address bar of a browser, 
+    f.e.: <a href="http://led-driver.local">led-driver.local</a>.
+</p>
+<p>
     The WiFi connection feature of your LED RGB controller operates on a prioritized list basis.
 </p>
 <ol>
@@ -13,7 +28,7 @@
     <li>
         Fallback Option: If none of the networks on the list are found, the device creates its own network (access
         point) with the specified name and password below the list. However, if the access point is disabled, it won't
-        create a new netwodk and will instead resume searching after a certain period.
+        create a new network and will instead resume searching after a certain period.
     </li>
     <li>
         Repetition of Algorithm: The device repeats this algorithm each time it fails to establish a connection with
@@ -36,6 +51,24 @@
     <li>
         SSID and Password: These fields allow users to define the name and password for the network that will be
         created. The password must consist of 8 to 63 characters or be left empty for an open network.
+    </li>
+    <li>
+        Captive portal: This functionality allows the device to display a custom login or welcome page when a user 
+        connects to its Wi-Fi network. When enabled, users are redirected to the device's 
+        main page upon connecting to the access point.
+    </li>
+    <li>
+        The channel selection feature allows you to specify which Wi-Fi channel the device should use for communication.
+        Wi-Fi networks operate on different channels within the 2.4 GHz band, and selecting the right channel can help
+        avoid interference from other nearby networks and devices, improving performance and reliability.
+        When manually selecting a channel, it's advisable to choose one of the non-overlapping channels: 1, 6, or 11.
+        These channels minimize interference with each other and are widely recommended for stable Wi-Fi communication
+        in crowded environments.
+        It is generally recommended to avoid channels between 2 and 5 or between 7 and 10, as these overlap with other
+        channels, leading to increased interference and degraded performance.
+        If you set the channel to 0, the device will automatically scan the environment and choose the least congested
+        channel from the set of channels 1, 6, or 11. This is useful in environments where the Wi-Fi spectrum is
+        crowded, and manually selecting a channel may be less effective.
     </li>
     <li>
         Address, Gateway, and Subnet: Address refers to the IPv4 address where the device's web panel can be accessed
@@ -78,47 +111,62 @@
     functionality.
 </p>
 <p>
-    Examples of Different IP Addresses with Corresponding Gateway and Subnet:
-<ol>
-    <li>
-        Example 1:
-        <ul>
-            <li>Address: 192.168.1.100</li>
-            <li>Gateway: 192.168.1.1</li>
-            <li>Subnet: 255.255.255.0</li>
-        </ul>
-    </li>
-    <li>
-        Example 2:
-        <ul>
-            <li>Address: 10.0.0.50</li>
-            <li>Gateway: 10.0.0.1</li>
-            <li>Subnet: 255.255.255.0</li>
-        </ul>
-    </li>
-    <li>
-        Example 3:
-        <ul>
-            <li>Address: 172.16.0.10</li>
-            <li>Gateway: 172.16.0.1</li>
-            <li>Subnet: 255.255.0.0</li>
-        </ul>
-    </li>
-    <li>
-        Example 4:
-        <ul>
-            <li>Address: 192.168.0.200</li>
-            <li>Gateway: 192.168.0.254</li>
-            <li>Subnet: 255.255.255.0</li>
-        </ul>
-    </li>
-    <li>
-        Example 5:
-        <ul>
-            <li>Address: 192.168.10.5</li>
-            <li>Gateway: 192.168.10.1</li>
-            <li>Subnet: 255.255.255.0</li>
-        </ul>
-    </li>
-</ol>
+    <span>Examples of Different IP Addresses with Corresponding Gateway and Subnet:</span>
+    <ol>
+        <li>
+            Example 1:
+            <ul>
+                <li>Address: 192.168.1.100</li>
+                <li>Gateway: 192.168.1.1</li>
+                <li>Subnet: 255.255.255.0</li>
+            </ul>
+        </li>
+        <li>
+            Example 2:
+            <ul>
+                <li>Address: 10.0.0.50</li>
+                <li>Gateway: 10.0.0.1</li>
+                <li>Subnet: 255.255.255.0</li>
+            </ul>
+        </li>
+        <li>
+            Example 3:
+            <ul>
+                <li>Address: 172.16.0.10</li>
+                <li>Gateway: 172.16.0.1</li>
+                <li>Subnet: 255.255.0.0</li>
+            </ul>
+        </li>
+        <li>
+            Example 4:
+            <ul>
+                <li>Address: 192.168.0.200</li>
+                <li>Gateway: 192.168.0.254</li>
+                <li>Subnet: 255.255.255.0</li>
+            </ul>
+        </li>
+        <li>
+            Example 5:
+            <ul>
+                <li>Address: 192.168.10.5</li>
+                <li>Gateway: 192.168.10.1</li>
+                <li>Subnet: 255.255.255.0</li>
+            </ul>
+        </li>
+    </ol>
+</p>
+<p>
+    Additional actions:
+    <ul>
+        <li>
+            Remove HTTPS certificate - removes self-signed certificate from the device.
+            The old one is used until next reboot when the new one is generated.
+        </li>
+        <li>
+            Run autoconnect pipeline - disconnects from the current network and executes the algorithm which is executed after reboot to connect to a network.
+        </li>
+        <li>
+            Restart device - restarts the device as it was disconnected from power and connected again.
+        </li>
+    </ul>
 </p>

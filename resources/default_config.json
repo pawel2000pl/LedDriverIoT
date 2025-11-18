@@ -3,21 +3,18 @@
         "hostname": "led-driver",
         "sta_priority": [
             {
-                "ssid": "router0",
-                "password": "password0",
-                "hidden": false
-            },
-            {
-                "ssid": "router1",
-                "password": "password1",
+                "ssid": "LedDriver",
+                "password": "ledDriver",
                 "hidden": false
             }
         ],
         "access_point": {
             "enabled": true,
             "hidden": false,
+            "captive": true,
             "ssid": "LedDriver",
-            "password": "passwordLed",
+            "password": "ledDriver",
+            "channel": 0,
             "address": "192.168.1.1",
             "gateway": "192.168.1.254",
             "subnet": "255.255.255.0"
@@ -25,7 +22,19 @@
     },
     "channels": {
         "webMode": "hsv",
-        "knobMode": "hsv"
+        "knobMode": "hsv",
+        "defaultColorEnabled": false,
+        "defaultColor": {
+            "hue": 0,
+            "saturation": 0,
+            "value": 0,
+            "white": 0
+        },
+        "autoShutdown": {
+            "enabled": false,
+            "timeout": 21600,
+            "fadeOutTime": 10
+        }
     },
     "filters": {
         "inputFilters": {
@@ -205,11 +214,22 @@
             "output 3": 3
         },
         "bias": {
-            "up": 0,
-            "down": 0.001
+            "up": 0.146,
+            "down": 0.002
         },
+        "scalling": {
+            "red": 1.0,
+            "green": 1.0,
+            "blue": 1.0,
+            "white": 1.0
+        },
+        "phaseMode": 2,
+        "frequency": 3800,
         "knobActivateDelta": 0.01,
-        "enbleWhiteKnob": true,
-        "invertOutputs": false
+        "gateLoadingTime": 0.55,
+        "enableColorKnob": true,
+        "enableWhiteKnob": false,
+        "invertOutputs": true,
+        "knobsNoisesReduction": 1.7
     }
 }

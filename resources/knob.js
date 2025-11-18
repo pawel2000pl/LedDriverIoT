@@ -17,6 +17,7 @@ const array2color = function(c) {
     return 'rgb('+c[0]+','+c[1]+','+c[2]+')';
 };
 
+
 class Knob extends HTMLElement {
         
     constructor(radius=128, knobRadius=20, width=32, angle=5) {
@@ -37,7 +38,6 @@ class Knob extends HTMLElement {
         this.__queues = {createMap: false, drawBackground: false, render: false};
         this.setSize(radius, knobRadius, width, angle);
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__queue(false, true, true);});    
-        //event
         this.onChangeValue = undefined;
         this.__queue(true, true, true);
     }
@@ -80,16 +80,16 @@ class Knob extends HTMLElement {
             this.onChangeValue(this.__value);
     }
     
-    __fraqFromPosition(x, y) {
+    __fracFromPosition(x, y) {
         const restAngle = 2*PI - this.__angle;
         const angleOffset = restAngle / 2;
         return (PI + atan2(x, -y)-angleOffset) / this.__angle;
     }
     
     __valueFromPosition(x, y) {
-        const fraq = this.__fraqFromPosition(x, y);
-        const cfraq = min(1, max(0, fraq));
-        return cfraq * (this.__maxValue - this.__minValue) + this.__minValue;
+        const frac = this.__fracFromPosition(x, y);
+        const cfrac = min(1, max(0, frac));
+        return cfrac * (this.__maxValue - this.__minValue) + this.__minValue;
     }
     
     
@@ -141,11 +141,11 @@ class Knob extends HTMLElement {
             for (let x = -this.__canvas.width/2; x < this.__canvas.width/2; x++) {
                 const cr = hypot(x, y);
                 if (cr >= rs1 && cr <= rs2) {
-                    const fraq = this.__fraqFromPosition(x, y);
-                    const toBorder = min(1, max(0, min(1 - fraq, fraq) * cr * this.__angle));
+                    const frac = this.__fracFromPosition(x, y);
+                    const toBorder = min(1, max(0, min(1 - frac, frac) * cr * this.__angle));
                     const alpha = toBorder * ((cr - rs1 < 1) ? (cr - rs1) : (rs2 - cr < 1) ? (rs2 - cr) : 1);                    
-                    if (fraq >= 0 && fraq <= 1) 
-                        map.push([4*i, alpha, fraq]);
+                    if (frac >= 0 && frac <= 1) 
+                        map.push([4*i, alpha, frac]);
                 }
                 i++;
             }
@@ -221,12 +221,12 @@ class Knob extends HTMLElement {
     }
     
     
-    getColor(fraq) {
+    getColor(frac) {
         if (! this.__gradient instanceof Array)
             this.__gradient = [this.__gradient];
         const count = this.__gradient.length;
-        const d = floor(fraq * (count-1)) % count;
-        const f = (fraq * (count-1) - d) % 1;
+        const d = floor(frac * (count-1)) % count;
+        const f = (frac * (count-1) - d) % 1;
         const nf = 1 - f;
         const d2 = (d + 1) % count;
         let result = [0,0,0];
@@ -255,6 +255,7 @@ class Knob extends HTMLElement {
         this.__queue(false, true, true);
     }
 
+
     get gradient() {
         return this.__gradient;
     }
@@ -281,20 +282,24 @@ class Knob extends HTMLElement {
         this.__queue(false, false, true);
     }
     
+
     get minValue() {
         return this.__minValue;
     }
+
     
     set maxValue(value) {
         this.__maxValue = value;
         this.__constrainValues();
         this.__queue(false, false, true);
     }
+    
 
     get maxValue() {
         return this.__maxValue;
     }
 
 };
+
 
 customElements.define('knob-input', Knob);

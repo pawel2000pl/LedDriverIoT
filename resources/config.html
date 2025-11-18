@@ -3,15 +3,19 @@
 <html>
 
     <head>
-        <link rel="stylesheet" href="/styles.css">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta charset="UTF-8">
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="stylesheet" href="/styles.css" />
+        <link name="manifest" href="manifest.json" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8" />
     </head>
     
     <body>
         
         <h1 class="name-header">Configuration</h1>
-        <p class="configure-button" onclick="window.location = '/index.html';">Main page</p>
+        <p class="upper-menu">
+            <button class="main-page-button link-button" link="/index.html">Main page</button>
+        </p>
         
         <div class="config-div">
         
@@ -27,6 +31,39 @@
                         <p class="prevent-select">
                             Select colorspace for knobs: 
                             <select id="knobs-mode-colorspace" class="colorspace-option"></select>
+                        </p>
+                        <p class="prevent-select">
+                            Default color: 
+                            <p>
+                                <input id="enable-default-color" type="checkbox">
+                                <label for="enable-default-color">Enable default color</label>
+                            </p>
+                            <p>
+                                <input id="default-color-hue" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-saturation" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-value" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-white" type="number" min="0" max="1" step="0.01">
+                            </p>
+                            <p>
+                                <button onclick="setDefaultsBlack()">Set black</button>
+                                <button onclick="setDefaultsCurrent()">Set current</button>
+                                <button onclick="setDefaultsWhite()">Set white</button>
+                            </p>
+                        </p>
+                        <p>
+                            Shutdown timeout:
+                            <p>
+                                <input id="enable-shutdown-timeout" type="checkbox">
+                                <label for="enable-shutdown-timeout">Enable shutdown timeout</label>
+                            </p>
+                            <p>
+                                <span>Shutdown timeout [hours:minutes:seconds]: </span>
+                                <input type="time" min="00:00:01" max="23:59:00" id="shutdown-timeout">
+                            </p>
+                            <p>
+                                <span>Fadeout-time [hours:minutes:seconds]: </span>
+                                <input type="time" min="00:00:00" max="02:00:00" id="fadeout-time">
+                            </p>
                         </p>
                         
                         <details class="info-div">
@@ -49,9 +86,11 @@
                         <p>Currently scanned networks</p>
                         <table id="networks-list"></table>
                         <p>
-                            <button onclick="refreshNetworks()">Refresh list</button>
-                            <p>Warning:&#32;led driver must disconnect from the current network to scan.</p>
-                        </p>
+                            <button onclick="getNetworks()">Refresh list</button>    
+                        </p> 
+                        <p>
+                            Warning: scanning (refreshing) networks might turn off access point for a while.
+                        </p>                       
                     </p>
                     <h3>Access point</h3>
                     <p> 
@@ -61,7 +100,9 @@
                         <p>
                             <div><span>SSID:</span><input id="ap-ssid"></div>
                             <div><span>Password:</span><input id="ap-password" type="password"></div>    
-                            <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>                        
+                            <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>
+                            <div><input id="ap-captive" type="checkbox"><label for="ap-captive">Enable captive portal</label></div>
+                            <div>Channel (set 0 for auto):<input id="ap-channel" type="number" min="0" max="13" value="1"></div>
                         </p>
                         <p>
                             <div><span>IP Address:</span><input id="ap-address"></div>
@@ -70,6 +111,12 @@
                         </p>
                     </p>
                     <button onclick="openAccessPoint()">Open access-point now</button>
+                    <h3>Additional actions</h3>
+                    <p>
+                        <button onclick="deleteCert()">Remove HTTPS certificate</button>
+                        <button onclick="reconnect()">Run autoconnect pipeline</button>
+                        <button onclick="restart()">Restart device</button>
+                    </p>
                     <details class="info-div">
                         <summary class="prevent-select">Description</summary>
                         <include-raw src="wifi_desc.html"></include-raw>
@@ -102,12 +149,82 @@
                         <input id="knob-activate-input" type="number" min="0.001" max="0.999" step="0.001" value="0">
                     </p>
                     <p>
+                        <span>Potentiometers noise reduction:</span>
+                        <input id="knob-noises-reduction" type="number" min="0.000" max="1000" step="0.1" value="0.105">
+                    </p>
+                    <h3>Output settings</h3>
+                    <p>
+                        <div>
+                            <span>Red scalling factor: </span>
+                            <input id="red-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                        </div>
+                        <div>
+                            <span>Green scalling factor: </span>
+                            <input id="green-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                        </div>
+                        <div>
+                            <span>Blue scalling factor: </span>
+                            <input id="blue-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                        </div>
+                        <div>
+                            <span>White scalling factor: </span>
+                            <input id="white-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                        </div>
+                        <p>
+                            <button onclick="getTailoredScalling()">Set current color as scalling factors</button>
+                        </p>
+                    </p>
+                    <p>
+                        <span>Output frequency:</span>
+                        <select id="frequency-selector" value="10">                            
+                            <option value="1000">1000Hz</option>
+                            <option value="1200">1200Hz</option>
+                            <option value="1400">1400Hz</option>
+                            <option value="1700">1700Hz</option>
+                            <option value="2100">2100Hz</option>
+                            <option value="2600">2600Hz</option>
+                            <option value="3100">3100Hz</option>
+                            <option value="3800">3800Hz</option>
+                            <option value="4600">4600Hz</option>
+                            <option value="5600">5600Hz</option>
+                            <option value="6800">6800Hz</option>
+                            <option value="8300">8300Hz</option>
+                            <option value="10000">10000Hz</option>
+                            <option value="12200">12200Hz</option>
+                            <option value="14800">14800Hz</option>
+                            <option value="17900">17900Hz</option>
+                            <option value="21800">21800Hz</option>
+                            <option value="26400">26400Hz</option>
+                            <option value="32000">32000Hz</option>
+                        </select>
+                    </p>
+                    <p>
+                        <span>Phase mode:</span>
+                        <select id="phase-mode" value="1">
+                            <option value="0">No phase control</option>
+                            <option value="1">Smooth color (align signals to middle)</option>
+                            <option value="2">Eco mode (split signals)</option>
+                            <option value="3">Eco mode with white channel</option>
+                        </select>
+                    </p>
+                    <p>
+                        <span>Gate loading time [us]:</span>
+                        <input id="gate-loading-time" type="number" min="0.000" max="32" step="0.1" value="0.55">
+                    </p>
+                    <p>
+                        <input id="activate-color-knob" type="checkbox">
+                        <label for="activate-color-knob">Enable color channels</label>
+                        <br>
                         <input id="activate-white-knob" type="checkbox">
                         <label for="activate-white-knob">Enable white channel</label>
                         <br>
                         <input id="invert-outputs" type="checkbox">
                         <label for="invert-outputs">Invert outputs</label>
                     </p>
+                    <details class="info-div">
+                        <summary class="prevent-select">Description</summary>
+                        <include-raw src="hardware_desc.html"></include-raw>
+                    </details>
                 </div>
             </details>
 
@@ -118,34 +235,62 @@
                     
                     <div>
                         <div id="filters-div">
-                            <h3>Input hue filter&#32;(for HSV and HSL)</h3>
-                            <filterselector id="input-hue"></filterselector>   
-                            <h3>Input saturation filter&#32;(for HSV and HSL)</h3>
-                            <filterselector id="input-saturation"></filterselector>
-                            <h3>Input value filter&#32;(for HSV)</h3>
-                            <filterselector id="input-value"></filterselector>
-                            <h3>Input lightness filter&#32;(for HSL)</h3>
-                            <filterselector id="input-lightness"></filterselector>
-                            <h3>Input red filter&#32;(for RGB)</h3>
-                            <filterselector id="input-red"></filterselector>
-                            <h3>Input green filter&#32;(for RGB)</h3>
-                            <filterselector id="input-green"></filterselector>
-                            <h3>Input blue filter&#32;(for RGB)</h3>
-                            <filterselector id="input-blue"></filterselector>
-                            <h3>Input white filter&#32;(additional channel)</h3>
-                            <filterselector id="input-white"></filterselector>
-                            <h3>Input common filter&#32;(for/after all above)</h3>
-                            <filterselector id="input-common-filter"></filterselector>
-                            <h3>Output common filter&#32;(for/before all below)</h3>
-                            <filterselector id="output-common-filter"></filterselector>
-                            <h3>Output red filter</h3>
-                            <filterselector id="output-red"></filterselector>
-                            <h3>Output green filter</h3>
-                            <filterselector id="output-green"></filterselector>
-                            <h3>Output blue filter</h3>
-                            <filterselector id="output-blue"></filterselector>
-                            <h3>Output white filter&#32;(additional channel)</h3>
-                            <filterselector id="output-white"></filterselector>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input hue filter&#32;(for HSV and HSL)</summary>
+                                <filterselector id="input-hue"></filterselector>
+                            </details>   
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input saturation filter&#32;(for HSV and HSL)</summary>
+                                <filterselector id="input-saturation"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input value filter&#32;(for HSV)</summary>
+                                <filterselector id="input-value"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input lightness filter&#32;(for HSL)</summary>
+                                <filterselector id="input-lightness"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input red filter&#32;(for RGB)</summary>
+                                <filterselector id="input-red"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input green filter&#32;(for RGB)</summary>
+                                <filterselector id="input-green"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input blue filter&#32;(for RGB)</summary>
+                                <filterselector id="input-blue"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input white filter&#32;(additional channel)</summary>
+                                <filterselector id="input-white"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Input common filter&#32;(for/after all above)</summary>
+                                <filterselector id="input-common-filter"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Output common filter&#32;(for/before all below)</summary>
+                                <filterselector id="output-common-filter"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Output red filter</summary>
+                                <filterselector id="output-red"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Output green filter</summary>
+                                <filterselector id="output-green"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Output blue filter</summary>
+                                <filterselector id="output-blue"></filterselector>
+                            </details>
+                            <details class="menu-details">
+                                <summary class="menu-summary prevent-select">Output white filter&#32;(additional channel)</summary>
+                                <filterselector id="output-white"></filterselector>
+                            </details>
                         </div>
 
                         <details class="info-div">
@@ -201,12 +346,22 @@
             <details class="menu-details">
                 <summary class="menu-summary prevent-select">Update</summary>
                 <div class="details-div">
-                    <p id="version-p"></p>
-                    <form method="POST" action="#" enctype="multipart/form-data" id="update-form">
-                        <input type="file" name="update">
-                        <input id="update-btn" type="submit" value="Update">
-                    </form>                    
-                    <div id="prg"></div>
+                    <p>
+                        <span id="version-span"></span>
+                        <br>
+                        <span id="hardware-span"></span>
+                        <br>
+                        <span id="resources-span"></span>
+                    </p>                    
+                    <p>
+                        <input id="update-file" type="file" name="update">
+                        <input id="update-btn" type="button" value="Update">
+                    </p>                    
+                    <p>
+                        If some web panel's features do not work after upgrading, it may be required to clear cache of your browser manually. 
+                        <br>
+                        <a href="/invalidate_cache">Click here to clear all stored data and upgrade cache.</a> 
+                    </p>
                 </div>
             </details>
              
@@ -223,21 +378,18 @@
 
         </div>
 
-        <script>
-            const $id = (id)=>document.getElementById(id);
-            const $new = (...args)=>document.createElement(...args);
-        </script>
+        <script src="/utils.js" defer></script>
+        <script src="/conversions.js" defer></script>
+        <script src="/chart.js" defer></script>
+        <script src="/component_list.js" defer></script>
         
-        <script src="/conversions.js"></script>
-        <script src="/chart.js"></script>
-        
-        <script src="/config_fetcher.js"></script>
-        <script src="/filter_selector.js"></script>
+        <script src="/config_fetcher.js" defer></script>
+        <script src="/filter_selector.js" defer></script>
 
-        <script src="include_raw.js"></script>
-        <script src="/config.js"></script>
-        <script src="config_components.js"></script>
-        <script src="update.js"></script>
+        <script src="/include_raw.js" defer></script>
+        <script src="/config.js" defer></script>
+        <script src="/config_components.js" defer></script>
+        <script src="/update.js" defer></script>
         
         
     </body>

@@ -34,13 +34,18 @@
                     "hidden": "boolean",
                     "ssid": "wifi-ssid",
                     "password": "ap-password",
+                    "captive": "boolean",
+                    "channel": {
+                        "type": "integer",
+                        "min_value": 0,
+                        "max_value": 13
+                    },
                     "address": "ip-address",
                     "gateway": "ip-address",
                     "subnet": "ip-address"
                 }
             }
         }
-
     },
     "wifi-ssid": { 
         "type": "string",
@@ -48,7 +53,7 @@
     },
     "wifi-password": {
         "type": "string",
-        "regexp": ".{0,63}"
+        "regexp": "^(.{8,63})?$"
     },
     "wifi-entry": {
         "type": "object",
@@ -63,8 +68,14 @@
         "regexp": "^(.{8,63})?$"
     },
     "channels-settings": {
-        "webMode": "channel-setting",
-        "knobMode": "channel-setting"
+        "type": "object",
+        "fields": {
+            "webMode": "channel-setting",
+            "knobMode": "channel-setting",
+            "defaultColorEnabled": "bool",
+            "defaultColor": "hsvw-color",
+            "autoShutdown": "auto-shutdown-settings"
+        }
     },
     "channel-setting": {
         "type": "string",
@@ -155,23 +166,71 @@
                     "down": "fraction"
                 }
             },
+            "scalling": {
+                "type": "object",
+                "fields": {
+                    "red": "fraction",
+                    "green": "fraction",
+                    "blue": "fraction",
+                    "white": "fraction"
+                }
+            },
+            "frequency": {
+                "type": "integer",
+                "min_value": 1000,
+                "max_value": 32000
+            },
+            "phaseMode": "integer",
             "knobActivateDelta": "fraction",
-            "enbleWhiteKnob": "boolean",
-            "invertOutputs": "boolean"
-        }
-    },
-    "color-values": {
-        "type": "object",
-        "fields": {
-            "red": "fraction",
-            "green": "fraction",
-            "blue": "fraction",
-            "white": "fraction"
+            "enableColorKnob": "boolean",
+            "enableWhiteKnob": "boolean",
+            "invertOutputs": "boolean",
+            "knobsNoisesReduction": {
+                "type": "float",
+                "min_value": 0,
+                "max_value": 1000
+            },
+            "gateLoadingTime": {
+                "type": "float",
+                "min_value": 0,
+                "max_value": 32
+            }
         }
     },
     "color-channels": {
         "type": "array",
         "length": 4,
         "item": "fraction"
+    },
+    "favorite-color": {
+        "type": "string",
+        "regexp": "^[01][0-9A-F]{8}$"
+    },
+    "favorites-list": {
+        "type": "array",
+        "max_length": 64,
+        "item": "favorite-color"
+    },
+    "hsvw-color": {
+        "hue": "fraction",
+        "saturation": "fraction",
+        "value": "fraction",
+        "white": "fraction"
+    },
+    "auto-shutdown-settings": {
+        "type": "object",
+        "fields": {
+            "enabled": "bool",
+            "timeout": {
+                "type": "integer",
+                "min_value": 1,
+                "max_value": 31536000
+            },
+            "fadeOutTime": {
+                "type": "integer",
+                "min_value": 0,
+                "max_value": 7200
+            }
+        }
     }
 }

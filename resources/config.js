@@ -1,5 +1,28 @@
 "use strict";
 
+
+function time2sec(time_str) {
+    const parts = time_str.split(':');
+    return Number(parts[2]) + Number(parts[1]) * 60 + Number(parts[0]) * 3600;
+}
+
+
+function to_digits(num, digits=2) {
+    let s = num.toString();
+    while (s.length < digits)
+        s = '0' + s;
+    return s;
+}
+
+
+function sec2time(time_as_seconds) {
+    const hours = Math.floor(time_as_seconds / 3600);
+    const minutes = Math.floor(time_as_seconds % 3600 / 60);
+    const seconds = Math.floor(time_as_seconds % 60);
+    return to_digits(hours) + ':' + to_digits(minutes) + ':' + to_digits(seconds);
+}
+
+
 function dumpConfig() {
     return {
         "wifi": {
@@ -10,6 +33,8 @@ function dumpConfig() {
                 "ssid": $id('ap-ssid').value,
                 "password": $id('ap-password').value,
                 "hidden": $id('ap-hidden').checked,
+                "captive": $id('ap-captive').checked,
+                "channel": Number($id('ap-channel').value),
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
                 "subnet": $id('ap-subnet').value
@@ -17,7 +42,19 @@ function dumpConfig() {
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
-            "knobMode": $id('knobs-mode-colorspace').value
+            "knobMode": $id('knobs-mode-colorspace').value,
+            "defaultColorEnabled": $id('enable-default-color').checked,
+            "defaultColor": {
+                "hue": Number($id('default-color-hue').value),
+                "saturation": Number($id('default-color-saturation').value),
+                "value": Number($id('default-color-value').value),
+                "white": Number($id('default-color-white').value)
+            },
+            "autoShutdown": {
+                "enabled": $id('enable-shutdown-timeout').checked,
+                "timeout": time2sec($id('shutdown-timeout').value),
+                "fadeOutTime": time2sec($id('fadeout-time').value)
+            }
         },
         "filters": {
             "inputFilters": {
@@ -43,11 +80,22 @@ function dumpConfig() {
             "potentionemterConfiguration": $id('input-table').getValues(),
             "transistorConfiguration": $id('output-table').getValues(),
             "bias": {
-                "up": Number($id('low-bias-input').value),
-                "down": Number($id('high-bias-input').value)
+                "down": Number($id('low-bias-input').value),
+                "up": Number($id('high-bias-input').value)
             },
+            "scalling": {
+                "red": Number($id('red-scalling-factor').value),
+                "green": Number($id('green-scalling-factor').value),
+                "blue": Number($id('blue-scalling-factor').value),
+                "white": Number($id('white-scalling-factor').value)
+            },
+            "phaseMode": Number($id('phase-mode').value),
             "knobActivateDelta": Number($id('knob-activate-input').value),
-            "enbleWhiteKnob": $id('activate-white-knob').checked,
+            "knobsNoisesReduction": Number($id('knob-noises-reduction').value),
+            "gateLoadingTime": Number($id('gate-loading-time').value),
+            "frequency": Number($id('frequency-selector').value),
+            "enableColorKnob": $id('activate-color-knob').checked,
+            "enableWhiteKnob": $id('activate-white-knob').checked,
             "invertOutputs": $id('invert-outputs').checked
         }
     };
@@ -61,12 +109,22 @@ function fillConfig(config) {
     $id('ap-ssid').value = config.wifi.access_point.ssid;
     $id('ap-password').value = config.wifi.access_point.password;
     $id('ap-hidden').checked = config.wifi.access_point.hidden;
+    $id('ap-captive').checked = config.wifi.access_point.captive;
+    $id('ap-channel').value = config.wifi.access_point.channel;
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;
     $id('ap-subnet').value = config.wifi.access_point.subnet;
 
     $id('web-mode-colorspace').value = config.channels.webMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
+    $id('enable-default-color').checked = config.channels.defaultColorEnabled;
+    $id('default-color-hue').value = config.channels.defaultColor.hue;
+    $id('default-color-saturation').value = config.channels.defaultColor.saturation;
+    $id('default-color-value').value = config.channels.defaultColor.value;
+    $id('default-color-white').value = config.channels.defaultColor.white;
+    $id('enable-shutdown-timeout').checked = config.channels.autoShutdown.enabled;
+    $id('shutdown-timeout').value = sec2time(config.channels.autoShutdown.timeout);
+    $id('fadeout-time').value = sec2time(config.channels.autoShutdown.fadeOutTime);
 
     $id('input-hue').setValues(config.filters.inputFilters.hue);
     $id('input-saturation').setValues(config.filters.inputFilters.saturation);
@@ -86,24 +144,35 @@ function fillConfig(config) {
     $id('input-table').setValues(config.hardware.potentionemterConfiguration);
     $id('output-table').setValues(config.hardware.transistorConfiguration);
 
-    $id('low-bias-input').value = config.hardware.bias.up;
-    $id('high-bias-input').value = config.hardware.bias.down;
+    $id('low-bias-input').value = config.hardware.bias.down;
+    $id('high-bias-input').value = config.hardware.bias.up;
 
+    $id('red-scalling-factor').value = config.hardware.scalling.red;
+    $id('green-scalling-factor').value = config.hardware.scalling.green;
+    $id('blue-scalling-factor').value = config.hardware.scalling.blue;
+    $id('white-scalling-factor').value = config.hardware.scalling.white;
+
+    $id('phase-mode').value = config.hardware.phaseMode;
     $id('knob-activate-input').value = config.hardware.knobActivateDelta;
-    $id('activate-white-knob').checked = config.hardware.enbleWhiteKnob;
+    $id('knob-noises-reduction').value = config.hardware.knobsNoisesReduction;
+    $id('gate-loading-time').value = config.hardware.gateLoadingTime;
+    $id('frequency-selector').value = config.hardware.frequency;
+    $id('activate-color-knob').checked = config.hardware.enableColorKnob;
+    $id('activate-white-knob').checked = config.hardware.enableWhiteKnob;
     $id('invert-outputs').checked = config.hardware.invertOutputs;
 }
 
-$id('save-settings-btn').onclick = ()=>{config = dumpConfig(); saveConfig();};
-$id('revert-settings-btn').onclick = ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));};
-$id('default-settings-btn').onclick = async ()=>{
+
+$id('save-settings-btn').addEventListener('click', async ()=>{ await configPromise; config = dumpConfig(); saveConfig(); });
+$id('revert-settings-btn').addEventListener('click', async ()=>{ configPromise = refreshConfig(); await configPromise; fillConfig(config); });
+$id('default-settings-btn').addEventListener('click', async ()=>{
     if (confirm("All settings "+"(wifi credentials, filters, etc)"+" will be reverted to default values."+" "+"Are you sure you want to continue?")) {
         await refreshConfig(true);
         await saveConfig();
     }
-};
-$id('export-settings-btn').onclick = exportConfigToJSON;
-$id('import-settings-btn').onclick = async ()=>{
+});
+$id('export-settings-btn').addEventListener('click', exportConfigToJSON);
+$id('import-settings-btn').addEventListener('click', async ()=>{
     try {
         const newConfig = await importConfigFromFile();
         if (newConfig === null) return;
@@ -114,12 +183,68 @@ $id('import-settings-btn').onclick = async ()=>{
         fillConfig(config);
         alert('Error ocurred.'+' Invalid configuration file.');
     }
-};
+});
+
 
 function refreshNetworks() {
-    fetch('/refresh_networks');
+    return fetch('/refresh_networks');
 }
+
 
 function openAccessPoint() {
     fetch('/open_access_point');
 }
+
+
+function reconnect() {
+    fetch('/reconnect');
+}
+
+
+function deleteCert() {
+    fetch('/delete_cert');
+}
+
+
+function restart() {
+    fetch('/restart');
+}
+
+
+async function getTailoredScalling() {
+    const response = await fetch('/get_tailored_scalling');
+    const data = await response.json();
+    $id('red-scalling-factor').value = data[0];
+    $id('green-scalling-factor').value = data[1];
+    $id('blue-scalling-factor').value = data[2];
+    $id('white-scalling-factor').value = data[3];
+}
+
+
+function setDefaultsBlack() {
+    $id('default-color-hue').value = 0;
+    $id('default-color-saturation').value = 0;
+    $id('default-color-value').value = 0;
+    $id('default-color-white').value = 0;
+}
+
+
+function setDefaultsWhite() {
+    $id('default-color-hue').value = 0;
+    $id('default-color-saturation').value = 0;
+    $id('default-color-value').value = 1;
+    $id('default-color-white').value = 1;
+}
+
+
+async function setDefaultsCurrent() {
+    const response = await fetch('/color.json?colorspace=hsv');
+    const data = await response.json();
+    $id('default-color-hue').value = data[0];
+    $id('default-color-saturation').value = data[1];
+    $id('default-color-value').value = data[2];
+    $id('default-color-white').value = data[3];
+}
+
+
+updateClientApp();
