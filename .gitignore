@@ -9,6 +9,9 @@ components
 build
 managed_components
 main.ino.bin
+iot-led-driver.bin
 doc/pinout-usage.csv
 doc/pinout-usage.md
 logs.txt
+logs.old
+dependencies.lock

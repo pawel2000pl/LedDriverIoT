@@ -6,32 +6,40 @@
 namespace timer_mgr {
     
     hw_timer_t * timer = NULL;
-    bool settingsInLock = false;
-    bool timerExecution = false;
+    volatile bool settingsInLock = false;
+    volatile bool timerExecution = false;
+    TaskHandle_t taskHandle = NULL;
+
 
     void setLock(bool lockState) {
         settingsInLock = lockState;
     }
 
 
-    void ARDUINO_ISR_ATTR timerCheck60() {
-        if (settingsInLock || timerExecution) return;
-        timerExecution = true;
-        try {
-            knobs::checkTimer();
-            timer_shutdown::checkTimer();
-            timerExecution = false;
-        } catch (...) {
-            timerExecution = false;
+    void timerCheck60(void*) {
+        while (1) {
+            if (!(settingsInLock || timerExecution)) {
+                timerExecution = true;
+                knobs::checkTimer();
+                timer_shutdown::checkTimer();
+                timerExecution = false;
+            }
+            vTaskDelay(20 / portTICK_PERIOD_MS);
         }
     }
 
 
     void attachTimer() {
-        if (timer) return;
-        timer = timerBegin(1000000);
-        timerAttachInterrupt(timer, &timerCheck60);
-        timerAlarm(timer, 20000, true, 0);
+        if (taskHandle) return;
+        xTaskCreatePinnedToCore(
+            timerCheck60,         // Task function
+            "timerCheck60",       // Task name
+            10000,                // Stack size (bytes)
+            NULL,                 // Parameters
+            1,                    // Priority
+            &taskHandle,          // Task handle
+            0                     // Core 0
+        );
     }
 
 }
