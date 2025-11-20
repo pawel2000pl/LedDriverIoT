@@ -1,6 +1,7 @@
 # IOT RGB Led driver
 
-Project was designed for XIAO ESP32C3 and Waveshare ESP32C3-Zero.
+Project was designed for XIAO ESP32C3 and Waveshare ESP32C3-Zero.<br>
+Compilable with Arduino and ESP-IDF.
 
 ## Example hardware application
 
@@ -49,6 +50,8 @@ Each configuration might be modified by disconnecting potentiometers or removing
 The software matches pins automatically.
 
 ### Table with led driver pinout
+
+...and possible hardware configurations
 
 Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|No multiplexer|Comment
 ---|----|----|---------|--------------|--------------|--------------|--------------|-------
@@ -105,7 +108,9 @@ Mult. Ch7||||Potentiometer 3||||
 
 ## How to use docker container
 ```
-docker build -t led_driver . && docker run -it -p 8000:8000 led_driver
+docker build -t led_driver_idf -f Idf.Dockerfile . && docker run -it -p 8000:8000 led_driver_idf
+# or
+# docker build -t led_driver_arduino -f Arduino.Dockerfile . && docker run -it -p 8000:8000 led_driver_arduino
 ```
 then open http://0.0.0.0:8000 in your browser and download a binary file.
 
@@ -114,7 +119,7 @@ You can aslo run a script which builds the image, runs the container, downloads 
 ./compile_with_docker.sh
 ```
 
-The file `main.ino.bin` can be uploaded on `Configuration` page in `Update` tab.
+The file `iot-led-driver.bin` can be uploaded on `Configuration` page in `Update` tab.
 
 
 ## How to connect first time

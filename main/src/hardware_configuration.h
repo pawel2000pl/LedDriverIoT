@@ -4,7 +4,7 @@
 #include <vector>
 #include <array>
 
-#include <ArduinoJson.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
 
 #include "common_types.h"
 #include "json_utils.h"

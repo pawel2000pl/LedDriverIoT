@@ -1,15 +1,15 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <string>
 #include <vector>
-#include <HTTPSServer.hpp>
-#include <HTTPServer.hpp>
-#include <SSLCert.hpp>
-#include <HTTPRequest.hpp>
-#include <HTTPResponse.hpp>
+#include "lib/esp32_https_server/HTTPSServer.hpp"
+#include "lib/esp32_https_server/HTTPServer.hpp"
+#include "lib/esp32_https_server/SSLCert.hpp"
+#include "lib/esp32_https_server/HTTPRequest.hpp"
+#include "lib/esp32_https_server/HTTPResponse.hpp"
 
+#include "lib/ArduinoJson/ArduinoJson.h"
 #include "resources.h"
 #include "json_utils.h"
 

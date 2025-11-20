@@ -3,8 +3,8 @@
 #define CONNECTION_TIMEOUT 15000
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <vector>
+#include "lib/ArduinoJson/ArduinoJson.h"
 #include "json_utils.h"
 
 namespace wifi {

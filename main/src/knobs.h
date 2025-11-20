@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
 #include "json_utils.h"
 
 namespace knobs {

@@ -1,7 +1,8 @@
 #include "configuration.h"
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+
+#include "../lib/ArduinoJson/ArduinoJson.h"
 
 #include "../wifi.h"
 #include "../server.h"
