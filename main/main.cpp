@@ -4,7 +4,7 @@
 #include "src/knobs.h"
 #include "src/server.h"
 #include "src/modules.h"
-#include "src/timer_mgr.h"
+#include "src/threads_mgr.h"
 #include "src/ledc_driver.h"
 #include "src/temperature.h"
 #include "src/configuration.h"
@@ -49,7 +49,7 @@ void setup() {
 	modules::updateModules();
 	wifi::fastInit();
 	knobs::check(true);
-	timer_mgr::attachTimer();
+	threads_mgr::attachTimer();
 	endpoints::configureServer();
 	knobs::setDefaultColor();
 }

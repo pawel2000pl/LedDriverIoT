@@ -1,11 +1,11 @@
 #include <functional>
 
-#include "timer_mgr.h"
+#include "threads_mgr.h"
 
 #include "knobs.h"
 #include "timer_shutdown.h"
 
-namespace timer_mgr {
+namespace threads_mgr {
     
     volatile bool settingsInLock = false;
 
@@ -54,12 +54,12 @@ namespace timer_mgr {
     };
 
     TaskThread knobsThread(knobs::checkTimer, 20);
-    TaskThread timerThread(timer_shutdown::checkTimer, 20);
+    TaskThread shutdownThread(timer_shutdown::checkTimer, 20);
 
 
     void attachTimer() {
         knobsThread.init();
-        timerThread.init();
+        shutdownThread.init();
     }
 
 }

@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-namespace timer_mgr {
+namespace threads_mgr {
 
     void setLock(bool lockState);
     void attachTimer();

@@ -5,7 +5,7 @@
 #include "server.h"
 #include "inputs.h"
 #include "outputs.h"
-#include "timer_mgr.h"
+#include "threads_mgr.h"
 #include "configuration.h"
 #include "timer_shutdown.h"
 
@@ -18,7 +18,7 @@ namespace modules {
 
 
     void updateModules(JsonVariant configuration) {
-        timer_mgr::setLock(true);
+        threads_mgr::setLock(true);
         knobs::updateConfiguration(configuration);
         inputs::updateConfiguration(configuration);
         outputs::updateConfiguration(configuration);
@@ -28,7 +28,7 @@ namespace modules {
         webColorSpace = configuration["channels"]["webMode"].as<String>();
         colorKnobEnabled = configuration["hardware"]["enableColorKnob"].as<bool>();
         whiteKnobEnabled = configuration["hardware"]["enableWhiteKnob"].as<bool>();
-        timer_mgr::setLock(false);
+        threads_mgr::setLock(false);
     }
 
 
