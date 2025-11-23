@@ -65,7 +65,7 @@
         <h1>Led driver</h1>
         <h2>Software update</h2>
 
-        <a id="download-btn" href="/build/main.ino.bin">Download update</a>
+        <a id="download-btn" href="/build/iot-led-driver.bin">Download update</a>
         <p>Current version: <span id="update-span"></span> [<span id="timestamp-span"></span>]</p>
 
         <p>All downloads</p>
@@ -105,20 +105,30 @@
             const promise_size = fetch('/build/'+filename+'.size');
             const response_md5 = await promise_md5;
             const response_size = await promise_size;
+            const response_md5_text = await response_md5.text();
+            const response_size_text = await response_size.text();
+            const error_text = '<p>Error code: 404</p>';
+            if (response_md5_text.search(error_text) >= 0 || response_size_text.search(error_text) >= 0)
+                return;
             const tr = document.createElement('tr');
             const td_name = document.createElement('td');
             const td_checksum = document.createElement('td');
             const td_size = document.createElement('td');
             td_name.appendChild(wrapInA(filename, '/build/'+filename));
-            td_checksum.appendChild(wrapInA(await response_md5.text(), '/build/'+filename+'.md5'));
-            td_size.appendChild(wrapInA((await response_size.text()) + 'kB', '/build/'+filename+'.size'));
+            td_checksum.appendChild(wrapInA(response_md5_text, '/build/'+filename+'.md5'));
+            td_size.appendChild(wrapInA(response_size_text + 'kB', '/build/'+filename+'.size'));
             tr.appendChild(td_name);
             tr.appendChild(td_checksum);
             tr.appendChild(td_size);
             document.getElementById('file-table-body').appendChild(tr);
         }
 
-        ['main.ino.bin', 'main.ino.bootloader.bin', 'main.ino.elf', 'main.ino.map', 'main.ino.partitions.bin', 'license.txt'].forEach(addFile);
+        [
+            'iot-led-driver.bin', 
+            'iot-led-driver.map', 
+            'iot-led-driver.elf', 
+            'license.txt'
+        ].forEach(addFile);
     </script>
 
 </body>

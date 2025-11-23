@@ -1,5 +1,5 @@
 #pragma once
-#include <ArduinoJson.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
 
 #ifndef ARDUINO
   using String = std::string;

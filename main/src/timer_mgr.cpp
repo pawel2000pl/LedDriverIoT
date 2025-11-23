@@ -1,3 +1,5 @@
+#include <functional>
+
 #include "timer_mgr.h"
 
 #include "knobs.h"
@@ -5,33 +7,59 @@
 
 namespace timer_mgr {
     
-    hw_timer_t * timer = NULL;
-    bool settingsInLock = false;
-    bool timerExecution = false;
+    volatile bool settingsInLock = false;
 
     void setLock(bool lockState) {
         settingsInLock = lockState;
     }
 
+    class TaskThread {
 
-    void ARDUINO_ISR_ATTR timerCheck60() {
-        if (settingsInLock || timerExecution) return;
-        timerExecution = true;
-        try {
-            knobs::checkTimer();
-            timer_shutdown::checkTimer();
-            timerExecution = false;
-        } catch (...) {
-            timerExecution = false;
-        }
-    }
+        public:
+
+            TaskThread(std::function<void()> handler, unsigned long int period=16)
+             : runner(handler), period_ms(period), taskHandle(NULL) {}
+
+            void init() {
+                if (taskHandle) return;
+                xTaskCreatePinnedToCore(
+                    TaskThread::loop,     // Task function
+                    "unnamed",            // Task name
+                    10000,                // Stack size (bytes)
+                    (void*)this,          // Parameters
+                    1,                    // Priority
+                    &taskHandle,          // Task handle
+                    0                     // Core 0
+                );
+            }
+
+        private:
+
+            std::function<void()> runner;
+            unsigned long int period_ms;
+            TaskHandle_t taskHandle;
+
+            void execute() {
+                if (!settingsInLock)
+                    runner();                
+                vTaskDelay(std::max<long int>(period_ms - (millis() % period_ms), (period_ms >> 1) + 1) / portTICK_PERIOD_MS);
+            }
+
+            static void loop(void* instance) {
+                while (1) {
+                    ((TaskThread*)instance)->execute();
+                }
+            }
+
+    };
+
+    TaskThread knobsThread(knobs::checkTimer, 20);
+    TaskThread timerThread(timer_shutdown::checkTimer, 20);
 
 
     void attachTimer() {
-        if (timer) return;
-        timer = timerBegin(1000000);
-        timerAttachInterrupt(timer, &timerCheck60);
-        timerAlarm(timer, 20000, true, 0);
+        knobsThread.init();
+        timerThread.init();
     }
 
 }

@@ -22,11 +22,11 @@ COPY License.txt /app/License.txt
 WORKDIR /app
 RUN python3 compilation_utils/validate_json.py /app/resources/default_config.json /app/resources/config.schema.json
 RUN python3 compilation_utils/compile_resources.py
-RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp `find /root/Arduino/libraries/ArduinoJson -type d -exec echo -I{} -L{} \;` -o validate_configuration
+RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp -o validate_configuration
 RUN ./validate_configuration
 RUN mkdir -p /tmp/app-build
 WORKDIR /app/main
-RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -MMD -felide-constructors -c" --output-dir /tmp/app-build ./main.ino 2>&1
+RUN arduino-cli compile -b esp32:esp32:esp32c3:CDCOnBoot=cdc,PartitionScheme=min_spiffs --warnings all --build-property compiler.optimization_flags=-Os --build-property upload.maximum_size=1966080 --build-property compiler.cpp.extra_flags="-DHTTPS_LOGLEVEL=0 -DNEW_FLAGS -MMD -felide-constructors -c" --output-dir /tmp/app-build ./main.ino 2>&1
 
 RUN mkdir -p /var/www/build
 RUN cp /tmp/app-build/main* /var/www/build/
@@ -39,6 +39,7 @@ RUN cp /app/resources/favicon.svg /var/www/favicon.svg
 WORKDIR /var/www/build
 RUN find -type f -not -name "*.md5" -and -not -name "*.size" -exec bash -c "md5sum {} | head -c 32 > {}.md5" \;
 RUN find -type f -not -name "*.md5" -and -not -name "*.size" -exec bash -c "du {} | grep -oP '^[0-9]*' > {}.size" \;
+RUN for f in main.ino.*; do mv -- "$f" "iot-led-driver.${f#main.ino.}"; done || echo skip
 RUN date > /var/www/build/timestamp.txt
 RUN cp -r /app/resources/version.json /var/www/build/version.json
 
