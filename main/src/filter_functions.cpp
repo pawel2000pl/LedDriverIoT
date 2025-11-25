@@ -1,5 +1,12 @@
 #include "filter_functions.h"
 #include "taylormath.h"
+#include "poly_approx.h"
+
+
+ArithmeticFunction polyApprox(ArithmeticFunction fun) {
+	return PolyApprox<fixed32_f>::create<fixed32_f>(fun, 7, 0, 1, 1e-3);
+}
+
 
 ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed32_f min_x, fixed32_f max_x) {
 	const fixed32_f fmin = fun(min_x);
@@ -38,13 +45,13 @@ const unsigned filterFunctionsCount = filterFunctions.size();
 
 ArithmeticFunction mixFilterFunctions(std::vector<fixed32_f> filters) {
 	while (filters.size() < filterFunctionsCount) filters.push_back(0);
-	return constrainFunction(normalizeFunction([=](fixed32_f x) { 
+	return constrainFunction(normalizeFunction(polyApprox([=](fixed32_f x) { 
 		fixed32_f sum = 0;
 		for (int i=0;i<filterFunctionsCount;i++)
 			if (filters[i] != 0)
 				sum += filters[i] * filterFunctionsPtr->at(i)(x);
 		return sum;
-	}));
+	})));
 }
 
 ArithmeticFunction createInverseFunction(ArithmeticFunction originalFunction, fixed32_f epsilon) {
@@ -57,8 +64,9 @@ ArithmeticFunction createInverseFunction(ArithmeticFunction originalFunction, fi
 		fixed32_f left = 0;
 		fixed32_f right = 1;
 		fixed32_f prev_mid = -1;
+		unsigned it = 0;
 		if (minus) y = -y;
-		while (right - left >= epsilon) {
+		while (right - left >= epsilon && it++ < 64) {
 			const fixed32_f mid = (left + right) / 2;
 			if (mid == prev_mid) break;
 			prev_mid = mid;
