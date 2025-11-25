@@ -16,3 +16,4 @@ doc/pinout-usage.md
 logs.txt
 logs.old
 dependencies.lock
+version.txt

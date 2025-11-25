@@ -6,7 +6,6 @@ WORKDIR /app
 RUN mkdir -p /app
 COPY CMakeLists.txt /app/CMakeLists.txt
 COPY partitions.csv /app/partitions.csv
-COPY .git /app/.git
 COPY sdkconfig /app/sdkconfig
 COPY compilation_utils /app/compilation_utils
 COPY doc /app/doc
@@ -16,6 +15,7 @@ COPY License.txt /app/License.txt
 WORKDIR /app
 RUN python3 compilation_utils/validate_json.py /app/resources/default_config.json /app/resources/config.schema.json
 RUN python3 compilation_utils/compile_resources.py
+RUN python3 compilation_utils/show_version.py > version.txt
 RUN g++ compilation_utils/validate_config.cpp main/src/validate_json.cpp -o validate_configuration
 RUN ./validate_configuration
 
