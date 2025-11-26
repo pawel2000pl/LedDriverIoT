@@ -26,13 +26,36 @@ namespace inputs {
         ArithmeticFunction invertedInputBlue;
         ArithmeticFunction invertedInputWhite;
         ArithmeticFunction invertedGlobalInput;
+
+        void clear() {
+            inputSaturation = linear_function;
+            inputHue = linear_function;
+            inputValue = linear_function;
+            inputLightness = linear_function;
+            inputRed = linear_function;
+            inputGreen = linear_function;
+            inputBlue = linear_function;
+            inputWhite = linear_function;
+            globalInput = linear_function;
+
+            invertedInputHue = linear_function;
+            invertedInputSaturation = linear_function;
+            invertedInputValue = linear_function;
+            invertedInputLightness = linear_function;
+            invertedInputRed = linear_function;
+            invertedInputGreen = linear_function;
+            invertedInputBlue = linear_function;
+            invertedInputWhite = linear_function;
+            invertedGlobalInput = linear_function;
+        }
     }
 
 
     void updateConfiguration(const JsonVariantConst& configuration) {
         const auto& filters = configuration["filters"];
         const auto& inputFilters = filters["inputFilters"];
-                
+
+        filters::clear();            
         filters::inputSaturation = mixFilterFunctions(toFixedpointVector(inputFilters["saturation"]));
         filters::inputHue = periodizeFunction(mixFilterFunctions(toFixedpointVector(inputFilters["hue"])), 6);
         filters::inputValue = mixFilterFunctions(toFixedpointVector(inputFilters["value"]));

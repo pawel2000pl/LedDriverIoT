@@ -3,7 +3,8 @@
 #include <FS.h>
 #include <SPIFFS.h>
 
-#include "fastlz.h"
+#include "lib/fastlz/fastlz.h"
+
 #include "validate_json.h"
 #include "hardware_configuration.h"
 

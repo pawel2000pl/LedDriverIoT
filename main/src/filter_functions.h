@@ -10,6 +10,7 @@
 using ArithmeticFunction = std::function<fixed32_f(fixed32_f)>;
 extern const std::vector<ArithmeticFunction> filterFunctions;
 
+fixed32_f linear_function(fixed32_f x);
 ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed32_f min_x=0, fixed32_f max_x=1);
 ArithmeticFunction constrainFunction(ArithmeticFunction fun, fixed32_f min_y=0, fixed32_f max_y=1);
 ArithmeticFunction symFunction(ArithmeticFunction fun);

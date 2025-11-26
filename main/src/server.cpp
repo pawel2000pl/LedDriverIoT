@@ -3,8 +3,9 @@
 #include <sstream>
 #include <esp_system.h>
 
+#include "lib/fastlz/fastlz.h"
+
 #include "wifi.h"
-#include "fastlz.h"
 #include "constrain.h"
 #include "resources.h"
 #include "configuration.h"

@@ -37,12 +37,20 @@ namespace outputs {
         ArithmeticFunction outputBlue;
         ArithmeticFunction outputWhite;
         ArithmeticFunction globalOutput;
+
+        void clear() {
+            outputRed = linear_function;
+            outputGreen = linear_function;
+            outputBlue = linear_function;
+            outputWhite = linear_function;
+        }
     }
 
     void updateConfiguration(const JsonVariantConst& configuration) {
         const auto& filters = configuration["filters"];
         const auto& outputFilters = filters["outputFilters"];
 
+        filters::clear();
         filters::outputRed = mixFilterFunctions(toFixedpointVector(outputFilters["red"]));
         filters::outputGreen = mixFilterFunctions(toFixedpointVector(outputFilters["green"]));
         filters::outputBlue = mixFilterFunctions(toFixedpointVector(outputFilters["blue"]));

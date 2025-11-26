@@ -1,10 +1,10 @@
 #include "filter_functions.h"
-#include "taylormath.h"
-#include "poly_approx.h"
+#include "lib/fixedpoint/taylormath.h"
+#include "lib/fixedpoint/polyapprox.h"
 
 
 ArithmeticFunction polyApprox(ArithmeticFunction fun) {
-	return PolyApprox<fixed32_f>::create<fixed32_f>(fun, 7, 0, 1, 1e-3);
+	return PolyApprox<fixed32_f>::create<fixed32_f>(fun, 31, 0, 1, 1e-3);
 }
 
 
@@ -29,8 +29,13 @@ ArithmeticFunction symFunction(ArithmeticFunction fun) {
 }
 
 
+fixed32_f linear_function(fixed32_f x) {
+	return x;
+}
+
+
 const std::vector<ArithmeticFunction> filterFunctions = {
-	[](fixed32_f x) {return x; },
+	linear_function,
 	[](fixed32_f x) {return x*x; },
 	[](fixed32_f x) {return taylor::sqrt<fixed32_f>(x); },
 	normalizeFunction([](fixed32_f x) { return taylor::exp<fixed32_f>(M_PI*(x-1)); }),

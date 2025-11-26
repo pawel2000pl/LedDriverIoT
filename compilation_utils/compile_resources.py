@@ -9,7 +9,7 @@ import ctypes
 import hashlib
 import mimetypes
 
-os.system('gcc --std=c11 -O3 -x c main/src/fastlz.cpp -fpic -shared -o fastlz.so')
+os.system('gcc --std=c11 -O3 -x c main/src/lib/fastlz/fastlz.cpp -fpic -shared -o fastlz.so')
 
 lib = ctypes.CDLL('./fastlz.so')
 fastlz_compress_level = lib.fastlz_compress_level

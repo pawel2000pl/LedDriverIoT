@@ -38,18 +38,18 @@ wget http://0.0.0.0:8000/build/iot-led-driver.bin
 docker kill $CONTAINER_ID
 docker rm $CONTAINER_ID
 
-CPP_CODE=`find main -type f \( -name "*.h" -or -name "*.cpp" \) -and -not -name "resources.*" -and -not -path "*/lib/*" -exec cat {} \; | wc -l`
-JS_CODE=`find resources -type f -name "*.js" -and -not -path "*/lib/*" -exec cat {} \; | wc -l`
-HTML_CODE=`find resources -type f -name "*.html" -and -not -path "*/lib/*" -exec cat {} \; | wc -l`
-CSS_CODE=`find resources -type f -name "*.css" -and -not -path "*/lib/*" -exec cat {} \; | wc -l`
-OTHER_CODE=`find resources -type f -name "*.svg" -and -not -path "*/lib/*" -or -name "*.json" -exec cat {} \; | wc -l`
+CPP_CODE=`find main -type f \( -name "*.h" -or -name "*.cpp" \) -and -not -name "resources.*" -exec cat {} \; | wc -l`
+JS_CODE=`find resources -type f -name "*.js" -exec cat {} \; | wc -l`
+HTML_CODE=`find resources -type f -name "*.html" -exec cat {} \; | wc -l`
+CSS_CODE=`find resources -type f -name "*.css" -exec cat {} \; | wc -l`
+OTHER_CODE=`find resources -type f -name "*.svg" -or -name "*.json" -exec cat {} \; | wc -l`
 
-MAIN_BYTES=`find main -type f -not -name "resources.*" -and -not -path "*/lib/*" -exec cat {} \; | wc -c`
+MAIN_BYTES=`find main -type f -not -name "resources.*" -exec cat {} \; | wc -c`
 RESOURCES_BYTES=`find resources -type f -exec cat {} \; | wc -c`
 BIN_BYTES=`cat iot-led-driver.bin | wc -c`
 
 echo "Compilation successful"
-echo "The code has (excluding libraries):"
+echo "The code has (including local libraries):"
 echo "  $CPP_CODE lines in CPP"
 echo "  $JS_CODE lines in JS"
 echo "  $HTML_CODE lines in HTML"

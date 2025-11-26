@@ -1,4 +1,31 @@
-#pragma once
+/****************************************************************************************
+
+                                       MIT License
+
+               Copyright (c) 2025 Pawel Bielecki [pbielecki2000@gmail.com]
+
+       Permission is hereby granted, free of charge, to any person obtaining a copy
+      of this software and associated documentation files (the "Software"), to deal
+       in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+                 furnished to do so, subject to the following conditions:
+
+      The above copyright notice and this permission notice shall be included in all
+                     copies or substantial portions of the Software.
+
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+         IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+       FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+      OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+                                        SOFTWARE.
+
+****************************************************************************************/
+
+#ifndef POLY_APPROX
+#define POLY_APPROX
 
 #include <functional>
 #include <vector>
@@ -63,7 +90,7 @@ class PolyApprox {
 
                 auto& coeffs = coefficients[i-1];
                 coeffs[4] = prev_x;
-                //              value           derivate at max         derivate at min
+                //              value           derivate at max     derivate at min
                 coeffs[3] = (   (-2) * vx       + deriverate        + prev_deriverate       ) / inc3;
                 coeffs[2] = (   3 * vx          - deriverate        - 2 * prev_deriverate   ) / inc2;
                 coeffs[1] = (                                       prev_deriverate         ) / inc;
@@ -129,10 +156,6 @@ class PolyApprox {
             return 0;
         }
 
-        template<typename T>
-        T min_abs(T a, T b) {
-            return (abs<T>(a) < abs<T>(b)) ? a : b;
-        }
-
 };
 
+#endif
