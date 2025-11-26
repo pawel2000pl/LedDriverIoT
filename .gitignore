@@ -16,3 +16,4 @@ logs.txt
 logs.old
 dependencies.lock
 version.txt
+sdkconfig.old
