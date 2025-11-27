@@ -23,6 +23,23 @@ function sec2time(time_as_seconds) {
 }
 
 
+function deepEqual(a, b) {
+    if (a === b) return true;
+    if (typeof a !== typeof b) return false;
+    if (typeof a === 'number') return Math.abs(a - b) < 1e-4;
+    if (typeof a !== 'object') return false;
+    if (a === null || b === null) return false;
+    const keysA = Array.from(Object.keys(a)).sort();
+    const keysB = Array.from(Object.keys(b)).sort();
+    if (keysA.length !== keysB.length) return false;
+    for (let i = 0; i < keysA.length; i++)
+        if (keysA[i] !== keysB[i]) return false;
+    for (const key of keysA)
+        if (!deepEqual(a[key], b[key])) return false;
+    return true;
+}
+
+
 function dumpConfig() {
     return {
         "wifi": {
@@ -247,4 +264,11 @@ async function setDefaultsCurrent() {
 }
 
 
-updateClientApp();
+updateClientApp().then(()=>{
+    window.onbeforeunload = (event)=>{
+        if (config !== null && !deepEqual(dumpConfig(), config)) {
+            event.preventDefault();
+            event.returnValue = true;
+        }
+    };
+});
