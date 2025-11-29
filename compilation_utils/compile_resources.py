@@ -9,6 +9,7 @@ import ctypes
 import hashlib
 import mimetypes
 
+
 os.system('gcc --std=c11 -O3 -x c main/src/lib/fastlz/fastlz.cpp -fpic -shared -o fastlz.so')
 
 lib = ctypes.CDLL('./fastlz.so')
@@ -131,7 +132,7 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         all_srcs[PATH+filename] = content
         orginal_content = content
         if filename.endswith('.json'):
-            content = json.dumps(json.loads(content), indent=None)
+            content = json.dumps(json.loads(content), indent=None, separators=(',', ':'))
         else:
             content = re.sub('/\\*(.|\n)*?\\*/', ' ', content)
             content = re.sub('\\/\\/[^"\'\\n]*\n', ' ', content)

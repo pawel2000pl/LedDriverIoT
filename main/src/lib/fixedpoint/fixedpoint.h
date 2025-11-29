@@ -543,14 +543,16 @@ class fixedpoint {
 
         static fixedpoint fromCharBuf(const char* buffer, unsigned char base=10, unsigned* size=NULL) {
             fixedpoint result = 0;
-            fixedpoint multiplier = 1;
+            BUF_TYPE divider = 1;
+            BUF_TYPE counter = 0;
+            const BUF_TYPE frac_max = (std::numeric_limits<BUF_TYPE>::max() / base) >> (sizeof(BUF_TYPE)*8 - std::is_signed<BUF_TYPE>::value - frac_bits);
             bool frac_mode = false;
             unsigned position = 0;
             unsigned max_size = size ? *size : (unsigned)(-1);
             bool minus = buffer[position] == '-';
             if (buffer[position] == '-' || buffer[position] == '+') position++;
             position--;
-            while (++position < max_size && buffer[position] && multiplier) {
+            while (++position < max_size && buffer[position] && divider < frac_max) {
                 if (buffer[position] == '.') {
                     if (frac_mode) break;
                     frac_mode = true;
@@ -559,13 +561,14 @@ class fixedpoint {
                 unsigned num = chr2num(buffer[position]);
                 if (num >= base) break;
                 if (frac_mode) {
-                    multiplier /= base;
-                    result += multiplier * num;
+                    divider *= base;
+                    counter = counter * base + num;
                 } else {
                     result *= base;
                     result += num;
                 }
             }
+            result += fraction(counter, divider);
             if (size) *size = position;
             return minus ? -result : result;
         }

@@ -35,14 +35,14 @@
                         <p class="prevent-select">
                             Default color: 
                             <p>
-                                <input id="enable-default-color" type="checkbox">
+                                <input id="enable-default-color" type="checkbox"/>
                                 <label for="enable-default-color">Enable default color</label>
                             </p>
                             <p>
-                                <input id="default-color-hue" type="number" min="0" max="1" step="0.01">
-                                <input id="default-color-saturation" type="number" min="0" max="1" step="0.01">
-                                <input id="default-color-value" type="number" min="0" max="1" step="0.01">
-                                <input id="default-color-white" type="number" min="0" max="1" step="0.01">
+                                <input id="default-color-hue" type="number" min="0" max="1" step="0.01"/>
+                                <input id="default-color-saturation" type="number" min="0" max="1" step="0.01"/>
+                                <input id="default-color-value" type="number" min="0" max="1" step="0.01"/>
+                                <input id="default-color-white" type="number" min="0" max="1" step="0.01"/>
                             </p>
                             <p>
                                 <button onclick="setDefaultsBlack()">Set black</button>
@@ -53,23 +53,23 @@
                         <p>
                             Shutdown timeout:
                             <p>
-                                <input id="enable-shutdown-timeout" type="checkbox">
+                                <input id="enable-shutdown-timeout" type="checkbox"/>
                                 <label for="enable-shutdown-timeout">Enable shutdown timeout</label>
                             </p>
                             <p>
                                 <span>Shutdown timeout [hours:minutes:seconds]: </span>
-                                <input type="time" min="00:00:01" max="23:59:00" id="shutdown-timeout">
+                                <input type="time" min="00:00:01" max="23:59:00" id="shutdown-timeout"/>
                             </p>
                             <p>
                                 <span>Fadeout-time [hours:minutes:seconds]: </span>
-                                <input type="time" min="00:00:00" max="02:00:00" id="fadeout-time">
+                                <input type="time" min="00:00:00" max="02:00:00" id="fadeout-time"/>
                             </p>
                         </p>
                         
                         <details class="info-div">
                             <summary class="prevent-select">Description</summary>
                             <include-raw src="/colors_desc.html"></include-raw>
-                        </detals>
+                        </details>
                     </div>
                 </div>
             </details>
@@ -79,7 +79,7 @@
 
                 <div id="wifi-mac-selector" class="details-div">
                     <h3>Hostname</h3>
-                    <input id="wifi-hostname">
+                    <input id="wifi-hostname"/>
                     <h3>Wi-Fi priority list</h3>
                     <wifiselector id="sta-priority-list"></wifiselector>
                     <p>
@@ -95,19 +95,19 @@
                     <h3>Access point</h3>
                     <p> 
                         <p>
-                            <div><input id="enable-ap" type="checkbox"><label for="enable-ap">Enabled</label></div>
+                            <div><input id="enable-ap" type="checkbox"/><label for="enable-ap">Enabled</label></div>
                         </p>
                         <p>
-                            <div><span>SSID:</span><input id="ap-ssid"></div>
-                            <div><span>Password:</span><input id="ap-password" type="password"></div>    
-                            <div><input id="ap-hidden" type="checkbox"><label for="ap-hidden">Hide SSID</label></div>
-                            <div><input id="ap-captive" type="checkbox"><label for="ap-captive">Enable captive portal</label></div>
-                            <div>Channel (set 0 for auto):<input id="ap-channel" type="number" min="0" max="13" value="1"></div>
+                            <div><span>SSID:</span><input id="ap-ssid"/></div>
+                            <div><span>Password:</span><input id="ap-password" type="password"/></div>    
+                            <div><input id="ap-hidden" type="checkbox"/><label for="ap-hidden">Hide SSID</label></div>
+                            <div><input id="ap-captive" type="checkbox"/><label for="ap-captive">Enable captive portal</label></div>
+                            <div>Channel (set 0 for auto):<input id="ap-channel" type="number" min="0" max="13" value="1"/></div>
                         </p>
                         <p>
-                            <div><span>IP Address:</span><input id="ap-address"></div>
-                            <div><span>Gateway:</span><input id="ap-gateway"></div>
-                            <div><span>Subnet:</span><input id="ap-subnet"></div>
+                            <div><span>IP Address:</span><input id="ap-address"/></div>
+                            <div><span>Gateway:</span><input id="ap-gateway"/></div>
+                            <div><span>Subnet:</span><input id="ap-subnet"/></div>
                         </p>
                     </p>
                     <button onclick="openAccessPoint()">Open access-point now</button>
@@ -137,38 +137,38 @@
                     <p>
                         <div>
                             <span>Low bias: </span>
-                            <input id="low-bias-input" type="number" min="0" max="1" step="0.001" value="0">
+                            <input id="low-bias-input" type="number" min="0" max="1" step="0.001" value="0"/>
                         </div>
                         <div>
                             <span>High bias: </span>
-                            <input id="high-bias-input" type="number" min="0" max="1" step="0.001" value="0">
+                            <input id="high-bias-input" type="number" min="0" max="1" step="0.001" value="0"/>
                         </div>
                     </p>
                     <p>
                         <span>Switch from wifi to knobs after changing them for:</span>
-                        <input id="knob-activate-input" type="number" min="0.001" max="0.999" step="0.001" value="0">
+                        <input id="knob-activate-input" type="number" min="0.001" max="0.999" step="0.001" value="0"/>
                     </p>
                     <p>
                         <span>Potentiometers noise reduction:</span>
-                        <input id="knob-noises-reduction" type="number" min="0.000" max="1000" step="0.1" value="0.105">
+                        <input id="knob-noises-reduction" type="number" min="0.000" max="1000" step="0.1" value="0.105"/>
                     </p>
                     <h3>Output settings</h3>
                     <p>
                         <div>
                             <span>Red scalling factor: </span>
-                            <input id="red-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                            <input id="red-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0"/>
                         </div>
                         <div>
                             <span>Green scalling factor: </span>
-                            <input id="green-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                            <input id="green-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0"/>
                         </div>
                         <div>
                             <span>Blue scalling factor: </span>
-                            <input id="blue-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                            <input id="blue-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0"/>
                         </div>
                         <div>
                             <span>White scalling factor: </span>
-                            <input id="white-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0">
+                            <input id="white-scalling-factor" type="number" min="0" max="1" step="0.005" value="1.0"/>
                         </div>
                         <p>
                             <button onclick="getTailoredScalling()">Set current color as scalling factors</button>
@@ -209,16 +209,16 @@
                     </p>
                     <p>
                         <span>Gate loading time [us]:</span>
-                        <input id="gate-loading-time" type="number" min="0.000" max="32" step="0.1" value="0.55">
+                        <input id="gate-loading-time" type="number" min="0.000" max="32" step="0.1" value="0.55"/>
                     </p>
                     <p>
-                        <input id="activate-color-knob" type="checkbox">
+                        <input id="activate-color-knob" type="checkbox"/>
                         <label for="activate-color-knob">Enable color channels</label>
-                        <br>
-                        <input id="activate-white-knob" type="checkbox">
+                        <br/>
+                        <input id="activate-white-knob" type="checkbox"/>
                         <label for="activate-white-knob">Enable white channel</label>
-                        <br>
-                        <input id="invert-outputs" type="checkbox">
+                        <br/>
+                        <input id="invert-outputs" type="checkbox"/>
                         <label for="invert-outputs">Invert outputs</label>
                     </p>
                     <details class="info-div">
@@ -348,18 +348,18 @@
                 <div class="details-div">
                     <p>
                         <span id="version-span"></span>
-                        <br>
+                        <br/>
                         <span id="hardware-span"></span>
-                        <br>
+                        <br/>
                         <span id="resources-span"></span>
                     </p>                    
                     <p>
-                        <input id="update-file" type="file" name="update">
-                        <input id="update-btn" type="button" value="Update">
+                        <input id="update-file" type="file" name="update"/>
+                        <input id="update-btn" type="button" value="Update"/>
                     </p>                    
                     <p>
                         If some web panel's features do not work after upgrading, it may be required to clear cache of your browser manually. 
-                        <br>
+                        <br/>
                         <a href="/invalidate_cache">Click here to clear all stored data and upgrade cache.</a> 
                     </p>
                 </div>
@@ -378,18 +378,18 @@
 
         </div>
 
-        <script src="/utils.js" defer></script>
-        <script src="/conversions.js" defer></script>
-        <script src="/chart.js" defer></script>
-        <script src="/component_list.js" defer></script>
+        <script src="/utils.js" defer="defer"></script>
+        <script src="/conversions.js" defer="defer"></script>
+        <script src="/chart.js" defer="defer"></script>
+        <script src="/component_list.js" defer="defer"></script>
         
-        <script src="/config_fetcher.js" defer></script>
-        <script src="/filter_selector.js" defer></script>
+        <script src="/config_fetcher.js" defer="defer"></script>
+        <script src="/filter_selector.js" defer="defer"></script>
 
-        <script src="/include_raw.js" defer></script>
-        <script src="/config.js" defer></script>
-        <script src="/config_components.js" defer></script>
-        <script src="/update.js" defer></script>
+        <script src="/include_raw.js" defer="defer"></script>
+        <script src="/config.js" defer="defer"></script>
+        <script src="/config_components.js" defer="defer"></script>
+        <script src="/update.js" defer="defer"></script>
         
         
     </body>
