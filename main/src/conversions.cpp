@@ -64,9 +64,10 @@ void rgbToHsv(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& h, fixed32_c& s,
 }
 
 void hsvToRgb(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c& r, fixed32_c& g, fixed32_c& b) {
-    int i = std::floor(h * 6);
+    fixed32_c h6 = h * 6;
+    int i = std::floor(h6);
     fixed32_c vs = v * s;
-    fixed32_c f = h * 6 - i;
+    fixed32_c f = h6 - i;
     fixed32_c vsf = vs * f;
     fixed32_c p = v - vs;
     fixed32_c q = v - vsf;

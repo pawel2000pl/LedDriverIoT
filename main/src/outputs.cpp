@@ -32,25 +32,18 @@ namespace outputs {
     std::array<unsigned, 4> transistorConnections;
 
     namespace filters {
-        ArithmeticFunction outputRed;
-        ArithmeticFunction outputGreen;
-        ArithmeticFunction outputBlue;
-        ArithmeticFunction outputWhite;
-        ArithmeticFunction globalOutput;
+        MixedFunction outputRed;
+        MixedFunction outputGreen;
+        MixedFunction outputBlue;
+        MixedFunction outputWhite;
+        MixedFunction globalOutput;
 
-        void clear() {
-            outputRed = linear_function;
-            outputGreen = linear_function;
-            outputBlue = linear_function;
-            outputWhite = linear_function;
-        }
     }
 
     void updateConfiguration(const JsonVariantConst& configuration) {
         const auto& filters = configuration["filters"];
         const auto& outputFilters = filters["outputFilters"];
 
-        filters::clear();
         filters::outputRed = mixFilterFunctions(toFixedpointVector(outputFilters["red"]));
         filters::outputGreen = mixFilterFunctions(toFixedpointVector(outputFilters["green"]));
         filters::outputBlue = mixFilterFunctions(toFixedpointVector(outputFilters["blue"]));

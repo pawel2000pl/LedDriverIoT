@@ -28,6 +28,7 @@
 #define POLY_APPROX
 
 #include <functional>
+#include <type_traits>
 #include <vector>
 #include <array>
 
@@ -38,72 +39,49 @@ namespace std {
 }
 
 
-template <typename Storable>
+template <typename Storable, unsigned static_part_count = 0>
 class PolyApprox {
 
     public:
+
+        constexpr const static bool is_static = static_part_count > 0;
 
         PolyApprox() = default;
         PolyApprox(const PolyApprox&) = default;
         PolyApprox(PolyApprox&&) = default;
 
-    
-        template <typename Calculable>
+
+        template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<enable_part_count, void>::type* = nullptr>
         PolyApprox(const std::function<Calculable(Calculable)>& src, unsigned part_count, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
-            fit<Calculable>(src, part_count, range_min, range_max, dx);
+            __fit<Calculable>(src, part_count, range_min, range_max, dx);
+        }
+
+        template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<!enable_part_count, void>::type* = nullptr>
+        PolyApprox(const std::function<Calculable(Calculable)>& src, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
+            __fit<Calculable>(src, static_part_count, range_min, range_max, dx);
         }
 
 
-        template <typename Calculable>
+        template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<enable_part_count, void>::type* = nullptr>
         static PolyApprox create(const std::function<Calculable(Calculable)>& src, unsigned part_count, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
             return PolyApprox(src, part_count, range_min, range_max, dx);
         }
 
+        template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<!enable_part_count, void>::type* = nullptr>
+        static PolyApprox create(const std::function<Calculable(Calculable)>& src, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
+            return PolyApprox(src, range_min, range_max, dx);
+        }
 
-        template <typename Calculable>
+
+        template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<enable_part_count, void>::type* = nullptr>
         void fit(const std::function<Calculable(Calculable)>& src, unsigned part_count, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
-            coefficients.resize(part_count);
+            __fit(src, part_count, range_min, range_max, dx);
+        }
 
-            Calculable inc = (range_max - range_min) / part_count;
-            Calculable inv_inc = Calculable(1) / inc;
-            Calculable inv_inc2 = inv_inc * inv_inc;
-            Calculable inv_inc3 = inv_inc2 * inv_inc;
-            Calculable idx = Calculable(1) / dx;
-            Calculable idx2 = idx / 2;
-            this->range_min = range_min;
-            this->inv_incrementator = inv_inc;
 
-            coefficients.resize(part_count);
-
-            Calculable prev_value = src(range_min);
-            Calculable prev_deriverate = (src(range_min+dx) - prev_value) * inc * idx;
-            Calculable prev_x = range_min;
-
-            for (unsigned i=1;i<=part_count;i++) {
-                Calculable x = range_min + i * inc;
-                Calculable value = src(x);
-                Calculable new_deriverate = ((i<part_count) ? ((src(x+dx) - src(x-dx)) * idx2) : ((value - src(x-dx)) * idx)) * inc;
-                Calculable deriverate = new_deriverate;
-                Calculable vx = value - prev_value;
-                Calculable max_deriverate = 3 * abs<Calculable>(vx);
-                if (abs<Calculable>(prev_deriverate) > max_deriverate)
-                    prev_deriverate = max_deriverate*sign<Calculable>(prev_deriverate);
-                if (abs<Calculable>(deriverate) > max_deriverate)
-                    deriverate = max_deriverate*sign<Calculable>(deriverate);
-
-                auto& coeffs = this->coefficients[i-1];
-                coeffs[4] = prev_x;
-                //              value           derivate at max     derivate at min
-                coeffs[3] = (   (-2) * vx       + deriverate        + prev_deriverate       ) * inv_inc3;
-                coeffs[2] = (   3 * vx          - deriverate        - 2 * prev_deriverate   ) * inv_inc2;
-                coeffs[1] = (                                       prev_deriverate         ) * inv_inc;
-                coeffs[0] =     prev_value;
-
-                prev_x = x;
-                prev_value = value;
-                prev_deriverate = new_deriverate;
-            }
-
+        template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<!enable_part_count, void>::type* = nullptr>
+        void fit(const std::function<Calculable(Calculable)>& src, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
+            __fit(src, static_part_count, range_min, range_max, dx);
         }
 
 
@@ -145,7 +123,11 @@ class PolyApprox {
 
     private:
 
-        std::vector<std::array<Storable, 5>> coefficients;
+        using static_coefficients = std::array<std::array<Storable, 5>, static_part_count>;
+        using dynamic_coefficients = std::vector<std::array<Storable, 5>>;
+        using coefficients_type = typename std::conditional<is_static, static_coefficients, dynamic_coefficients>::type;
+
+        coefficients_type coefficients;
         Storable range_min;
         Storable inv_incrementator;
 
@@ -161,6 +143,62 @@ class PolyApprox {
             if (x < 0) return -1;
             if (x > 0) return 1;
             return 0;
+        }
+
+
+        template<typename CT>
+        typename std::enable_if<std::is_same<CT, dynamic_coefficients>::value, void>::type 
+        resize_coefficients(unsigned new_size) {
+            coefficients.resize(new_size);
+        }
+
+        template<typename CT>
+        typename std::enable_if<std::is_same<CT, static_coefficients>::value, void>::type 
+        resize_coefficients(unsigned) {}
+
+
+        template <typename Calculable>
+        void __fit(const std::function<Calculable(Calculable)>& src, unsigned part_count, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
+            this->resize_coefficients<coefficients_type>(part_count);
+
+            Calculable inc = (range_max - range_min) / part_count;
+            Calculable inv_inc = Calculable(1) / inc;
+            Calculable inv_inc2 = inv_inc * inv_inc;
+            Calculable inv_inc3 = inv_inc2 * inv_inc;
+            Calculable idx = Calculable(1) / dx;
+            Calculable idx2 = idx / 2;
+            this->range_min = range_min;
+            this->inv_incrementator = inv_inc;
+
+            Calculable prev_value = src(range_min);
+            Calculable prev_deriverate = (src(range_min+dx) - prev_value) * inc * idx;
+            Calculable prev_x = range_min;
+
+            for (unsigned i=1;i<=part_count;i++) {
+                Calculable x = range_min + i * inc;
+                Calculable value = src(x);
+                Calculable new_deriverate = ((i<part_count) ? ((src(x+dx) - src(x-dx)) * idx2) : ((value - src(x-dx)) * idx)) * inc;
+                Calculable deriverate = new_deriverate;
+                Calculable vx = value - prev_value;
+                Calculable max_deriverate = 3 * abs<Calculable>(vx);
+                if (abs<Calculable>(prev_deriverate) > max_deriverate)
+                    prev_deriverate = max_deriverate*sign<Calculable>(prev_deriverate);
+                if (abs<Calculable>(deriverate) > max_deriverate)
+                    deriverate = max_deriverate*sign<Calculable>(deriverate);
+
+                auto& coeffs = this->coefficients[i-1];
+                coeffs[4] = prev_x;
+                //              value           derivate at max     derivate at min
+                coeffs[3] = (   (-2) * vx       + deriverate        + prev_deriverate       ) * inv_inc3;
+                coeffs[2] = (   3 * vx          - deriverate        - 2 * prev_deriverate   ) * inv_inc2;
+                coeffs[1] = (                                       prev_deriverate         ) * inv_inc;
+                coeffs[0] =     prev_value;
+
+                prev_x = x;
+                prev_value = value;
+                prev_deriverate = new_deriverate;
+            }
+
         }
 
 };

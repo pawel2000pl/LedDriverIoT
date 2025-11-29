@@ -503,10 +503,7 @@ class fixedpoint {
         unsigned toCharBuf(char* buffer, unsigned char base=10, unsigned max_frac_digits=(unsigned)(-1)) const {
             char* wbuf = buffer;
             T tmpBuf = buf;
-            if (tmpBuf < 0) {
-                *(wbuf++) = '-';
-                tmpBuf = -tmpBuf;
-                if (tmpBuf < 0) {
+            if (std::is_signed<T>::value && tmpBuf == std::numeric_limits<T>::min()) {
                     *(wbuf++) = '-';
                     *(wbuf++) = 'i';
                     *(wbuf++) = 'n';
@@ -514,6 +511,9 @@ class fixedpoint {
                     *wbuf = 0;
                     return wbuf - buffer;
                 }
+            if (tmpBuf < 0) {
+                *(wbuf++) = '-';
+                tmpBuf = -tmpBuf;
             }
             T intPart = tmpBuf >> frac_bits;
             T fracPart = tmpBuf - (intPart << frac_bits);
