@@ -80,8 +80,8 @@ def create_name_resolver(name_list, indent=2):
         return indent_s + 'return (def && (!same_str(name, '+res_str+'.name))) ? *def : ' + res_str + ';'
 
     pos, letter = find_best_divide_letter([name + '\0' for name in name_list])
-    list1 = [name for name in name_list if ord(name[pos]) <= ord(letter)]
-    list2 = [name for name in name_list if ord(name[pos]) > ord(letter)]
+    list1 = [name for name in name_list if len(name) == pos or ord(name[pos]) <= ord(letter)]
+    list2 = [name for name in name_list if len(name) > pos and ord(name[pos]) > ord(letter)]
     result = [
         indent_s, "if (name[%d] <= %d)"%(pos, ord(letter)), " {\n",
         create_name_resolver(list1, indent+2), "\n",
@@ -161,7 +161,7 @@ for root, dirs, files in os.walk(PATH, topdown=False):
         result_content.append('const unsigned char '+var_name+'_data[] = {'+str2c(compressed)+'};')
         result_content.append('const char '+var_name+'_filename[] = {'+str2c('/'+filename+"\0")+'};')
         result_content.append('const char '+var_name+'_mime_type[] = {'+str2c(mimetypes.guess_type(PATH+filename)[0]+"\0")+'};')
-        result_content.append('extern const char '+var_name+'_etag[] = {'+str2c(etag)+'};')
+        result_content.append('const char '+var_name+'_etag[] = {'+str2c(etag)+'};')
         result_content.append('const unsigned int '+var_name+'_size = '+str(len(compressed))+';')
         result_content.append('const unsigned int '+var_name+'_decompressed_size = '+str(len(content))+';')
         result_content.append('const struct Resource resource_'+var_name+' = {')
