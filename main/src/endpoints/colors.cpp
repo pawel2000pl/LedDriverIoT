@@ -15,6 +15,7 @@
 #include "../common_types.h"
 #include "../configuration.h"
 #include "../timer_shutdown.h"
+#include "../lib/esp32_https_server/HTTPURLEncodedBodyParser.hpp"
 
 namespace endpoints {
 
@@ -58,14 +59,21 @@ namespace endpoints {
 
 
     void simpleMode(HTTPRequest* req, HTTPResponse* res) {
-        if (req->getMethod() == "POST") {
-            httpsserver::ResourceParameters* params = req->getParams();
-            auto fun = [=](std::string name) {
-                std::string param = "0000";
-                params->getQueryParameter(name, param);
-                return constrain<fixed32_c>(fixed32_c::fromCharBuf(param.c_str())/15, 0, 1);
-            };    
-            ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
+        if (req->getMethod() == "POST") {            
+            ColorChannels channels = {0, 0, 0, 0};
+            httpsserver::HTTPURLEncodedBodyParser parser(req);
+            while(parser.nextField()) {
+                std::string name = parser.getFieldName();
+                char buffer[16];
+                unsigned size = parser.read((unsigned char*)buffer, 16);
+                if (!size) continue;
+                buffer[size] = 0;
+                fixed32_c value = constrain<fixed64>(fixed64::fromCharBuf(buffer)/15, 0, 1);
+                if (name == "ch0") channels[0] = value;
+                if (name == "ch1") channels[1] = value;
+                if (name == "ch2") channels[2] = value;
+                if (name == "ch3") channels[3] = value;
+            }
             knobs::turnOff();
             timer_shutdown::resetTimer();
             inputs::setAuto(modules::webColorSpace, channels);
@@ -83,14 +91,14 @@ namespace endpoints {
         char* render_buffer = new char[simple_template_html_decompressed_size+256];
         int size = sprintf(
             render_buffer, templateStr.c_str(), 
-            modules::colorKnobEnabled ? "" : "style=\"display: none;\"",
+            modules::colorKnobEnabled ? "" : "display: none;",
             channelsInCurrentColorspace[0],
             fixedpointFilter15(filteredChannels[0]),
             channelsInCurrentColorspace[1],
             fixedpointFilter15(filteredChannels[1]),
             channelsInCurrentColorspace[2],
             fixedpointFilter15(filteredChannels[2]),
-            modules::whiteKnobEnabled ? "" : "style=\"display: none;\"",
+            modules::whiteKnobEnabled ? "" : "display: none;",
             channelsInCurrentColorspace[3],
             fixedpointFilter15(filteredChannels[3])
         );
