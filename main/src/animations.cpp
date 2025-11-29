@@ -90,6 +90,7 @@ namespace animations {
             }
             stage.use_white = stage_json.as<bool>();
         }
+        loaded_stages[0].generateTransition(&current_transition);
         inputs::source_control = inputs::scAnimation;
     }
 
@@ -108,7 +109,6 @@ namespace animations {
         }
         if (current_time >= next_ms)
             next_stage->generateTransition(this);
-        loaded_stages[0].generateTransition(&current_transition);
     }
 
 

@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "timer_shutdown.h"
 #include "inputs.h"
 #include "common_types.h"
