@@ -6,7 +6,6 @@
 
 #include "../lib/ArduinoJson/ArduinoJson.h"
 
-#include "../knobs.h"
 #include "../server.h"
 #include "../inputs.h"
 #include "../outputs.h"
@@ -50,7 +49,7 @@ namespace endpoints {
         if (!server::readJson(req, res, data)) return;
         std::string colorspace = "";
         inputs::setAuto(req->getParams()->getQueryParameter("colorspace", colorspace) ? String(colorspace.c_str()) : modules::webColorSpace, {data[0].as<fixed32_c>(), data[1].as<fixed32_c>(), data[2].as<fixed32_c>(), data[3].as<fixed32_c>()});
-        knobs::turnOff();
+        inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
         outputs::writeOutput();
         server::sendOk(res);   
@@ -66,7 +65,7 @@ namespace endpoints {
                 return constrain<fixed32_c>(fixed32_c::fromCharBuf(param.c_str())/15, 0, 1);
             };    
             ColorChannels channels = {fun("ch0"), fun("ch1"), fun("ch2"), fun("ch3")};
-            knobs::turnOff();
+            inputs::source_control = inputs::scWeb;
             timer_shutdown::resetTimer();
             inputs::setAuto(modules::webColorSpace, channels);
             outputs::writeOutput();

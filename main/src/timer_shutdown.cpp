@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "timer_shutdown.h"
-#include "knobs.h"
+#include "inputs.h"
 #include "common_types.h"
 #include "outputs.h"
 
@@ -36,7 +36,7 @@ namespace timer_shutdown {
 
         if (ctime > shutdown_time) {
             if (!fading_out) {
-                knobs::turnOff();
+                inputs::source_control = inputs::scFadingOut;
                 fading_out = true;
             }
             std::int64_t diff = ctime - shutdown_time;

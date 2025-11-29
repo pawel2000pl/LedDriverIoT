@@ -232,5 +232,42 @@
                 "max_value": 7200
             }
         }
+    },
+    "animation-period": {
+        "type": "integer",
+        "min_value": 0,
+        "max_value": 86400000
+    },
+    "animation-stage": {
+        "type": "object",
+        "fields": {
+            "fade_in_ms": "animation-period",
+            "fade_in_randomness": "animation-period",
+            "period_ms": "animation-period",
+            "period_randomness": "animation-period",
+            "colorspace": "channel-setting",
+            "base_color": "color-channels",
+            "color_randomness": "color-channels",
+            "next_stages": {
+                "type": "array",
+                "item": {
+                    "type": "integer",
+                    "min_value": 0,
+                    "max_value": 15
+                },
+                "max_length": 16
+            },
+            "use_white": "bool"
+        }
+    },
+    "animation-sequence": {
+        "type": "array",
+        "max_length": 16,
+        "item": "animation-stage"
+    },
+    "animations-list": {
+        "type": "array",
+        "item": "animation-sequence",
+        "max_length": 64
     }
 }

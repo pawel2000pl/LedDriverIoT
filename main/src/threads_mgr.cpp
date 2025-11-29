@@ -4,6 +4,7 @@
 
 #include "knobs.h"
 #include "timer_shutdown.h"
+#include "animations.h"
 
 namespace threads_mgr {
     
@@ -55,11 +56,13 @@ namespace threads_mgr {
 
     TaskThread knobsThread(knobs::checkTimer, 20);
     TaskThread shutdownThread(timer_shutdown::checkTimer, 20);
+    TaskThread animationsThread(animations::checkTimer, 20);
 
 
     void attachTimer() {
         knobsThread.init();
         shutdownThread.init();
+        animationsThread.init();
     }
 
 }

@@ -6,7 +6,6 @@
 
 #include "../lib/ArduinoJson/ArduinoJson.h"
 
-#include "../knobs.h"
 #include "../server.h"
 #include "../inputs.h"
 #include "../outputs.h"
@@ -78,7 +77,7 @@ namespace endpoints {
     void applyFavorite(HTTPRequest* req, HTTPResponse* res) {
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
-        knobs::turnOff();
+        inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
         inputs::applyFavoriteColor(String(code.c_str()));
         outputs::writeOutput();
@@ -91,7 +90,7 @@ namespace endpoints {
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
         inputs::applyFavoriteColor(String(code.c_str()));
-        knobs::turnOff();
+        inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
         outputs::writeOutput();
 

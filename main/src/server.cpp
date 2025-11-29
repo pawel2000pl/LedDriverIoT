@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <esp_system.h>
+#include <esp_random.h>
 
 #include "lib/fastlz/fastlz.h"
 
@@ -215,7 +216,7 @@ namespace server {
     void sendCacheControlHeader(HTTPResponse* res) {
         int minAge = 432000; 
         int maxAge = 604800; 
-        int randomAge = random(minAge, maxAge + 1);
+        int randomAge = minAge + (esp_random() % (maxAge - minAge));
         String headerValue = "max-age=" + String(randomAge);
         res->setHeader("Cache-Control", headerValue.c_str());
     }

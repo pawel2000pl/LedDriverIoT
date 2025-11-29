@@ -40,7 +40,6 @@ void setup() {
 	delay(50); // await for stable voltage in peripherals
 	Serial.begin(115200);  
 	Serial.println("Initialization");
-	randomSeed(29615);
 	hardware::detectHardware();
 	temperature::init();
 	temperature::block_until_is_ok();

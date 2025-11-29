@@ -80,8 +80,8 @@ def create_name_resolver(name_list, indent=2):
         return indent_s + 'return (def && (!same_str(name, '+res_str+'.name))) ? *def : ' + res_str + ';'
 
     pos, letter = find_best_divide_letter([name + '\0' for name in name_list])
-    list1 = [name for name in name_list if ord(name[pos]) <= ord(letter)]
-    list2 = [name for name in name_list if ord(name[pos]) > ord(letter)]
+    list1 = [name for name in name_list if len(name) == pos or ord(name[pos]) <= ord(letter)]
+    list2 = [name for name in name_list if len(name) > pos and ord(name[pos]) > ord(letter)]
     result = [
         indent_s, "if (name[%d] <= %d)"%(pos, ord(letter)), " {\n",
         create_name_resolver(list1, indent+2), "\n",

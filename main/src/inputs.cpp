@@ -6,6 +6,8 @@
 
 namespace inputs {
 
+    SourceControl source_control = scKnobs;
+
     namespace filters {
         MixedFunction inputSaturation;
         MixedFunction inputHueBasic;
