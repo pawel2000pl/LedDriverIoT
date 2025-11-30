@@ -260,6 +260,16 @@
             "use_white": "bool"
         }
     },
+    "animation-start": {
+        "type": "object",
+        "fields": {
+            "id": {
+                "type": "integer",
+                "min_value": 0,
+                "max_value": 15
+            }
+        }
+    },
     "animation-sequence": {
         "type": "array",
         "max_length": 16,

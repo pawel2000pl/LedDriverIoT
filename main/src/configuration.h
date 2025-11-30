@@ -37,6 +37,7 @@ namespace configuration {
     String assertConfiguration(JsonVariant configuration);
     JsonDocument getVersionInfo();
     String getConfigurationStr();
+    String getAnimationsStr();
     JsonDocument getConfiguration();
     JsonDocument getFavorites();
     JsonDocument getAnimations();
