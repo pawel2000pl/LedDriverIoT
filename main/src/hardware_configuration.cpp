@@ -44,7 +44,8 @@ namespace hardware {
 					digitalWrite(pin, LOW);
 			}
 			pinMode(read_pin, INPUT);
-			delayMicroseconds(RELAXATION_DELAY);
+			auto wakeup = micros() + RELAXATION_DELAY;
+			do vTaskDelay(0); while (micros() < wakeup);
 			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
 	}
 
