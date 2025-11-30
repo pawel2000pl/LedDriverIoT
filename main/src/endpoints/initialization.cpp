@@ -11,6 +11,7 @@
 #include "outputs.h"
 #include "network.h"
 #include "favorites.h"
+#include "statistics.h"
 #include "temperature.h"
 #include "configuration.h"
 #include "initialization.h"
@@ -37,6 +38,7 @@ namespace endpoints {
     void configureServer() {
         server::configure();	
         server::addCallback("/", "GET", handleIndex);
+        server::addCallback("/statistics.txt", "GET", sendStatistics);
         server::addCallback("/config.json", "GET", sendConfiguration);
         server::addCallback("/favicon.ico", "GET", sendFavicon);
         server::addCallback("/config.json", "POST", recvConfiguration);

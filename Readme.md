@@ -121,6 +121,35 @@ You can aslo run a script which builds the image, runs the container, downloads 
 
 The file `iot-led-driver.bin` can be uploaded on `Configuration` page in `Update` tab.
 
+## Runtime statistics
+The runtime statistics are available on `/statistics.txt` endpoint.<br>
+The last system statistics:
+~~~
+=== Tasks info ===
+Name             |        Ticks | CPU % | Free stack |  Stack ptr
+-----------------+--------------+-------+------------+------------
+loopTask         |      9904040 |    5% |       1120 | 0x3fca4c4c
+IDLE             |    166867918 |   88% |       1240 | 0x3fca3318
+shutdown         |       263624 |    0% |       1700 | 0x3fcb2a1c
+tiT              |       382535 |    0% |       2764 | 0x3fca7894
+knobs            |      8344395 |    4% |       1516 | 0x3fcb20b4
+sys_evt          |         1150 |    0% |       2264 | 0x3fca8d04
+arduino_events   |         1293 |    0% |       2836 | 0x3fca996c
+wifi             |      3163878 |    1% |       2140 | 0x3fcab7f4
+esp_timer        |       604891 |    0% |       3672 | 0x3fca1008
+Tmr Svc          |            8 |    0% |       1792 | 0x3fca3a80
+mdns             |        28925 |    0% |       3092 | 0x3fcb67ec
+
+
+=== Heap info ===
+Total size:            	262140
+Minimum free heap:     	134184	( 51% )
+Total free bytes:      	148400	( 56% )
+Total allocated bytes: 	113740	( 43% )
+Largest free block:    	114688	( 43% )
+Blocks free:           	     6
+Blocks allocated:      	   450
+~~~
 
 ## How to connect first time
 

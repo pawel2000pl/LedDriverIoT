@@ -1,9 +1,12 @@
 #include <functional>
+#include <cstring>
 
 #include "threads_mgr.h"
 
 #include "knobs.h"
 #include "timer_shutdown.h"
+
+#define TASK_NAME_SIZE 16
 
 namespace threads_mgr {
     
@@ -17,15 +20,22 @@ namespace threads_mgr {
 
         public:
 
-            TaskThread(std::function<void()> handler, unsigned long int period=16)
-             : runner(handler), period_ms(period), taskHandle(NULL) {}
+            TaskThread(std::function<void()> handler, unsigned long int period=16, const char* name="")
+             : runner(handler), period_ms(period), taskHandle(NULL) {
+                unsigned len = strlen(name);
+                if (len > TASK_NAME_SIZE) len = TASK_NAME_SIZE;
+                for (unsigned i=0;i<len;i++)
+                    task_name[i] = name[i];
+                task_name[len] = 0;
+                task_name[TASK_NAME_SIZE] = 0;
+             }
 
             void init() {
                 if (taskHandle) return;
                 xTaskCreatePinnedToCore(
                     TaskThread::loop,     // Task function
-                    "unnamed",            // Task name
-                    10000,                // Stack size (bytes)
+                    task_name,            // Task name
+                    2048,                 // Stack size
                     (void*)this,          // Parameters
                     1,                    // Priority
                     &taskHandle,          // Task handle
@@ -38,6 +48,7 @@ namespace threads_mgr {
             std::function<void()> runner;
             unsigned long int period_ms;
             TaskHandle_t taskHandle;
+            char task_name[TASK_NAME_SIZE+1];
 
             void execute() {
                 if (!settingsInLock)
@@ -53,8 +64,8 @@ namespace threads_mgr {
 
     };
 
-    TaskThread knobsThread(knobs::checkTimer, 20);
-    TaskThread shutdownThread(timer_shutdown::checkTimer, 20);
+    TaskThread knobsThread(knobs::checkTimer, 20, "knobs");
+    TaskThread shutdownThread(timer_shutdown::checkTimer, 20, "shutdown");
 
 
     void attachTimer() {
