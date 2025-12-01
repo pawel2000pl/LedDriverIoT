@@ -66,7 +66,7 @@ namespace endpoints {
             "    }\n"
             "}\n"
             "</style>\n"
-            "<p>Please wait, upgrading client app...</p>\n"
+            "<p>Please wait, upgrading the client app...</p>\n"
             "<progress id=\"upgrade_progress\" value=\"0\" max=\"100\"/>\n"
             "<script defer>\n"
             "   async function upgrade() {\n"
