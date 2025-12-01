@@ -40,7 +40,7 @@ function wifi_selector_factory(ssid="") {
     const text2 = $new('span');
     text2.textContent = 'Password: ';
     const password_input = $new('input');
-    password_input.type = 'password';
+    password_input.classList = ['masked'];
     password_input.onchange = ()=>{wifiWasModified = true;};
     const hiddenInput = $new('input');
     hiddenInput.type = 'checkbox';

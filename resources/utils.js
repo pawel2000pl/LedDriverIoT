@@ -1,9 +1,14 @@
 "use strict";
 
 
-Array.from(document.getElementsByClassName('link-button')).forEach((button)=>{
-    const linkAttr = button.attributes['link'] ?? undefined;
-    const link = (linkAttr === undefined) ? './#' : linkAttr.value;
+const MENU_ITEMS = {
+    'Main page': '/index.html',
+    'Favorites': '/favorites.html',
+    'Configure': '/config.html'
+};
+
+
+function addLinkToButton(button, link) {
     button.addEventListener('click', _ => {
         window.location = link;
     });
@@ -27,7 +32,7 @@ Array.from(document.getElementsByClassName('link-button')).forEach((button)=>{
         button.touchTimer = -1;
         window.location = link;
     });
-});
+}
 
 
 async function fetchVersion() {
@@ -72,3 +77,19 @@ function deepEqual(a, b) {
 const $id = (id)=>document.getElementById(id);
 const $new = (...args)=>document.createElement(...args);
 
+
+function renderMenuOnElement(element) {
+    element.innerHTML = '';
+    for(let [label, link] of Object.entries(MENU_ITEMS)) {
+        if (location.pathname.startsWith(link))
+            continue;
+        const btn = $new('button');
+        btn.classList = ['main-page-button', 'link-button'];
+        btn.textContent = label;
+        addLinkToButton(btn, link);
+        element.appendChild(btn);
+    }
+}
+
+
+Array.from(document.getElementsByClassName('main-menu')).forEach(renderMenuOnElement);

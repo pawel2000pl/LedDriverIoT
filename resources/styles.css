@@ -232,3 +232,14 @@ simple-chart canvas {
     text-align: center;  
     margin: 0px;
 }
+
+@font-face {
+    font-family: 'mask_font';
+    src: url('/text-security.woff2');
+}
+
+.masked {
+    -webkit-text-security: disc;
+    -mox-text-security: disc;
+    font-family: 'mask_font';
+}
