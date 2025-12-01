@@ -235,7 +235,7 @@ simple-chart canvas {
 
 @font-face {
     font-family: 'mask_font';
-    src: url('/text-security.woff2');
+    src: url('/text_security.woff2');
 }
 
 .masked {
