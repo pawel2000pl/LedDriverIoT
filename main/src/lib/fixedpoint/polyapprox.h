@@ -56,6 +56,7 @@ class PolyApprox {
             __fit<Calculable>(src, part_count, range_min, range_max, dx);
         }
 
+
         template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<!enable_part_count, void>::type* = nullptr>
         PolyApprox(const std::function<Calculable(Calculable)>& src, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
             __fit<Calculable>(src, static_part_count, range_min, range_max, dx);
@@ -66,6 +67,7 @@ class PolyApprox {
         static PolyApprox create(const std::function<Calculable(Calculable)>& src, unsigned part_count, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
             return PolyApprox(src, part_count, range_min, range_max, dx);
         }
+
 
         template <typename Calculable, bool enable_part_count = !is_static, typename std::enable_if<!enable_part_count, void>::type* = nullptr>
         static PolyApprox create(const std::function<Calculable(Calculable)>& src, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
@@ -139,6 +141,18 @@ class PolyApprox {
 
 
         template<typename T>
+        T max(T a, T b) {
+            return a > b ? a : b;
+        }
+
+                
+        template<typename T>
+        T absmax(T a, T b) {
+            return max<T>(abs<T>(a), abs<T>(b));
+        }
+
+
+        template<typename T>
         int sign(T x) {
             if (x < 0) return -1;
             if (x > 0) return 1;
@@ -151,6 +165,7 @@ class PolyApprox {
         resize_coefficients(unsigned new_size) {
             coefficients.resize(new_size);
         }
+        
 
         template<typename CT>
         typename std::enable_if<std::is_same<CT, static_coefficients>::value, void>::type 
@@ -159,30 +174,34 @@ class PolyApprox {
 
         template <typename Calculable>
         void __fit(const std::function<Calculable(Calculable)>& src, unsigned part_count, Calculable range_min, Calculable range_max, Calculable dx=1e-3) {
-            this->resize_coefficients<coefficients_type>(part_count);
-
+            
+            constexpr const Calculable mid_der_k = Calculable(3) / 2;
             Calculable inc = (range_max - range_min) / part_count;
+            Calculable half_inc = inc / 2;
             Calculable inv_inc = Calculable(1) / inc;
             Calculable inv_inc2 = inv_inc * inv_inc;
             Calculable inv_inc3 = inv_inc2 * inv_inc;
-            Calculable idx = Calculable(1) / dx;
-            Calculable idx2 = idx / 2;
+            Calculable inc_idx = inc / dx;
+            Calculable half_inc_idx = inc_idx / 2;
             this->range_min = range_min;
             this->inv_incrementator = inv_inc;
+            this->resize_coefficients<coefficients_type>(part_count);
 
             Calculable prev_value = src(range_min);
-            Calculable prev_deriverate = (src(range_min+dx) - prev_value) * inc * idx;
+            Calculable prev_deriverate = (src(range_min+dx) - prev_value) * inc_idx;
             Calculable prev_x = range_min;
 
             for (unsigned i=1;i<=part_count;i++) {
                 Calculable x = range_min + i * inc;
                 Calculable value = src(x);
-                Calculable new_deriverate = ((i<part_count) ? ((src(x+dx) - src(x-dx)) * idx2) : ((value - src(x-dx)) * idx)) * inc;
+                Calculable v_mid = src(x - half_inc);
+                Calculable new_deriverate = ((i<part_count) ? ((src(x+dx) - src(x-dx)) * half_inc_idx) : ((value - src(x-dx)) * inc_idx));
                 Calculable deriverate = new_deriverate;
                 Calculable vx = value - prev_value;
-                Calculable max_deriverate = 3 * abs<Calculable>(vx);
-                if (abs<Calculable>(prev_deriverate) > max_deriverate)
-                    prev_deriverate = max_deriverate*sign<Calculable>(prev_deriverate);
+                Calculable max_prev_deriverate = 3 * absmax<Calculable>(mid_der_k * (v_mid - prev_value), vx);
+                Calculable max_deriverate = 3 * absmax<Calculable>(mid_der_k * (v_mid - value), vx);
+                if (abs<Calculable>(prev_deriverate) > max_prev_deriverate)
+                    prev_deriverate = max_prev_deriverate*sign<Calculable>(prev_deriverate);
                 if (abs<Calculable>(deriverate) > max_deriverate)
                     deriverate = max_deriverate*sign<Calculable>(deriverate);
 
