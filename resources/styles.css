@@ -243,3 +243,49 @@ simple-chart canvas {
     -mox-text-security: disc;
     font-family: 'mask_font';
 }
+
+raw-color-picker input, .like-color-picker input {
+    height: 1.8em;
+    margin-right: 8px;
+}
+
+raw-color-picker input[type="color"] {
+    width: 4em;
+}
+
+raw-color-picker td:last-of-type {
+  padding-left: 16px;
+}
+
+
+.animation-stage {
+    border: 1px solid black;
+    padding: 12px;;
+    display: block;
+    @media(prefers-color-scheme:dark) {
+        border-color:white;
+    }
+}
+
+.color-random-sample {
+    display: block;
+}
+
+.color-random-sample .small-color-sample {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 0.5px solid lightgray;
+}
+
+.next-stage-table {
+    border-collapse: collapse;
+    border: 0px none;
+}
+
+.next-stage-table td {
+    width: min-content;
+    text-align: center;  
+    padding: 0px;  
+    font-size: small;
+}

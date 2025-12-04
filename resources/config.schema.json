@@ -245,7 +245,6 @@
             "fade_in_randomness": "animation-period",
             "period_ms": "animation-period",
             "period_randomness": "animation-period",
-            "colorspace": "channel-setting",
             "base_color": "color-channels",
             "color_randomness": "color-channels",
             "next_stages": {

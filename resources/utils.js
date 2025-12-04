@@ -3,6 +3,7 @@
 
 const MENU_ITEMS = {
     'Main page': '/index.html',
+    'Animations': '/animations.html',
     'Favorites': '/favorites.html',
     'Configure': '/config.html'
 };

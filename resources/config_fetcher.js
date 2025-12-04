@@ -142,8 +142,9 @@ async function assertConfig(configObject) {
 }
 
 
-function exportConfigToJSON() {
-    const jsonConfig = JSON.stringify(config, null, 4);
+function exportConfigToJSON(new_config=null) {
+    const dump_data = new_config === null ? config : new_config;
+    const jsonConfig = JSON.stringify(dump_data, null, 4);
     const blob = new Blob([jsonConfig], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

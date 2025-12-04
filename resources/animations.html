@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+
+<html>
+
+    <head>
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="stylesheet" href="/styles.css" />
+        <link name="manifest" href="manifest.json" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8" />
+    </head>
+    
+    <body>
+        <h1 class="name-header">Animations</h1>
+        <p class="upper-menu main-menu"></p>
+        <div id="animations-div"></div>
+
+        <div id="animation-stage-template">
+            <div class="animation-stage">
+                <h2 class="stage-number-head">Stage #<span class="stage-number-value">0</span></h2>
+                <input type="number" name="fade_in_ms" value="1000" step="100" min="0" max="86400000"/>
+                <input type="number" name="fade_in_randomness" value="1000" step="100" min="0" max="86400000"/>
+                <input type="number" name="period_ms" value="1000" step="100" min="0" max="86400000"/>
+                <input type="number" name="period_randomness" value="1000" step="100" min="0" max="86400000"/>
+                <div class="white-channel-related">
+                    <input type="checkbox" name="use_white"/>
+                    <label onclick="const checkbox = event.target.parentNode.querySelector('input'); checkbox.checked = !checkbox.checked;">Set also the white channel</label>
+                </div>
+                <raw-color-picker name="base_color"></raw-color-picker>
+                <div class="like-color-picker">
+                    <table>
+                        <thead>
+                            <td>Hue</td>
+                            <td>Saturation</td>
+                            <td>Value</td>
+                            <td>White</td>
+                        </thead>
+                        <tbody>
+                            <td><input type="number" name="color_randomness_hue" min="0" max="1" value="0" step="0.01" onchange="generateColorRandomSample(event.target)"/></td>
+                            <td><input type="number" name="color_randomness_saturation" min="0" max="1" value="0" step="0.01" onchange="generateColorRandomSample(event.target)"/></td>
+                            <td><input type="number" name="color_randomness_value" min="0" max="1" value="0" step="0.01" onchange="generateColorRandomSample(event.target)"/></td>
+                            <td><input type="number" name="color_randomness_white" min="0" max="1" value="0" step="0.01" onchange="generateColorRandomSample(event.target)"/></td>
+                        </tbody>
+                    </table>
+                    <button onclick="generateColorRandomSample(event.target)">Generate another samples</button>
+                </div>
+                <div class="color-random-sample"></div>
+                <p>
+                    <span>Next stage:</span>
+                    <table class="next-stage-table">
+                        <thead>
+                            <tr>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>2</td>
+                                <td>3</td>
+                                <td>4</td>
+                                <td>5</td>
+                                <td>6</td>
+                                <td>7</td>
+                                <td>8</td>
+                                <td>9</td>
+                                <td>10</td>
+                                <td>11</td>
+                                <td>12</td>
+                                <td>13</td>
+                                <td>14</td>
+                                <td>15</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-0"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-1"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-2"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-3"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-4"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-5"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-6"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-7"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-8"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-9"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-10"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-11"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-12"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-13"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-14"/></td>
+                                <td><input type="checkbox" class="next-stage" name="next-stage-15"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </p>
+            </div>
+        </div>
+
+
+        <script src="/utils.js" defer="defer"></script>
+        <script src="/conversions.js" defer="defer"></script>
+        <script src="/raw_color_picker.js" defer="defer"></script>
+        <script src="/config_fetcher.js" defer="defer"></script>
+        <script src="/component_list.js" defer="defer"></script>
+        <script src="/animations.js" defer="defer"></script>
+        <script src="/knob.js" defer="defer"></script>
+        
+    </body>
+
+</html>
+
