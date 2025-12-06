@@ -249,12 +249,35 @@ raw-color-picker input, .like-color-picker input {
     margin-right: 8px;
 }
 
+raw-color-picker table, .like-color-picker table {
+    display: inline-block;
+}
+
 raw-color-picker input[type="color"] {
     width: 4em;
 }
 
-raw-color-picker td:last-of-type {
-  padding-left: 16px;
+raw-color-picker input[type="range"] {
+    appearance: none;  
+    height: min-content;
+    border-radius: 10px;
+}
+
+
+raw-color-picker input[type="range"][class="hue_input"] {
+    background: linear-gradient(to right, red, yellow, green, blue, purple, red);
+}
+
+raw-color-picker input[type="range"][class="saturation_input"] {
+    background: linear-gradient(to right, lightgray, gray);
+}
+
+raw-color-picker input[type="range"][class="value_input"] {
+    background: linear-gradient(to right, black, white);
+}
+
+raw-color-picker input[type="range"][class="white_input"] {
+    background: linear-gradient(to right, black, white);
 }
 
 
@@ -271,11 +294,15 @@ raw-color-picker td:last-of-type {
     display: block;
 }
 
-.color-random-sample .small-color-sample {
+.div-color-sample {
     display: inline-block;
     width: 1em;
     height: 1em;
     border: 0.5px solid lightgray;
+}
+
+.stage-number-head .div-color-sample {
+    float: right;
 }
 
 .next-stage-table {

@@ -22,7 +22,7 @@ function generateColorRandomSample(targetStage) {
         white: Number(targetStage.querySelector('[name="color_randomness_white"]').value)
     };
 
-    Array.from(targetStage.querySelectorAll('.color-random-sample .small-color-sample')).forEach(div => {
+    Array.from(targetStage.querySelectorAll('.div-color-sample')).forEach(div => {
 
         const color = [
             base_color.hue + randomness.hue * (Math.random() - 0.5),
@@ -30,8 +30,8 @@ function generateColorRandomSample(targetStage) {
             base_color.value + randomness.value * (Math.random() - 0.5)
         ];
         
-        const constrainColor = x => (x < 0) ? 0 : (x > 1) ? 1 : x;
-        const rgb = hsvToRgb(...color.map(constrainColor));
+        const cc = x => (x <= 0) ? 0 : (x >= 1) ? 1 : x;
+        const rgb = hsvToRgb((color[0] + 1) % 1, cc(color[1]), cc(color[2]));
 
         div.style.backgroundColor = '#' + rgb.map(channel => Math.round(255*channel).toString(16).padStart(2, '0')).join('');
 
@@ -57,6 +57,13 @@ Promise.all([configPromise, animationsPromise]).then(([config, animations])=>{
 });
 
 
+function switchRandomInputs(event) {
+    Array.from(event.target.parentNode.parentNode.querySelectorAll('.like-color-picker input')).forEach(element => {
+        element.type = (element.type == 'number') ? 'range' : 'number';
+    });
+}
+
+
 function regenerateSamples() {
     Array.from(document.getElementsByClassName('color-random-sample')).forEach(element => {
         element.innerHTML = '';
@@ -64,10 +71,10 @@ function regenerateSamples() {
             const row_div = $new('div');
             row_div.style.display = 'block';
             element.appendChild(row_div);
-            const col_count = row_div.clientWidth / 18; // 16px width + 1px border + margin
+            const col_count = Math.floor(row_div.clientWidth / 18); // 16px width + 2 x 1px border
             for (let col=0;col<col_count;col++) {
                 const div = $new('div');
-                div.classList = ['small-color-sample'];
+                div.classList = ['div-color-sample'];
                 row_div.appendChild(div);
             }
         }
@@ -77,3 +84,10 @@ function regenerateSamples() {
 
 regenerateSamples();
 window.addEventListener('resize', regenerateSamples);
+
+Array.from(document.getElementsByClassName('animation-stage')).forEach(element => {
+    if (element.attachedUpdatingSamples) return;
+    element.attachedUpdatingSamples = true;
+    element.addEventListener('change', event => generateColorRandomSample(event.target));
+    element.addEventListener('input', event => generateColorRandomSample(event.target));
+});

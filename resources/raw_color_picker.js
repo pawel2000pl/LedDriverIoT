@@ -5,56 +5,72 @@ class RawColorPicker extends HTMLElement {
 
     constructor() {
         super();
-        this.hue_input = this.__createSubinput();
-        this.saturation_input = this.__createSubinput();
-        this.value_input = this.__createSubinput();
-        this.white_input = this.__createSubinput();
+        this.hue_input = this.__createSubinput('hue_input');
+        this.saturation_input = this.__createSubinput('saturation_input');
+        this.value_input = this.__createSubinput('value_input');
+        this.white_input = this.__createSubinput('white_input');
         this.colorpicker = $new('input');
         this.colorpicker.type = 'color';
         this.colorpicker.addEventListener('change', ()=>{
             this.__updateFromColorpicker();
         });
 
-        const table = $new('table');
-        const thead = $new('thead');
-        const trh = $new('tr');
-        let td = null;
-        trh.appendChild((td = $new('td'), td.textContent = 'Hue', td));
-        trh.appendChild((td = $new('td'), td.textContent = 'Saturation', td));
-        trh.appendChild((td = $new('td'), td.textContent = 'Value', td));
-        trh.appendChild((td = $new('td'), td.textContent = 'White', td));
-        trh.appendChild((td = $new('td'), td.textContent = 'Color', td));
-        thead.appendChild(trh);
-        const tbody = $new('tbody');
-        const trb = $new('tr');
-        trb.appendChild((td = $new('td'), td.appendChild(this.hue_input), td));
-        trb.appendChild((td = $new('td'), td.appendChild(this.saturation_input), td));
-        trb.appendChild((td = $new('td'), td.appendChild(this.value_input), td));
-        trb.appendChild((td = $new('td'), td.appendChild(this.white_input), td));
-        trb.appendChild((td = $new('td'), td.appendChild(this.colorpicker), td));
-        tbody.appendChild(trb);
-        table.appendChild(thead);
-        table.appendChild(tbody);
-        this.appendChild(table);
+        this.saturation_input.value = 1;
+        this.value_input.value = 1;
 
+        const types = {
+            'hue_input': 'Hue',
+            'saturation_input': 'Saturation',
+            'value_input': 'Value',
+            'white_input': 'White',
+            'colorpicker': 'Color',
+        };
+
+        const inputs_div = $new('div');
+
+        for (const [input, label] of Object.entries(types)) {
+            const table = $new('table');
+            let td = null;
+            let tr = $new('tr');
+            tr.appendChild((td = $new('td'), td.textContent = label, td));
+            table.appendChild(tr);
+            tr = $new('tr');
+            tr.appendChild((td = $new('td'), td.appendChild(this[input]), td));
+            table.appendChild(tr);
+            inputs_div.appendChild(table);
+        }
+
+        const buttons_div = $new('div');
         let btn = null;
-        this.appendChild((btn = $new('button'), btn.textContent = 'Set black', btn.onclick=()=>{this.__setBlack()}, btn));
-        this.appendChild((btn = $new('button'), btn.textContent = 'Set current', btn.onclick=()=>{this.__setCurrent()}, btn));
-        this.appendChild((btn = $new('button'), btn.textContent = 'Set white', btn.onclick=()=>{this.__setWhite()}, btn));
+        buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set black', btn.onclick=()=>{this.__setBlack()}, btn));
+        buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set current', btn.onclick=()=>{this.__setCurrent()}, btn));
+        buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set white', btn.onclick=()=>{this.__setWhite()}, btn));
+        buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Switch sliders / text', btn.onclick=()=>{this.__swicthInputMode()}, btn));
+        this.appendChild(inputs_div);
+        this.appendChild(buttons_div);
     }
 
 
-    __createSubinput() {
+    __createSubinput(className) {
         let input = $new('input');
-        input.type = 'number';
+        input.type = 'range';
         input.step = '0.01';
         input.min = '0.00';
         input.max = '1.00';
         input.value = '0.00';
+        input.className = [className];
         input.addEventListener('change', ()=>{
             this.__updateFromNumbers();
         });
         return input;
+    }
+
+
+    __swicthInputMode() {
+        const numbers = Array.from(this.querySelectorAll('input[type="number"]'));
+        const ranges = Array.from(this.querySelectorAll('input[type="range"]'));
+        numbers.forEach(element=>element.type='range');
+        ranges.forEach(element=>element.type='number');
     }
 
 
