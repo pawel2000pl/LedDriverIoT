@@ -281,13 +281,18 @@ raw-color-picker input[type="range"][class="white_input"] {
 }
 
 
-.animation-stage {
+.animation-stage, .animation-sequence-options {
     border: 1px solid black;
     padding: 12px;;
     display: block;
     @media(prefers-color-scheme:dark) {
         border-color:white;
     }
+}
+
+.animation-sequence {
+    margin-top: 12px;
+    margin-bottom: 12px;
 }
 
 .color-random-sample {

@@ -30,7 +30,16 @@ namespace endpoints {
         JsonDocument data;
         if (!server::readJson(req, res, data, "animation-start")) return;
         server::sendOk(res);
-        animations::startAnimations(data["id"].as<unsigned>());
+        animations::startAnimation(data["id"].as<unsigned>());
     }
+
+
+    void testAnimation(HTTPRequest* req, HTTPResponse* res) {
+        JsonDocument data;
+        if (!server::readJson(req, res, data, "animation-sequence")) return;
+        server::sendOk(res);
+        animations::startAnimationFromJson(data);
+    }
+
 
 }

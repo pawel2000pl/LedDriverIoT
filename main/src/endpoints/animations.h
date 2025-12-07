@@ -11,5 +11,6 @@ namespace endpoints {
     void sendAnimations(HTTPRequest* req, HTTPResponse* res);
     void saveAnimations(HTTPRequest* req, HTTPResponse* res);
     void startAnimation(HTTPRequest* req, HTTPResponse* res);
+    void testAnimation(HTTPRequest* req, HTTPResponse* res);
 
 }

@@ -55,11 +55,15 @@ namespace animations {
     }
 
 
-    void startAnimations(unsigned id) {
+    void startAnimation(unsigned id) {
         JsonDocument animations = configuration::getAnimations();
         unsigned size = animations.size();
         if (id >= size) return;
-        const auto& stages = animations[id];
+        startAnimationFromJson(animations[id]);
+    }
+
+    
+    void startAnimationFromJson(const JsonVariant& stages) {
         unsigned stages_count = stages.size();
         if (stages_count > max_stages) stages_count = max_stages;
         if (!stages_count) return;

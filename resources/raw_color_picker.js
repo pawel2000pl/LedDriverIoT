@@ -62,6 +62,9 @@ class RawColorPicker extends HTMLElement {
         input.addEventListener('change', ()=>{
             this.__updateFromNumbers();
         });
+        input.addEventListener('input', ()=>{
+            this.__updateFromNumbers();
+        });
         return input;
     }
 

@@ -42,21 +42,6 @@ function generateColorRandomSample(targetStage) {
 }
 
 
-Promise.all([configPromise, animationsPromise]).then(([config, animations])=>{
-    const template = $id('animation-stage-template');
-    
-    animations.forEach(animationsSequence => {
-        const sequenceDiv = $new('div');
-        animationsSequence.forEach(animationStage=>{
-            const stageDiv = template.content.cloneNode(true);
-            //TODO
-
-        });
-    });
-
-});
-
-
 function switchRandomInputs(event) {
     Array.from(event.target.parentNode.parentNode.querySelectorAll('.like-color-picker input')).forEach(element => {
         element.type = (element.type == 'number') ? 'range' : 'number';
@@ -91,3 +76,45 @@ Array.from(document.getElementsByClassName('animation-stage')).forEach(element =
     element.addEventListener('change', event => generateColorRandomSample(event.target));
     element.addEventListener('input', event => generateColorRandomSample(event.target));
 });
+
+
+function addStage(target) {
+    const maxStageCount = 16;
+    let targetStage = target;
+    while (!targetStage.classList.contains('animation-sequence'))
+        targetStage = targetStage.parentNode;
+    const targetDiv = targetStage.querySelector('.animation-sequence-list');
+    const currentStagesCount = targetStage.getElementsByClassName('animation-stage').length;
+    if (currentStagesCount > maxStageCount) return alert('Maximum count of stages ecxeeded.');
+    const template = $id('animation-stage-template');
+    const div = template.content.cloneNode(true);
+    div.querySelector('.stage-number-value').textContent = currentStagesCount.toString();
+    targetStage.querySelector('.stages-count-span').textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`
+    targetDiv.appendChild(div);
+    regenerateSamples();
+}
+
+
+function addAnimation() {
+    const template = $id('animation-sequence-template');
+    const div = template.content.cloneNode(true);
+    $id('animations-div').appendChild(div);
+}
+
+
+Promise.all([configPromise, animationsPromise]).then(([config, animations])=>{
+    const template = $id('animation-stage-template');
+    
+    animations.forEach(animationsSequence => {
+        const sequenceDiv = $new('div');
+        animationsSequence.forEach(animationStage=>{
+            const stageDiv = template.content.cloneNode(true);
+            //TODO
+
+        });
+    });
+
+});
+
+
+

@@ -1,9 +1,11 @@
 #pragma once
 
+#include "lib/ArduinoJson/ArduinoJson.h"
 
 namespace animations {
 
     void checkTimer();
-    void startAnimations(unsigned id);
+    void startAnimation(unsigned id);
+    void startAnimationFromJson(const JsonVariant& stages);
 
 }

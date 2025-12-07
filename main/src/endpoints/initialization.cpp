@@ -68,6 +68,7 @@ namespace endpoints {
         server::addCallback("/animations.json", "GET", sendAnimations);
         server::addCallback("/animations.json", "POST", saveAnimations);
         server::addCallback("/start_animation", "POST", startAnimation);
+        server::addCallback("/test_animation", "POST", testAnimation);
         server::start();
     }
 
