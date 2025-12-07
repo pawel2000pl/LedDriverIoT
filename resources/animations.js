@@ -43,7 +43,7 @@ function generateColorRandomSample(targetStage) {
 
 
 function switchRandomInputs(event) {
-    Array.from(event.target.parentNode.parentNode.querySelectorAll('.like-color-picker input')).forEach(element => {
+    Array.from(event.target.parentNode.parentNode.querySelectorAll('.like-color-picker .switchable-input')).forEach(element => {
         element.type = (element.type == 'number') ? 'range' : 'number';
     });
 }
@@ -70,12 +70,24 @@ function regenerateSamples() {
 regenerateSamples();
 window.addEventListener('resize', regenerateSamples);
 
-Array.from(document.getElementsByClassName('animation-stage')).forEach(element => {
-    if (element.attachedUpdatingSamples) return;
-    element.attachedUpdatingSamples = true;
-    element.addEventListener('change', event => generateColorRandomSample(event.target));
-    element.addEventListener('input', event => generateColorRandomSample(event.target));
-});
+function attachSampleEvents(target) {
+    Array.from(target.getElementsByClassName('animation-stage')).forEach(element => {
+        if (element.attachedUpdatingSamples) return;
+        element.attachedUpdatingSamples = true;
+        element.addEventListener('change', event => generateColorRandomSample(event.target));
+        element.addEventListener('input', event => generateColorRandomSample(event.target));
+    });
+}
+
+
+function updateAnimationName(target) {
+    const value = target.value;
+    while (!target.classList.contains('animation-sequence'))
+        target = target.parentNode;
+    Array.from(target.getElementsByClassName('sequence-name')).forEach(element => {
+        element.textContent = value;
+    });
+}
 
 
 function addStage(target) {
@@ -88,9 +100,10 @@ function addStage(target) {
     if (currentStagesCount > maxStageCount) return alert('Maximum count of stages ecxeeded.');
     const template = $id('animation-stage-template');
     const div = template.content.cloneNode(true);
-    div.querySelector('.stage-number-value').textContent = currentStagesCount.toString();
-    targetStage.querySelector('.stages-count-span').textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`
+    Array.from(div.querySelectorAll('.stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
+    Array.from(targetStage.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
     targetDiv.appendChild(div);
+    attachSampleEvents(targetDiv);
     regenerateSamples();
 }
 

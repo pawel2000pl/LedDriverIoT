@@ -30,6 +30,7 @@
                     <div class="div-color-sample"></div>
                     <div class="div-color-sample"></div>
                 </summary>
+                <h3>Stage timing</h3>
                 <div class="like-color-picker">
                     <table>
                         <tr><td>Fade-in time [ms]</td></tr>
@@ -40,7 +41,7 @@
                         <tr><td><input type="number" name="fade_in_randomness" value="1000" step="100" min="0" max="86400000"/></td></tr>
                     </table>
                     <table>
-                        <tr><td>Duration time - [ms]</td></tr>
+                        <tr><td>Duration time [ms]</td></tr>
                         <tr><td><input type="number" name="period_ms" value="1000" step="100" min="0" max="86400000"/></td></tr>
                     </table>                
                     <table>
@@ -52,30 +53,32 @@
                         <label onclick="const checkbox = event.target.parentNode.querySelector('input'); checkbox.checked = !checkbox.checked;">Set also the white channel</label>
                     </div>
                 </div>
+                <h3>Base color</h3>
                 <raw-color-picker name="base_color"></raw-color-picker>
+                <h3>Color randomness [+-]</h3>
                 <div class="like-color-picker">
                     <table>
                         <tr><td>Hue</td></tr><tr>
-                        <tr><td><input type="range" name="color_randomness_hue" min="0" max="1" value="0" step="0.01"/></td></tr>
+                        <tr><td><input class="switchable-input" type="range" name="color_randomness_hue" min="0" max="1" value="0" step="0.01"/></td></tr>
                     </table>
                     <table>
                         <tr><td>Saturation</td></tr><tr>
-                            <tr><td><input type="range" name="color_randomness_saturation" min="0" max="1" value="0" step="0.01"/></td></tr>
+                            <tr><td><input class="switchable-input" type="range" name="color_randomness_saturation" min="0" max="1" value="0" step="0.01"/></td></tr>
                     </table>
                     <table>
                         <tr><td>Value</td></tr><tr>
-                        <tr><td><input type="range" name="color_randomness_value" min="0" max="1" value="0" step="0.01"/></td></tr>
+                        <tr><td><input class="switchable-input" type="range" name="color_randomness_value" min="0" max="1" value="0" step="0.01"/></td></tr>
                     </table>
                     <table>
                         <tr><td>White</td></tr><tr>
-                        <tr><td><input type="range" name="color_randomness_white" min="0" max="1" value="0" step="0.01"/></td></tr>
+                        <tr><td><input class="switchable-input" type="range" name="color_randomness_white" min="0" max="1" value="0" step="0.01"/></td></tr>
                     </table>                
                 </div>
                 <button onclick="generateColorRandomSample(event.target)">Generate another samples</button>
                 <button onclick="switchRandomInputs(event)">Switch sliders / text</button>
                 <div class="color-random-sample"></div>
                 <p>
-                    <span>Next stage:</span>
+                    <h3>Next stage</h3>
                     <table class="next-stage-table">
                         <thead>
                             <tr>
@@ -119,14 +122,29 @@
                         </tbody>
                     </table>
                 </p>
+                <h3>Options</h3>
+                <p>
+                    <button>Copy</button>
+                    <button>Paste</button>
+                    <button>Export</button>
+                    <button>Import</button>
+                    <button>Delete</button>
+                </p>
+                <div class="info-div">
+                    <span><i>Paste</i> and <i>Import</i> overwrites current settings. </span>
+                    <span>To add a new stage based on clipboard content or a file, use buttons below stages list.</span>
+                </div>
             </details>
         </template>
 
         <template id="animation-sequence-template">
             <details class="animation-sequence">
-                <summary class="menu-summary">
-
+                <summary class="menu-summary sequence-name">
                 </summary>
+                <div class="animation-sequence-options">
+                    <span>Animation name: </span>
+                    <input class="sequence-name-input" onchange="updateAnimationName(event.target)" oninput="updateAnimationName(event.target)" type="text"/>
+                </div>
                 <div class="animation-sequence-list"></div>
                 <div class="animation-sequence-options">
                     <button onclick="addStage(event.target)">Add stage</button>
