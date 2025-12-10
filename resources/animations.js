@@ -97,14 +97,22 @@ function addStage(target) {
         targetStage = targetStage.parentNode;
     const targetDiv = targetStage.querySelector('.animation-sequence-list');
     const currentStagesCount = targetStage.getElementsByClassName('animation-stage').length;
-    if (currentStagesCount > maxStageCount) return alert('Maximum count of stages ecxeeded.');
+    if (currentStagesCount >= maxStageCount) {
+        alert('Maximum count of stages has been reached.');
+        return null;
+    }
     const template = $id('animation-stage-template');
-    const div = template.content.cloneNode(true);
-    Array.from(div.querySelectorAll('.stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
+    const div = $new('div');
+    div.appendChild(template.content.cloneNode(true));
+    Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
     Array.from(targetStage.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
     targetDiv.appendChild(div);
-    attachSampleEvents(targetDiv);
+    attachSampleEvents(div);
     regenerateSamples();
+    div.getInputs = () => {
+        return Object.fromEntries(Array.from(targetDiv.getElementsByTagName('input')).map(element => [element.name, element]));
+    };
+    return div;
 }
 
 

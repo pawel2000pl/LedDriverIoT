@@ -3,17 +3,22 @@
 class RawColorPicker extends HTMLElement {
 
 
-    constructor() {
+    constructor(uniq = undefined) {
         super();
+        if (uniq === undefined && this.attributes.name !== undefined)
+            uniq = this.attributes.name.value;
+        this.name = uniq;
         this.hue_input = this.__createSubinput('hue_input');
         this.saturation_input = this.__createSubinput('saturation_input');
         this.value_input = this.__createSubinput('value_input');
         this.white_input = this.__createSubinput('white_input');
         this.colorpicker = $new('input');
         this.colorpicker.type = 'color';
+        this.colorpicker.name = this.name + '_color';
         this.colorpicker.addEventListener('change', ()=>{
             this.__updateFromColorpicker();
         });
+        this.colorpicker.update = ()=>{this.__updateFromColorpicker();};
 
         this.saturation_input.value = 1;
         this.value_input.value = 1;
@@ -45,31 +50,33 @@ class RawColorPicker extends HTMLElement {
         buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set black', btn.onclick=()=>{this.__setBlack()}, btn));
         buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set current', btn.onclick=()=>{this.__setCurrent()}, btn));
         buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set white', btn.onclick=()=>{this.__setWhite()}, btn));
-        buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Switch sliders / text', btn.onclick=()=>{this.__swicthInputMode()}, btn));
+        buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Switch sliders / text', btn.onclick=()=>{this.__switchInputMode()}, btn));
         this.appendChild(inputs_div);
         this.appendChild(buttons_div);
     }
 
 
-    __createSubinput(className) {
+    __createSubinput(name) {
         let input = $new('input');
         input.type = 'range';
         input.step = '0.01';
         input.min = '0.00';
         input.max = '1.00';
         input.value = '0.00';
-        input.className = [className];
+        input.name = this.name + '_' + name;
+        input.className = [name];
         input.addEventListener('change', ()=>{
             this.__updateFromNumbers();
         });
         input.addEventListener('input', ()=>{
             this.__updateFromNumbers();
         });
+        input.update = ()=>{this.__updateFromNumbers();};
         return input;
     }
 
 
-    __swicthInputMode() {
+    __switchInputMode() {
         const numbers = Array.from(this.querySelectorAll('input[type="number"]'));
         const ranges = Array.from(this.querySelectorAll('input[type="range"]'));
         numbers.forEach(element=>element.type='range');
