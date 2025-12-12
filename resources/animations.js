@@ -14,6 +14,51 @@ const animationsPromise = (async ()=>{
 })();
 
 
+function saveStage(stageDiv) {
+    const inputs = stageDiv.getInputs();
+    return {
+        fade_in_ms: Number(inputs.fade_in_ms.value),
+        fade_in_randomness: Number(inputs.fade_in_randomness.value),
+        period_ms: Number(inputs.period_ms.value),
+        period_randomness: Number(inputs.period_randomness.value),
+        use_white: inputs.use_white.checked,
+        base_color: [
+            Number(inputs.base_color_hue_input.value),
+            Number(inputs.base_color_saturation_input.value),
+            Number(inputs.base_color_value_input.value),
+            Number(inputs.base_color_white_input.value)
+        ],
+        color_randomness: [
+            Number(inputs.color_randomness_hue.value),
+            Number(inputs.color_randomness_saturation.value),
+            Number(inputs.color_randomness_value.value),
+            Number(inputs.color_randomness_white.value)
+        ],
+        next_stages: stageDiv.nextStagesDiv.getValues()
+    };
+}
+
+
+function loadStage(stageDiv, data) {
+    const inputs = stageDiv.getInputs();
+    inputs.fade_in_ms.value = data.fade_in_ms;
+    inputs.fade_in_randomness.value = data.fade_in_randomness;
+    inputs.period_ms.value = data.period_ms;
+    inputs.period_randomness.value = data.period_randomness;
+    inputs.use_white.checked = data.checked;
+    inputs.base_color_hue_input.value = data.base_color[0];
+    inputs.base_color_saturation_input.value = data.base_color[1];
+    inputs.base_color_value_input.value = data.base_color[2];
+    inputs.base_color_white_input.value = data.base_color[3];
+    inputs.base_color_white_input.update();
+    inputs.color_randomness_hue.value = data.color_randomness[0];
+    inputs.color_randomness_saturation.value = data.color_randomness[1];
+    inputs.color_randomness_value.value = data.color_randomness[2];
+    inputs.color_randomness_white.value = data.color_randomness[3];
+    stageDiv.nextStagesDiv.setValues(data.next_stages);
+}
+
+
 function generateColorRandomSample(targetStage) {
     while (!targetStage.classList.contains('animation-stage'))
         targetStage = targetStage.parentNode;
@@ -51,8 +96,8 @@ function switchRandomInputs(event) {
 }
 
 
-function regenerateSamples() {
-    Array.from(document.getElementsByClassName('color-random-sample')).forEach(element => {
+function regenerateSamples(target=document) {
+    Array.from(target.getElementsByClassName('color-random-sample')).forEach(element => {
         element.innerHTML = '';
         for (let row=0;row<4;row++) {
             const row_div = $new('div');
@@ -125,11 +170,15 @@ function addStage(target) {
     Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);
     targetDiv.appendChild(div);
     attachSampleEvents(div);
-    componentList(div.querySelector('.next-stage-div'), (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
-    regenerateSamples();
+    const nextStagesDiv = div.querySelector('.next-stage-div');
+    componentList(nextStagesDiv, (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
+    regenerateSamples(div);
+    div.nextStagesDiv = nextStagesDiv;
     div.getInputs = () => {
-        return Object.fromEntries(Array.from(targetDiv.getElementsByTagName('input')).map(element => [element.name, element]));
+        return Object.fromEntries(Array.from(div.getElementsByTagName('input')).map(element => [element.name, element]));
     };
+    div.saveData = () => saveStage(div);
+    div.loadData = (data) => {loadStage(div, data); generateColorRandomSample(nextStagesDiv);};
     return div;
 }
 
