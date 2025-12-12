@@ -310,14 +310,6 @@ raw-color-picker input[type="range"][class="white_input"] {
     float: right;
 }
 
-.next-stage-table {
-    border-collapse: collapse;
-    border: 0px none;
-}
-
-.next-stage-table td {
-    width: min-content;
-    text-align: center;  
-    padding: 0px;  
-    font-size: small;
+.next-stage-div .component-list-position-btn {
+    display: none;
 }

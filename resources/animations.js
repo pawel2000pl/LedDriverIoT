@@ -1,5 +1,10 @@
 "use strict";
 
+
+const maxStageCount = 16;
+const maxNextStagesCount = 16;
+
+
 const animationsPromise = (async ()=>{
     let response = await fetch('/animations.json');
     if (response.status !== 200)
@@ -7,7 +12,6 @@ const animationsPromise = (async ()=>{
     const data = await response.json();
     return data;
 })();
-
 
 
 function generateColorRandomSample(targetStage) {
@@ -36,8 +40,6 @@ function generateColorRandomSample(targetStage) {
         div.style.backgroundColor = '#' + rgb.map(channel => Math.round(255*channel).toString(16).padStart(2, '0')).join('');
 
     });
-
-    
 
 }
 
@@ -89,14 +91,28 @@ function updateAnimationName(target) {
     });
 }
 
+var stageInputCounter = 0;
+
+function nextStageInputFactory(mainDiv, value=0) {
+    const input = $new('input');
+    input.type = 'number';
+    input.min = 0;
+    input.value = value;
+    input.max = mainDiv.getElementsByClassName('animation-stage').length-1;
+    input.name = `stage_input[${stageInputCounter++}]`;
+    input.classList = ['stage-input'];
+    input.setValue = (value)=>input.value = value;
+    input.getValue = ()=>Number(input.value)
+    return input;
+}
+
 
 function addStage(target) {
-    const maxStageCount = 16;
-    let targetStage = target;
-    while (!targetStage.classList.contains('animation-sequence'))
-        targetStage = targetStage.parentNode;
-    const targetDiv = targetStage.querySelector('.animation-sequence-list');
-    const currentStagesCount = targetStage.getElementsByClassName('animation-stage').length;
+    let targetSequence = target;
+    while (!targetSequence.classList.contains('animation-sequence'))
+        targetSequence = targetSequence.parentNode;
+    const targetDiv = targetSequence.querySelector('.animation-sequence-list');
+    const currentStagesCount = targetSequence.getElementsByClassName('animation-stage').length;
     if (currentStagesCount >= maxStageCount) {
         alert('Maximum count of stages has been reached.');
         return null;
@@ -105,9 +121,11 @@ function addStage(target) {
     const div = $new('div');
     div.appendChild(template.content.cloneNode(true));
     Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
-    Array.from(targetStage.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
+    Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
+    Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);
     targetDiv.appendChild(div);
     attachSampleEvents(div);
+    componentList(div.querySelector('.next-stage-div'), (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
     regenerateSamples();
     div.getInputs = () => {
         return Object.fromEntries(Array.from(targetDiv.getElementsByTagName('input')).map(element => [element.name, element]));
