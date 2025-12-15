@@ -15,6 +15,10 @@
         <p class="upper-menu main-menu"></p>
         <div id="animations-div"></div>
         <button onclick="addAnimation()">Add animation</button>
+        <button onclick="">Save</button>
+        <button onclick="">Revert</button>
+        <button onclick="">Import</button>
+        <button onclick="">Export</button>
 
         <template id="animation-stage-template">
             <details class="animation-stage">
@@ -106,7 +110,7 @@
                 </summary>
                 <div class="animation-sequence-options">
                     <span>Animation name: </span>
-                    <input class="sequence-name-input" onchange="updateAnimationName(event.target)" oninput="updateAnimationName(event.target)" type="text"/>
+                    <input class="sequence-name-input" maxlength="64" onchange="updateAnimationName(event.target)" oninput="updateAnimationName(event.target)" type="text"/>
                 </div>
                 <div class="animation-sequence-list"></div>
                 <div class="animation-sequence-options">

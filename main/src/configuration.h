@@ -6,10 +6,6 @@
 #include "resources.h"
 #include "json_utils.h"
 
-#define JSON_CONFIG_BUF_SIZE (16*1024)
-#define JSON_FAVORITES_BUF_SIZE (4096)
-#define JSON_ANIMATIONS_BUF_SIZE (16*1024)
-#define JSON_VERSION_INFO_BUF_SIZE (1024)
 #define CONFIGURATION_FILENAME "/configuration.json"
 #define FAVORITES_FILENAME "/favorites.json"
 #define ANIMATIONS_FILENAME "/animations.json"

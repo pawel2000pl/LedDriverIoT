@@ -62,7 +62,7 @@ function loadStage(stageDiv, data) {
 function generateColorRandomSample(targetStage) {
     while (!targetStage.classList.contains('animation-stage'))
         targetStage = targetStage.parentNode;
-
+    
     const base_color = targetStage.querySelector('[name="base_color"]').color;
     const randomness = {
         hue: Number(targetStage.querySelector('[name="color_randomness_hue"]').value),
@@ -168,25 +168,52 @@ function addStage(target) {
     Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
     Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
     Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);
-    targetDiv.appendChild(div);
-    attachSampleEvents(div);
     const nextStagesDiv = div.querySelector('.next-stage-div');
     componentList(nextStagesDiv, (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
-    regenerateSamples(div);
     div.nextStagesDiv = nextStagesDiv;
     div.getInputs = () => {
         return Object.fromEntries(Array.from(div.getElementsByTagName('input')).map(element => [element.name, element]));
     };
     div.saveData = () => saveStage(div);
     div.loadData = (data) => {loadStage(div, data); generateColorRandomSample(nextStagesDiv);};
+    targetDiv.appendChild(div);
+    attachSampleEvents(div);
+    regenerateSamples(div);
     return div;
 }
 
 
 function addAnimation() {
     const template = $id('animation-sequence-template');
-    const div = template.content.cloneNode(true);
+    const div = $new('div');
+    div.appendChild(template.content.cloneNode(true));
     $id('animations-div').appendChild(div);
+    div.saveData = () => {
+        return {
+            'name': div.querySelector('.sequence-name-input').value,
+            'data': Array.from(div.querySelector('.animation-sequence-list').childNodes).map(element=>element.saveData())
+        };
+    };
+    const sequencePlace = div.querySelector('.animation-sequence');
+    div.loadData = (data) => {
+        const nameInput = div.querySelector('.sequence-name-input');
+        nameInput.value = data.name;
+        updateAnimationName(nameInput);
+        data.data.forEach(sequence => addStage(sequencePlace).loadData(sequence));
+    };
+    return div;
+}
+
+
+function saveAnimations() {
+    // TODO
+    return Array.from($id('animations-div').childNodes).map(div=>div.saveData());
+}
+
+
+function loadAnimations(data) {
+    // TODO
+    data.forEach(item=>addAnimation().loadData(item));
 }
 
 

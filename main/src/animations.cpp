@@ -63,7 +63,8 @@ namespace animations {
     }
 
     
-    void startAnimationFromJson(const JsonVariant& stages) {
+    void startAnimationFromJson(const JsonVariant& animationSequence) {
+        const JsonVariant& stages = animationSequence["data"];
         unsigned stages_count = stages.size();
         if (stages_count > max_stages) stages_count = max_stages;
         if (!stages_count) return;

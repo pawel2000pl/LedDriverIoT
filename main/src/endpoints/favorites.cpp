@@ -33,7 +33,7 @@ namespace endpoints {
             colorJson.add(channels[2]);
             colorJson.add(channels[3]);
         }
-        server::sendJson(res, response, JSON_FAVORITES_BUF_SIZE);
+        server::sendJson(res, response);
     }
 
 

@@ -108,6 +108,13 @@ namespace configuration {
     }
 
 
+    void serializeToFile(const String filename, const JsonDocument& data) {        
+        File file = SPIFFS.open(filename, FILE_WRITE);
+        serializeJson(data, file);
+        file.close();
+    }
+
+
     void saveFile(const String& filename, const unsigned char* content, unsigned length) {
         File file = SPIFFS.open(filename, FILE_WRITE);
         file.write(content, length);
@@ -239,27 +246,17 @@ namespace configuration {
 
 
     void setConfiguration(JsonDocument configuration) {
-        char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
-        unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
-        buf[size] = 0;
-        saveFile(CONFIGURATION_FILENAME, (unsigned char*)buf, size);
-        delete [] buf;
+        serializeToFile(CONFIGURATION_FILENAME, configuration);
     }
 
 
     void setFavorites(JsonDocument favorites) {
-        char* buf = new char[JSON_FAVORITES_BUF_SIZE+1];
-        unsigned size = serializeJson(favorites, buf, JSON_FAVORITES_BUF_SIZE);
-        saveFile(FAVORITES_FILENAME, (unsigned char*)buf, size);
-        delete [] buf;
+        serializeToFile(FAVORITES_FILENAME, favorites);
     }
 
 
     void setAnimations(JsonDocument animations) {
-        char* buf = new char[JSON_ANIMATIONS_BUF_SIZE+1];
-        unsigned size = serializeJson(animations, buf, JSON_ANIMATIONS_BUF_SIZE);
-        saveFile(ANIMATIONS_FILENAME, (unsigned char*)buf, size);
-        delete [] buf;
+        serializeToFile(ANIMATIONS_FILENAME, animations);
     }
 
 

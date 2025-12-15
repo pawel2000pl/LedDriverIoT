@@ -49,11 +49,13 @@
     },
     "wifi-ssid": { 
         "type": "string",
-        "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{0,30}[^] !#;+\\/\"\t]$"
+        "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{0,30}[^] !#;+\\/\"\t]$",
+        "max_length": 256
     },
     "wifi-password": {
         "type": "string",
-        "regexp": "^(.{8,63})?$"
+        "regexp": "^(.{8,63})?$",
+        "max_length": 64
     },
     "wifi-entry": {
         "type": "object",
@@ -65,7 +67,8 @@
     },
     "ap-password": {
         "type": "string",
-        "regexp": "^(.{8,63})?$"
+        "regexp": "^(.{8,63})?$",
+        "max_length": 64
     },
     "channels-settings": {
         "type": "object",
@@ -79,7 +82,7 @@
     },
     "channel-setting": {
         "type": "string",
-        "regex": "^((hsl)|(hsv)|(rgb))$" 
+        "regex": "^((hsl)|(hsv)|(rgb))$"
     },
     "filter-settings": {
         "type": "array",
@@ -270,9 +273,18 @@
         }
     },
     "animation-sequence": {
-        "type": "array",
-        "max_length": 16,
-        "item": "animation-stage"
+        "type": "object",
+        "fields": {
+            "name": {
+                "type": "string",
+                "max_length": 64
+            },
+            "data": {
+                "type": "array",
+                "max_length": 16,
+                "item": "animation-stage"
+            }
+        }
     },
     "animations-list": {
         "type": "array",
