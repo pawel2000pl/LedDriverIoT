@@ -24,7 +24,7 @@ namespace server {
     bool captivePortalEnabled = false;
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
+    void updateConfiguration(const JsonVariantConst configuration) {
         captivePortalEnabled = configuration["wifi"]["access_point"]["captive"].as<bool>();
     }
 
@@ -165,7 +165,7 @@ namespace server {
     }
 
 
-    bool sendJsonStatic(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize) {
+    bool sendJsonStatic(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize) {
         std::vector<char> buf(bufSize);
         unsigned int size = serializeJson(data, buf.data(), bufSize);
         if (size >= bufSize) return false;
@@ -177,13 +177,13 @@ namespace server {
     }
 
 
-    void sendJsonDynamic(HTTPResponse* res, const JsonVariantConst& data) {
+    void sendJsonDynamic(HTTPResponse* res, const JsonVariantConst data) {
         ResponseWriter writer(res);
         serializeJson(data, writer);
     }
 
 
-    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize, int statusCode) {
+    void sendJson(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize, int statusCode) {
         unsigned freeHeap = esp_get_free_heap_size();
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");

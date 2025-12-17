@@ -68,9 +68,9 @@ namespace inputs {
     }
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& filters = configuration["filters"];
-        const auto& inputFilters = filters["inputFilters"];
+    void updateConfiguration(const JsonVariantConst configuration) {
+        const auto filters = configuration["filters"];
+        const auto inputFilters = filters["inputFilters"];
         
         filters::inputSaturation = mixFilterFunctions(toFixedpointVector(inputFilters["saturation"]));
         filters::inputHueBasic = mixFilterFunctions(toFixedpointVector(inputFilters["hue"]));

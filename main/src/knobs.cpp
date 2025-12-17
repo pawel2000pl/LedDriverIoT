@@ -29,7 +29,7 @@ namespace knobs {
     ColorChannels defaultColor = {0,0,0,0};
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
+    void updateConfiguration(const JsonVariantConst configuration) {
         const auto bias = configuration["hardware"]["bias"];
         const auto channelsJson = configuration["channels"];
         fixed32_c biasUp = bias["up"].as<fixed32_c>();
@@ -42,7 +42,7 @@ namespace knobs {
         for (int i=0;i<3;i++)
             if (knobColorspace == colorspaces[i])
                 channelsInCurrentColorspace = channels[i];
-        const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
+        const auto potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
         for (int i=0;i<4;i++)
             potentionemterMapping[i] = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<unsigned>();
 

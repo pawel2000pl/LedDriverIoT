@@ -11,7 +11,7 @@ namespace inputs {
     enum SourceControl {scKnobs, scWeb, scFadingOut, scDefault, scAnimation};
     extern SourceControl source_control;
 
-    void updateConfiguration(const JsonVariantConst& configuration);
+    void updateConfiguration(const JsonVariantConst configuration);
     void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w);
     void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w);
     void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w);

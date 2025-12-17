@@ -6,6 +6,6 @@ namespace animations {
 
     void checkTimer();
     void startAnimation(unsigned id);
-    void startAnimationFromJson(const JsonVariant& animationSequence);
+    void startAnimationFromJson(const JsonVariantConst animationSequence);
 
 }

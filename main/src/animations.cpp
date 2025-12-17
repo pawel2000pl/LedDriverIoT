@@ -63,25 +63,25 @@ namespace animations {
     }
 
     
-    void startAnimationFromJson(const JsonVariant& animationSequence) {
-        const JsonVariant& stages = animationSequence["data"];
+    void startAnimationFromJson(const JsonVariantConst animationSequence) {
+        const JsonVariantConst stages = animationSequence["data"];
         unsigned stages_count = stages.size();
         if (stages_count > max_stages) stages_count = max_stages;
         if (!stages_count) return;
         for (unsigned i=0;i<stages_count;i++) {
             AnimationStage& stage = loaded_stages[i];
-            const auto& stage_json = stages[i];
+            const JsonVariantConst stage_json = stages[i];
             stage.fade_in_ms = stage_json["fade_in_ms"].as<unsigned>();
             stage.fade_in_randomness = stage_json["fade_in_randomness"].as<unsigned>();
             stage.period_ms = stage_json["period_ms"].as<unsigned>();
             stage.period_randomness = stage_json["period_randomness"].as<unsigned>();
-            const auto& base_color = stage_json["base_color"];
+            const auto base_color = stage_json["base_color"];
             for (unsigned j=0;j<4;j++)
                 stage.base_color[j] = base_color[j].as<fixed32_c>();
-            const auto& color_randomness = stage_json["color_randomness"];
+            const auto color_randomness = stage_json["color_randomness"];
             for (unsigned j=0;j<4;j++)
                 stage.color_randomness[j] = color_randomness[j].as<fixed32_c>();
-            const auto& next_stages = stage_json["next_stages"];
+            const auto next_stages = stage_json["next_stages"];
             stage.next_stages_size = next_stages.size();
             if (stage.next_stages_size > max_next_stage) stage.next_stages_size = max_next_stage;
             for (unsigned j=0;j<stage.next_stages_size;j++) {

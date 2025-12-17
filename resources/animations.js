@@ -5,13 +5,15 @@ const maxStageCount = 16;
 const maxNextStagesCount = 16;
 
 
-const animationsPromise = (async ()=>{
+async function fetchAnimations() {
     let response = await fetch('/animations.json');
     if (response.status !== 200)
     response = await fetch('/default_animations.json');
     const data = await response.json();
     return data;
-})();
+}
+
+const animationsPromise = fetchAnimations();
 
 
 function saveStage(stageDiv) {
@@ -96,7 +98,7 @@ function switchRandomInputs(event) {
 }
 
 
-function regenerateSamples(target=document) {
+function regenerateSamples(target) {
     Array.from(target.getElementsByClassName('color-random-sample')).forEach(element => {
         element.innerHTML = '';
         for (let row=0;row<4;row++) {
@@ -114,7 +116,7 @@ function regenerateSamples(target=document) {
     });
 }
 
-regenerateSamples();
+regenerateSamples(document.body);
 window.addEventListener('resize', regenerateSamples);
 
 function attachSampleEvents(target) {
@@ -167,7 +169,7 @@ function addStage(target) {
     div.appendChild(template.content.cloneNode(true));
     Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
     Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
-    Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);
+    Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);    
     const nextStagesDiv = div.querySelector('.next-stage-div');
     componentList(nextStagesDiv, (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
     div.nextStagesDiv = nextStagesDiv;
@@ -187,16 +189,18 @@ function addAnimation() {
     const template = $id('animation-sequence-template');
     const div = $new('div');
     div.appendChild(template.content.cloneNode(true));
+    const nameInput = div.querySelector('.sequence-name-input');
+    nameInput.value = 'Unnamed animation';
+    updateAnimationName(nameInput);
     $id('animations-div').appendChild(div);
     div.saveData = () => {
         return {
-            'name': div.querySelector('.sequence-name-input').value,
+            'name': nameInput.value,
             'data': Array.from(div.querySelector('.animation-sequence-list').childNodes).map(element=>element.saveData())
         };
     };
     const sequencePlace = div.querySelector('.animation-sequence');
     div.loadData = (data) => {
-        const nameInput = div.querySelector('.sequence-name-input');
         nameInput.value = data.name;
         updateAnimationName(nameInput);
         data.data.forEach(sequence => addStage(sequencePlace).loadData(sequence));
@@ -205,30 +209,35 @@ function addAnimation() {
 }
 
 
-function saveAnimations() {
-    // TODO
+function dumpAnimations() {
     return Array.from($id('animations-div').childNodes).map(div=>div.saveData());
 }
 
 
 function loadAnimations(data) {
-    // TODO
     data.forEach(item=>addAnimation().loadData(item));
 }
 
 
-Promise.all([configPromise, animationsPromise]).then(([config, animations])=>{
-    const template = $id('animation-stage-template');
-    
-    animations.forEach(animationsSequence => {
-        const sequenceDiv = $new('div');
-        animationsSequence.forEach(animationStage=>{
-            const stageDiv = template.content.cloneNode(true);
-            //TODO
+function exportAnimationsToFile() {
+    downloadJsonData(dumpAnimations(), 'animations.json');
+}
 
-        });
-    });
 
+function importAnimationsFromFile() {
+    uploadJsonData('animations-list', 'default_animations.json').then(loadAnimations).catch(alert);
+}
+
+
+async function saveAnimations() {
+    const data = dumpAnimations();
+    await saveJson(data, '/animations.json');
+    loadAnimations(await fetchAnimations());
+}
+
+
+Promise.all([configPromise, animationsPromise]).then(([_, animations])=>{
+    loadAnimations(animations);
 });
 
 
