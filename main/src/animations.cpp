@@ -26,7 +26,7 @@ namespace animations {
         long int next_ms;
         ColorChannels start_color;
         ColorChannels end_color;
-        AnimationStage* next_stage;
+        const AnimationStage* next_stage;
         void setColor();
     };
 
@@ -108,6 +108,7 @@ namespace animations {
                 out_color[i] = start_color[i] * rest + end_color[i] * frac;
             outputs::setColor(out_color);
         }
+        outputs::writeOutput();
         if (current_time >= next_ms)
             next_stage->generateTransition(this);
     }
@@ -119,15 +120,21 @@ namespace animations {
         transition->next_ms = transition->end_ms + period_ms + (esp_random() % period_randomness);
         transition->start_color = outputs::getColor();
         ColorChannels color;
-        for (int i=0;i<4;i++)
-            color[i] = constrain<fixed32_c>(base_color[i] + fixed32_c::buf_cast((esp_random() % color_randomness[i].getBuf())) - (color_randomness[i] >> 1), 0, 1);
+        for (int i=0;i<4;i++) {
+            if (color_randomness[i] > 0)
+                color[i] = constrain<fixed32_c>(base_color[i] + fixed32_c::buf_cast(esp_random() % color_randomness[i].getBuf()) - (color_randomness[i] >> 1), 0, 1);
+            else
+                color[i] = base_color[i];
+        }
         if (!use_white)
-            color[3] = base_color[3];
+            color[3] = transition->start_color[3];
         transition->end_color = color;
+        // hue fixes - shorter path
         if (transition->end_color[0] - transition->start_color[0] > fixed32_c::fraction(1, 2))
             transition->start_color[0] += 1;
         else if (transition->start_color[0] - transition->end_color[0] > fixed32_c::fraction(1, 2))
             transition->end_color[0] += 1;
+        transition->next_stage = this;
         if (next_stages_size)
             transition->next_stage = &loaded_stages[next_stages[esp_random() % next_stages_size]];
     }

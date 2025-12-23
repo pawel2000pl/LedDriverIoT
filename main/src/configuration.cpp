@@ -162,7 +162,7 @@ namespace configuration {
 
     String getAnimationsStr() {
         String data = getFileStr(ANIMATIONS_FILENAME);
-        if (data.length() == 0) return data;
+        if (data.length() != 0) return data;
         return getResourceStr(resource_default_animations_json);
     }
 

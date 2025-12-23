@@ -313,3 +313,8 @@ raw-color-picker input[type="range"][class="white_input"] {
 .next-stage-div .component-list-position-btn {
     display: none;
 }
+
+.play-btn {
+  float: right;
+  margin: -1px;
+}

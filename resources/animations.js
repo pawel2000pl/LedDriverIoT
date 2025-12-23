@@ -117,7 +117,7 @@ function regenerateSamples(target) {
 }
 
 regenerateSamples(document.body);
-window.addEventListener('resize', regenerateSamples);
+window.addEventListener('resize', ()=>regenerateSamples(document.body));
 
 function attachSampleEvents(target) {
     Array.from(target.getElementsByClassName('animation-stage')).forEach(element => {
@@ -149,8 +149,57 @@ function nextStageInputFactory(mainDiv, value=0) {
     input.name = `stage_input[${stageInputCounter++}]`;
     input.classList = ['stage-input'];
     input.setValue = (value)=>input.value = value;
-    input.getValue = ()=>Number(input.value)
+    input.getValue = ()=>Number(input.value);
     return input;
+}
+
+
+function attachStageOptionsEvents(target) {
+    Array.from(target.getElementsByClassName('options-panel')).forEach(panel => {
+        Array.from(panel.getElementsByClassName('copy-btn')).forEach(btn => {
+            btn.addEventListener('click', async ()=>{
+                await navigator.clipboard.writeText(JSON.stringify(target.saveData()));
+            });
+        });
+        Array.from(panel.getElementsByClassName('paste-btn')).forEach(btn => {
+            btn.addEventListener('click', async ()=>{
+                const text = await navigator.clipboard.readText();
+                const json = JSON.parse(text);
+                if (await assertJson(json, 'animation-stage'))
+                    target.loadData(json);
+            });
+        });
+        Array.from(panel.getElementsByClassName('export-btn')).forEach(btn => {
+            btn.addEventListener('click', async ()=>{
+                downloadJsonData(target.saveData());
+            });
+        });
+        Array.from(panel.getElementsByClassName('import-btn')).forEach(btn => {
+            btn.addEventListener('click', async ()=>{
+                const data = await uploadJsonData('animation-stage');
+                target.loadData(data);
+            });
+        });
+        Array.from(panel.getElementsByClassName('delete-btn')).forEach(btn => {
+            btn.addEventListener('click', async ()=>{
+                let element = target;
+                while (!element.classList.contains('animation-sequence'))
+                    element = element.parentNode;
+
+                Array.from(element.getElementsByClassName('stage-input')).forEach(input=>{
+                    if (input.value == target.stageNumber)
+                        input.parentNode.parentNode.querySelector('.component-list-del-btn').click();
+                    else if (input.value > target.stageNumber)
+                        input.value = input.value - 1;
+                });
+                let stages = element.childNodes;
+                for (let i=0;i<stages.length;i++)
+                    if (stages.stageNumber !== undefined)
+                        stages.setStageNumber(i);
+                target.remove();
+            });
+        });
+    });
 }
 
 
@@ -167,9 +216,15 @@ function addStage(target) {
     const template = $id('animation-stage-template');
     const div = $new('div');
     div.appendChild(template.content.cloneNode(true));
-    Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = currentStagesCount.toString());
-    Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
-    Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);    
+    div.setStageNumber = (number) => {
+        number = Number(number);
+        div.stageNumber = number;
+        const currentStagesCount = targetSequence.getElementsByClassName('animation-stage').length;
+        Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = number.toString());
+        Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
+        Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);    
+    };
+    div.setStageNumber(currentStagesCount);
     const nextStagesDiv = div.querySelector('.next-stage-div');
     componentList(nextStagesDiv, (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
     div.nextStagesDiv = nextStagesDiv;
@@ -179,6 +234,7 @@ function addStage(target) {
     div.saveData = () => saveStage(div);
     div.loadData = (data) => {loadStage(div, data); generateColorRandomSample(nextStagesDiv);};
     targetDiv.appendChild(div);
+    attachStageOptionsEvents(div);
     attachSampleEvents(div);
     regenerateSamples(div);
     return div;
@@ -202,9 +258,18 @@ function addAnimation() {
     const sequencePlace = div.querySelector('.animation-sequence');
     div.loadData = (data) => {
         nameInput.value = data.name;
+        Array.from(div.getElementsByClassName('animation-sequence-list')).forEach(element=>element.innerHTML='');
         updateAnimationName(nameInput);
         data.data.forEach(sequence => addStage(sequencePlace).loadData(sequence));
     };
+    Array.from(div.getElementsByClassName('play-btn')).forEach(btn=>{
+        btn.addEventListener('click', ()=>fetch('/test_animation', {
+            method: 'POST',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(div.saveData())
+        }));
+    });
+    div.querySelector('.animation-sequence-options .delete-btn').addEventListener('click', ()=>div.remove());
     return div;
 }
 
@@ -232,7 +297,6 @@ function importAnimationsFromFile() {
 async function saveAnimations() {
     const data = dumpAnimations();
     await saveJson(data, '/animations.json');
-    loadAnimations(await fetchAnimations());
 }
 
 

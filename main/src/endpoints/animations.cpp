@@ -3,6 +3,7 @@
 #include "../server.h"
 #include "../animations.h"
 #include "../configuration.h"
+#include "../timer_shutdown.h"
 
 namespace endpoints {
 
@@ -28,6 +29,7 @@ namespace endpoints {
 
     void startAnimation(HTTPRequest* req, HTTPResponse* res) {
         JsonDocument data;
+        timer_shutdown::resetTimer();
         if (!server::readJson(req, res, data, "animation-start")) return;
         server::sendOk(res);
         animations::startAnimation(data["id"].as<unsigned>());
@@ -36,6 +38,7 @@ namespace endpoints {
 
     void testAnimation(HTTPRequest* req, HTTPResponse* res) {
         JsonDocument data;
+        timer_shutdown::resetTimer();
         if (!server::readJson(req, res, data, "animation-sequence")) return;
         server::sendOk(res);
         animations::startAnimationFromJson(data);

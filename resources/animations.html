@@ -15,10 +15,10 @@
         <p class="upper-menu main-menu"></p>
         <div id="animations-div"></div>
         <button onclick="addAnimation()">Add animation</button>
-        <button onclick="">Save</button>
-        <button onclick="">Revert</button>
-        <button onclick="">Import</button>
-        <button onclick="">Export</button>
+        <button onclick="saveAnimations()">Save</button>
+        <button onclick="fetchAnimations().then(loadAnimations)">Revert</button>
+        <button onclick="importAnimationsFromFile()">Import</button>
+        <button onclick="exportAnimationsToFile()">Export</button>
 
         <template id="animation-stage-template">
             <details class="animation-stage">
@@ -90,23 +90,25 @@
                     </div>
                 </p>
                 <h3>Options</h3>
-                <p>
-                    <button>Copy</button>
-                    <button>Paste</button>
-                    <button>Export</button>
-                    <button>Import</button>
-                    <button>Delete</button>
+                <p class="options-panel">
+                    <button class="copy-btn">Copy</button>
+                    <button class="paste-btn">Paste</button>
+                    <button class="export-btn">Export</button>
+                    <button class="import-btn">Import</button>
+                    <button class="delete-btn">Delete</button>
                 </p>
                 <div class="info-div">
                     <span><i>Paste</i> and <i>Import</i> overwrites current settings. </span>
-                    <span>To add a new stage based on clipboard content or a file, use buttons below stages list.</span>
+                    <span>To add a new stage based on clipboard content or a file, add the new stage first.</span>
                 </div>
             </details>
         </template>
 
         <template id="animation-sequence-template">
             <details class="animation-sequence">
-                <summary class="menu-summary sequence-name">
+                <summary class="menu-summary">
+                    <span class="sequence-name"></span>
+                    <button class="play-btn">Play</button>
                 </summary>
                 <div class="animation-sequence-options">
                     <span>Animation name: </span>
@@ -114,8 +116,13 @@
                 </div>
                 <div class="animation-sequence-list"></div>
                 <div class="animation-sequence-options">
-                    <button onclick="addStage(event.target)">Add stage</button>
-                    <span class="stages-count-span">Stages 0 / 16</span>
+                    <p>
+                        <button onclick="addStage(event.target)">Add stage</button>
+                        <span class="stages-count-span">Stages 0 / 16</span>
+                    </p>
+                    <p>
+                        <button class="delete-btn">Delete animation</button>
+                    </p>
                 </div>
             </details>
         </template>

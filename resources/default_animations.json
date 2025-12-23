@@ -1,1 +1,29 @@
-[]
+[
+    {
+        "name": "All colors",
+        "data": [
+            {
+                "fade_in_ms": 1000,
+                "fade_in_randomness": 1000,
+                "period_ms": 1000,
+                "period_randomness": 1000,
+                "use_white": false,
+                "base_color": [
+                    0,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    0
+                ]
+            }
+        ]
+    }
+]
