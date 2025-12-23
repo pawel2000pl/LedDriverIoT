@@ -106,7 +106,7 @@ Mult. Ch7||||Potentiometer 3||||
 ![image](doc/waveshare-esp32c3-zero.png)
 
 
-## How to use docker container
+## How to use a docker container
 ```
 docker build -t led_driver_idf -f Idf.Dockerfile . && docker run -it -p 8000:8000 led_driver_idf
 # or
@@ -120,6 +120,25 @@ You can aslo run a script which builds the image, runs the container, downloads 
 ```
 
 The file `iot-led-driver.bin` can be uploaded on `Configuration` page in `Update` tab.
+
+## How to compile without a docker container
+
+#### For all compilations
+Before the compilation, it is required to compile resources to `.cpp` and `.h` files. It is also required after any modification of any file in the `resources` directory.
+To compile resources, execute in the project directory:
+~~~
+python3 ./compilation_utils/compile_resources.py
+~~~
+
+#### For idf:
+Run `idf.py build` in the project directory.
+
+#### For Arduino:
+Open the file `main/main.ino` in Arduino. Set the following parameters:
+* board: ESP32C3 - Dev module (requires additional installation)
+* CPU Frequency: 160MHz (default)
+* Flash size: 4MB
+* Partition scheme: Minimal SPIFFS (1.9MB APP with OTA / 190kB SPIFFS)
 
 ## Runtime statistics
 The runtime statistics are available on `/statistics.txt` endpoint.<br>
@@ -151,7 +170,7 @@ Blocks free:           	     6
 Blocks allocated:      	   450
 ~~~
 
-## How to connect first time
+## How to connect for the first time
 
 * Scan networks and find network with SSID `LedDriver` and connect to them with `ledDriver` password. Then type in browser `http://192.168.1.1`.
 * If you do not see any network with SSID `LedDriver`, create it (as a Hotspot) on your phone with password `ledDriver` and restart the driver.
