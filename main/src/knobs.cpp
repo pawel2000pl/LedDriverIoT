@@ -12,7 +12,6 @@
 
 namespace knobs {
 
-    bool knobMode = true;
     ColorChannels lastKnobValues = {0,0,0,0};
     String knobColorspace = "hsv";
     std::function<fixed32_c(fixed32_c)> applyBias = [](fixed32_c x){return x;};
@@ -30,12 +29,7 @@ namespace knobs {
     ColorChannels defaultColor = {0,0,0,0};
 
 
-    void turnOff() {
-        knobMode = false;
-    }
-
-
-    void updateConfiguration(const JsonVariantConst& configuration) {
+    void updateConfiguration(const JsonVariantConst configuration) {
         const auto bias = configuration["hardware"]["bias"];
         const auto channelsJson = configuration["channels"];
         fixed32_c biasUp = bias["up"].as<fixed32_c>();
@@ -48,7 +42,7 @@ namespace knobs {
         for (int i=0;i<3;i++)
             if (knobColorspace == colorspaces[i])
                 channelsInCurrentColorspace = channels[i];
-        const auto& potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
+        const auto potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
         for (int i=0;i<4;i++)
             potentionemterMapping[i] = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<unsigned>();
 
@@ -66,7 +60,7 @@ namespace knobs {
     void setDefaultColor() {
         if (!enableDefaultColor) return;
         delay(100); // let timer do some iterations
-        knobMode = false;
+        inputs::source_control = inputs::scDefault;
         timer_shutdown::resetTimer();
         inputs::setHSVW(defaultColor[0], defaultColor[1], defaultColor[2], defaultColor[3]);
         outputs::writeOutput();
@@ -99,8 +93,8 @@ namespace knobs {
         bool largeChange = md > epsilon;
         if (largeChange || force)
             timer_shutdown::resetTimer();
-        if (largeChange || (knobMode && md > analogResolution) || force) {
-            knobMode = true;
+        if (largeChange || (inputs::source_control == inputs::scKnobs && md > analogResolution) || force) {
+            inputs::source_control = inputs::scKnobs;
             for (int i=0;i<4;i++)
                 lastKnobValues[i] = values[i];
             setFromKnobs(values);

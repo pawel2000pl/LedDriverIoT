@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+
+<html>
+
+    <head>
+        <link rel="icon" href="/favicon.svg" />
+        <link rel="stylesheet" href="/styles.css" />
+        <link name="manifest" href="manifest.json" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta charset="UTF-8" />
+    </head>
+    
+    <body>
+        <h1 class="name-header">Animations</h1>
+        <p class="upper-menu main-menu"></p>
+        <div id="animations-div"></div>
+        <button onclick="addAnimation()">Add animation</button>
+        <button onclick="saveAnimations()">Save</button>
+        <button onclick="fetchAnimations().then(loadAnimations)">Revert</button>
+        <button onclick="importAnimationsFromFile()">Import</button>
+        <button onclick="exportAnimationsToFile()">Export</button>
+
+        <template id="animation-stage-template">
+            <details class="animation-stage">
+                <summary class="stage-number-head menu-summary">
+                    <span>Stage #</span>
+                    <span class="stage-number-value">0</span>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                    <div class="div-color-sample"></div>
+                </summary>
+                <h3>Stage timing</h3>
+                <div class="like-color-picker">
+                    <table>
+                        <tr><td>Fade-in time [ms]</td></tr>
+                        <tr><td><input type="number" name="fade_in_ms" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                    </table>
+                    <table>
+                        <tr><td>Fade-in time - randomness [+ms]</td></tr>
+                        <tr><td><input type="number" name="fade_in_randomness" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                    </table>
+                    <table>
+                        <tr><td>Duration time [ms]</td></tr>
+                        <tr><td><input type="number" name="period_ms" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                    </table>                
+                    <table>
+                        <tr><td>Duration time - randomness [+ms]</td></tr>
+                        <tr><td><input type="number" name="period_randomness" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                    </table>                
+                    <div class="white-channel-related">
+                        <input type="checkbox" name="use_white"/>
+                        <label onclick="const checkbox = event.target.parentNode.querySelector('input'); checkbox.checked = !checkbox.checked;">Set also the white channel</label>
+                    </div>
+                </div>
+                <h3>Base color</h3>
+                <raw-color-picker name="base_color"></raw-color-picker>
+                <h3>Color randomness [+-]</h3>
+                <div class="like-color-picker">
+                    <table>
+                        <tr><td>Hue</td></tr><tr>
+                        <tr><td><input class="switchable-input" type="range" name="color_randomness_hue" min="0" max="1" value="0" step="0.01"/></td></tr>
+                    </table>
+                    <table>
+                        <tr><td>Saturation</td></tr><tr>
+                            <tr><td><input class="switchable-input" type="range" name="color_randomness_saturation" min="0" max="1" value="0" step="0.01"/></td></tr>
+                    </table>
+                    <table>
+                        <tr><td>Value</td></tr><tr>
+                        <tr><td><input class="switchable-input" type="range" name="color_randomness_value" min="0" max="1" value="0" step="0.01"/></td></tr>
+                    </table>
+                    <table>
+                        <tr><td>White</td></tr><tr>
+                        <tr><td><input class="switchable-input" type="range" name="color_randomness_white" min="0" max="1" value="0" step="0.01"/></td></tr>
+                    </table>                
+                </div>
+                <button onclick="generateColorRandomSample(event.target)">Generate another samples</button>
+                <button onclick="switchRandomInputs(event)">Switch sliders / text</button>
+                <div class="color-random-sample"></div>
+                <p>
+                    <h3>Next stage</h3>
+                    <div class="info-div">
+                        <span>If no stage is selected, the current stage will be looped forever.</span>
+                    </div>
+                    <div class="next-stage-div">
+                    </div>
+                </p>
+                <h3>Options</h3>
+                <p class="options-panel">
+                    <button class="copy-btn">Copy</button>
+                    <button class="paste-btn">Paste</button>
+                    <button class="export-btn">Export</button>
+                    <button class="import-btn">Import</button>
+                    <button class="delete-btn">Delete</button>
+                </p>
+                <div class="info-div">
+                    <span><i>Paste</i> and <i>Import</i> overwrites current settings. </span>
+                    <span>To add a new stage based on clipboard content or a file, add the new stage first.</span>
+                </div>
+            </details>
+        </template>
+
+        <template id="animation-sequence-template">
+            <details class="animation-sequence">
+                <summary class="menu-summary">
+                    <span class="sequence-name"></span>
+                    <button class="play-btn">Play</button>
+                </summary>
+                <div class="animation-sequence-options">
+                    <span>Animation name: </span>
+                    <input class="sequence-name-input" maxlength="64" onchange="updateAnimationName(event.target)" oninput="updateAnimationName(event.target)" type="text"/>
+                </div>
+                <div class="animation-sequence-list"></div>
+                <div class="animation-sequence-options">
+                    <p>
+                        <button onclick="addStage(event.target)">Add stage</button>
+                        <span class="stages-count-span">Stages 0 / 16</span>
+                    </p>
+                    <p>
+                        <button class="delete-btn">Delete animation</button>
+                    </p>
+                </div>
+            </details>
+        </template>
+
+        <script src="/utils.js" defer="defer"></script>
+        <script src="/conversions.js" defer="defer"></script>
+        <script src="/raw_color_picker.js" defer="defer"></script>
+        <script src="/component_list.js" defer="defer"></script>
+        <script src="/config_fetcher.js" defer="defer"></script>
+        <script src="/component_list.js" defer="defer"></script>
+        <script src="/animations.js" defer="defer"></script>
+        <script src="/knob.js" defer="defer"></script>
+        
+    </body>
+
+</html>
+

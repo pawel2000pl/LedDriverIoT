@@ -6,11 +6,9 @@
 #include "resources.h"
 #include "json_utils.h"
 
-#define JSON_CONFIG_BUF_SIZE (16*1024)
-#define JSON_FAVORITES_BUF_SIZE (64*64)
-#define JSON_VERSION_INFO_BUF_SIZE (1024)
 #define CONFIGURATION_FILENAME "/configuration.json"
 #define FAVORITES_FILENAME "/favorites.json"
+#define ANIMATIONS_FILENAME "/animations.json"
 #define CERT_KEY_FILE_NAME "/cert.key"
 #define CERT_PUB_FILE_NAME "/cert.pub"
 
@@ -29,16 +27,20 @@ namespace configuration {
     JsonDocument getResourceJson(const struct Resource& resource, unsigned size=0);
     JsonDocument getDefautltConfiguration();
     JsonDocument getDefautltFavorites();
+    JsonDocument getDefautltAnimations();
     JsonDocument getConfigSchema();
     String assertJson(JsonVariant configuration, String name);
     String assertConfiguration(JsonVariant configuration);
     JsonDocument getVersionInfo();
     String getConfigurationStr();
+    String getAnimationsStr();
     JsonDocument getConfiguration();
     JsonDocument getFavorites();
+    JsonDocument getAnimations();
     void resetConfiguration();
     void setConfiguration(JsonDocument configuration);
     void setFavorites(JsonDocument favorites);
+    void setAnimations(JsonDocument animations);
     void deleteCert();
 
 }

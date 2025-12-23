@@ -10,12 +10,16 @@ function moveChoiceTo(elem_choice, direction) {
 }
 
 
-function componentList(element, factory) {
+function componentList(element, factory, maxCount=-1) {
     const listTable = $new('table');
     const addButton = $new('button');
     addButton.textContent = 'Add';
 
     const addElement = (...params)=>{
+        if (maxCount >= 0 && listTable.children.length >= maxCount) {
+            alert('Maximum count has been reached');
+            return {setValue: ()=>null, getValue: ()=>null};
+        }
         const tr = $new('tr');
         const contenttd = $new('td');
         const optiontd = $new('td');
@@ -27,12 +31,15 @@ function componentList(element, factory) {
         tr.appendChild(optiontd);
         const delBtn = $new('button');
         delBtn.textContent = 'Delete';
+        delBtn.classList = ['component-list-del-btn'];
         delBtn.onclick = ()=>{listTable.removeChild(tr);};
         const upBtn = $new('button');
         upBtn.textContent = 'Up';
+        upBtn.classList = ['component-list-up-btn component-list-position-btn'];
         upBtn.onclick = ()=>{moveChoiceTo(tr, -1);};
         const downBtn = $new('button');
         downBtn.textContent = 'Down';
+        downBtn.classList = ['component-list-down-btn component-list-position-btn'];
         downBtn.onclick = ()=>{moveChoiceTo(tr, 1);};
 
         optiontd.appendChild(upBtn);
@@ -42,6 +49,7 @@ function componentList(element, factory) {
         return tr;
     };
     addButton.onclick = ()=>{addElement()};
+    addButton.classList = ['component-list-add-btn'];
 
     element.appendChild(listTable);
     element.appendChild(addButton);

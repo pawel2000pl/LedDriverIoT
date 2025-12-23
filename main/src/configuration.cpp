@@ -37,6 +37,11 @@ namespace configuration {
     }
 
 
+    JsonDocument getDefautltAnimations() {
+        return getResourceJson(resource_default_animations_json);
+    }
+
+
     JsonDocument getConfigSchema() {
         return getResourceJson(resource_config_schema_json);
     }
@@ -103,6 +108,13 @@ namespace configuration {
     }
 
 
+    void serializeToFile(const String filename, const JsonDocument& data) {        
+        File file = SPIFFS.open(filename, FILE_WRITE);
+        serializeJson(data, file);
+        file.close();
+    }
+
+
     void saveFile(const String& filename, const unsigned char* content, unsigned length) {
         File file = SPIFFS.open(filename, FILE_WRITE);
         file.write(content, length);
@@ -148,6 +160,23 @@ namespace configuration {
     }
 
 
+    String getAnimationsStr() {
+        String data = getFileStr(ANIMATIONS_FILENAME);
+        if (data.length() != 0) return data;
+        return getResourceStr(resource_default_animations_json);
+    }
+
+
+    JsonDocument getAnimations() {
+        JsonDocument animations;
+        String buf = getFileStr(ANIMATIONS_FILENAME);
+        DeserializationError err = deserializeJson(animations, buf);
+        if (err != DeserializationError::Ok || assertJson(animations, "animations-list").length())
+            animations = getDefautltAnimations();
+        return animations;
+    }
+
+
     void deleteCert() {
         removeFile(CERT_KEY_FILE_NAME);
         removeFile(CERT_PUB_FILE_NAME);
@@ -157,18 +186,21 @@ namespace configuration {
     void rewriteFilesystem() {
         std::vector<unsigned char>* configuration = SPIFFS.exists(CONFIGURATION_FILENAME) ? getFileBin(CONFIGURATION_FILENAME) : NULL;
         std::vector<unsigned char>* favorites = SPIFFS.exists(FAVORITES_FILENAME) ? getFileBin(FAVORITES_FILENAME) : NULL;
+        std::vector<unsigned char>* animations = SPIFFS.exists(ANIMATIONS_FILENAME) ? getFileBin(ANIMATIONS_FILENAME) : NULL;        
         std::vector<unsigned char>* cert_key = SPIFFS.exists(CERT_KEY_FILE_NAME) ? getFileBin(CERT_KEY_FILE_NAME) : NULL;
-        std::vector<unsigned char>* cert_pub = SPIFFS.exists(CERT_PUB_FILE_NAME) ? getFileBin(CERT_PUB_FILE_NAME) : NULL;        
+        std::vector<unsigned char>* cert_pub = SPIFFS.exists(CERT_PUB_FILE_NAME) ? getFileBin(CERT_PUB_FILE_NAME) : NULL;    
         
         SPIFFS.format();
 
         if (configuration) saveFile(CONFIGURATION_FILENAME, configuration->data(), configuration->size());
         if (favorites) saveFile(FAVORITES_FILENAME, favorites->data(), favorites->size());
+        if (animations) saveFile(ANIMATIONS_FILENAME, animations->data(), animations->size());
         if (cert_key) saveFile(CERT_KEY_FILE_NAME, cert_key->data(), cert_key->size());
         if (cert_pub) saveFile(CERT_PUB_FILE_NAME, cert_pub->data(), cert_pub->size());
         
         if (configuration) delete configuration;
         if (favorites) delete favorites;
+        if (animations) delete animations;
         if (cert_key) delete cert_key;
         if (cert_pub) delete cert_pub;
     }
@@ -214,19 +246,17 @@ namespace configuration {
 
 
     void setConfiguration(JsonDocument configuration) {
-        char* buf = new char[JSON_CONFIG_BUF_SIZE+1];
-        unsigned size = serializeJson(configuration, buf, JSON_CONFIG_BUF_SIZE);
-        buf[size] = 0;
-        saveFile(CONFIGURATION_FILENAME, (unsigned char*)buf, size);
-        delete [] buf;
+        serializeToFile(CONFIGURATION_FILENAME, configuration);
     }
 
 
     void setFavorites(JsonDocument favorites) {
-        char* buf = new char[JSON_FAVORITES_BUF_SIZE+1];
-        unsigned size = serializeJson(favorites, buf, JSON_FAVORITES_BUF_SIZE);
-        saveFile(FAVORITES_FILENAME, (unsigned char*)buf, size);
-        delete [] buf;
+        serializeToFile(FAVORITES_FILENAME, favorites);
+    }
+
+
+    void setAnimations(JsonDocument animations) {
+        serializeToFile(ANIMATIONS_FILENAME, animations);
     }
 
 

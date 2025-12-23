@@ -11,7 +11,7 @@ namespace wifi {
 
     const std::vector<String>& getScannedNetworks();
     IPAddress str2ip(const String& str);
-    void updateConfiguration(const JsonVariant& configuration);
+    void updateConfiguration(const JsonVariantConst configuration);
     void scanNetworks();
     void disconnect();
     bool connectToNetwork(String ssid, String password);

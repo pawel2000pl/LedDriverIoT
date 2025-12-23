@@ -3,6 +3,7 @@
 
 const MENU_ITEMS = {
     'Main page': '/index.html',
+    'Animations': '/animations.html',
     'Favorites': '/favorites.html',
     'Configure': '/config.html'
 };
@@ -71,6 +72,84 @@ function deepEqual(a, b) {
     for (const key of keysA)
         if (!deepEqual(a[key], b[key])) return false;
     return true;
+}
+
+
+function downloadJsonData(data, filename='download.json') {
+    const jsonConfig = JSON.stringify(data, null, 4);
+    const blob = new Blob([jsonConfig], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+async function saveJson(data, path) {
+    try {
+        const response = await fetch(path, {
+            method: 'POST',
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.status == "error")
+            alert(result.message)
+    } catch {
+        return alert('Error occured. Please refresh page or restart device.');
+    }
+}
+
+
+async function assertJson(data, schemaName, defaultData=null) {
+    if (defaultData instanceof String) {
+        const response = await fetch(defaultData);
+        defaultData = await response.json();
+    }
+    const payload = {
+        "data": data,
+        "type": schemaName,
+        "default": defaultData
+    };
+    const response = await fetch('/assert_json', {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+    });
+    return await response.json();
+}
+
+
+function uploadJsonData(schemaName=null, defaultData=null) {
+    return new Promise((resolve, reject)=>{
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'application/json';
+        input.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) resolve(null);
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    if (!schemaName) resolve(parsed);
+                    assertJson(parsed, schemaName, defaultData).then((result)=>{
+                        if (result.status === "ok")
+                            resolve(result.data);
+                        else
+                            reject(result.message);
+                    }).catch(reject);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.readAsText(file);
+        });
+        input.click();
+    });
 }
 
 

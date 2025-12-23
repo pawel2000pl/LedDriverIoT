@@ -243,3 +243,78 @@ simple-chart canvas {
     -mox-text-security: disc;
     font-family: 'mask_font';
 }
+
+raw-color-picker input, .like-color-picker input {
+    height: 1.8em;
+    margin-right: 8px;
+}
+
+raw-color-picker table, .like-color-picker table {
+    display: inline-block;
+}
+
+raw-color-picker input[type="color"] {
+    width: 4em;
+}
+
+raw-color-picker input[type="range"] {
+    appearance: none;  
+    height: min-content;
+    border-radius: 10px;
+}
+
+
+raw-color-picker input[type="range"][class="hue_input"] {
+    background: linear-gradient(to right, red, yellow, green, blue, purple, red);
+}
+
+raw-color-picker input[type="range"][class="saturation_input"] {
+    background: linear-gradient(to right, lightgray, gray);
+}
+
+raw-color-picker input[type="range"][class="value_input"] {
+    background: linear-gradient(to right, black, white);
+}
+
+raw-color-picker input[type="range"][class="white_input"] {
+    background: linear-gradient(to right, black, white);
+}
+
+
+.animation-stage, .animation-sequence-options {
+    border: 1px solid black;
+    padding: 12px;;
+    display: block;
+    @media(prefers-color-scheme:dark) {
+        border-color:white;
+    }
+}
+
+.animation-sequence {
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.color-random-sample {
+    display: block;
+}
+
+.div-color-sample {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 0.5px solid lightgray;
+}
+
+.stage-number-head .div-color-sample {
+    float: right;
+}
+
+.next-stage-div .component-list-position-btn {
+    display: none;
+}
+
+.play-btn {
+  float: right;
+  margin: -1px;
+}

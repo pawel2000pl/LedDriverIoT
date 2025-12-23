@@ -49,11 +49,13 @@
     },
     "wifi-ssid": { 
         "type": "string",
-        "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{0,30}[^] !#;+\\/\"\t]$"
+        "regexp": "^[^]!#;+\\/\"\t][^]+\\/\"\t]{0,30}[^] !#;+\\/\"\t]$",
+        "max_length": 256
     },
     "wifi-password": {
         "type": "string",
-        "regexp": "^(.{8,63})?$"
+        "regexp": "^(.{8,63})?$",
+        "max_length": 64
     },
     "wifi-entry": {
         "type": "object",
@@ -65,7 +67,8 @@
     },
     "ap-password": {
         "type": "string",
-        "regexp": "^(.{8,63})?$"
+        "regexp": "^(.{8,63})?$",
+        "max_length": 64
     },
     "channels-settings": {
         "type": "object",
@@ -79,7 +82,7 @@
     },
     "channel-setting": {
         "type": "string",
-        "regex": "^((hsl)|(hsv)|(rgb))$" 
+        "regex": "^((hsl)|(hsv)|(rgb))$"
     },
     "filter-settings": {
         "type": "array",
@@ -232,5 +235,60 @@
                 "max_value": 7200
             }
         }
+    },
+    "animation-period": {
+        "type": "integer",
+        "min_value": 0,
+        "max_value": 86400000
+    },
+    "animation-stage": {
+        "type": "object",
+        "fields": {
+            "fade_in_ms": "animation-period",
+            "fade_in_randomness": "animation-period",
+            "period_ms": "animation-period",
+            "period_randomness": "animation-period",
+            "base_color": "color-channels",
+            "color_randomness": "color-channels",
+            "next_stages": {
+                "type": "array",
+                "item": {
+                    "type": "integer",
+                    "min_value": 0,
+                    "max_value": 15
+                },
+                "max_length": 16
+            },
+            "use_white": "bool"
+        }
+    },
+    "animation-start": {
+        "type": "object",
+        "fields": {
+            "id": {
+                "type": "integer",
+                "min_value": 0,
+                "max_value": 15
+            }
+        }
+    },
+    "animation-sequence": {
+        "type": "object",
+        "fields": {
+            "name": {
+                "type": "string",
+                "max_length": 64
+            },
+            "data": {
+                "type": "array",
+                "max_length": 16,
+                "item": "animation-stage"
+            }
+        }
+    },
+    "animations-list": {
+        "type": "array",
+        "item": "animation-sequence",
+        "max_length": 64
     }
 }

@@ -8,4 +8,4 @@
 extern JsonDocument JsonEmpty;
 extern JsonDocument JsonNull;
 
-String validateJson(const JsonVariant& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path=".", const JsonVariantConst& defaults=JsonNull);
+String validateJson(JsonVariant object, const JsonVariantConst schema, const JsonVariantConst objectType, String path=".", const JsonVariantConst defaults=JsonNull);

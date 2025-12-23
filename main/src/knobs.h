@@ -6,9 +6,8 @@
 
 namespace knobs {
     
-    void updateConfiguration(const JsonVariantConst& configuration);
+    void updateConfiguration(const JsonVariantConst configuration);
     void setDefaultColor();
-    void turnOff();
     void check(bool force=false);
     void checkTimer();
 

@@ -5,6 +5,7 @@
 
 #include "knobs.h"
 #include "timer_shutdown.h"
+#include "animations.h"
 
 #define TASK_NAME_SIZE 16
 
@@ -66,11 +67,13 @@ namespace threads_mgr {
 
     TaskThread knobsThread(knobs::checkTimer, 20, "knobs");
     TaskThread shutdownThread(timer_shutdown::checkTimer, 20, "shutdown");
+    TaskThread animationsThread(animations::checkTimer, 20, "animations");
 
 
     void attachTimer() {
         knobsThread.init();
         shutdownThread.init();
+        animationsThread.init();
     }
 
 }
