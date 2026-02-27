@@ -11,6 +11,7 @@
 #include "outputs.h"
 #include "network.h"
 #include "favorites.h"
+#include "animations.h"
 #include "statistics.h"
 #include "temperature.h"
 #include "configuration.h"
@@ -64,6 +65,10 @@ namespace endpoints {
         server::addCallback("/delete_cert", "GET", deleteCert);
         server::addCallback("/get_temp", "GET", getTemperature);
         server::addCallback("/get_tailored_scalling", "GET", getTailoredScalling);
+        server::addCallback("/animations.json", "GET", sendAnimations);
+        server::addCallback("/animations.json", "POST", saveAnimations);
+        server::addCallback("/start_animation", "POST", startAnimation);
+        server::addCallback("/test_animation", "POST", testAnimation);
         server::start();
     }
 

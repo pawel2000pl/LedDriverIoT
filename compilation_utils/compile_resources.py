@@ -24,7 +24,7 @@ fastlz_decompress.restype = ctypes.c_int
 
 def filehash(filename):
     sha1 = hashlib.sha1()
-    sha1.update(open(filename).read().encode('utf-8'))
+    sha1.update(open(filename, 'rb').read())
     return base64.b64encode(sha1.digest()).decode('utf-8')
 
 
@@ -125,26 +125,32 @@ total_decompressed = 0
 total_compressed = 0
 
 operators = ['<', '>', '<=', '>=', '=', '==', '===', '\\+', '-', '\\*', ',', ':', '\\/', '\\[', '\\]', '\\/=', '\\*=', '\\+=', '-=', '\\(', '\\)', '\\{', '\\}', ';', '\\|', '\\^', '&']
+minify_extensions = {'html', 'js', 'json', 'svg', 'css'}
 
 for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
-        with open(PATH+filename) as f: content = f.read()
-        all_srcs[PATH+filename] = content
+        with open(PATH+filename, 'br') as f: content = f.read()
         orginal_content = content
-        if filename.endswith('.json'):
-            content = json.dumps(json.loads(content), indent=None, separators=(',', ':'))
-        else:
-            content = re.sub('/\\*(.|\n)*?\\*/', ' ', content)
-            content = re.sub('\\/\\/[^"\'\\n]*\n', ' ', content)
-            content = re.sub('^[\\s]*', '', content)
-            content = re.sub('[\\s]*$', '', content)
-            content = re.sub('[\\s]+', ' ', content)
-            # for operator in operators:
-            #     no_escaped = operator if operator[0] != '\\' else operator[1:]
-            #     content = re.sub('[\\s]*'+operator+'[\\s]*', no_escaped, content)
-        while len(content) < 16: content += " "
-        compressed = compress_data(content.encode('utf-8'))
-        decompressed = decompress_data(compressed).decode('utf-8')
+        all_srcs[PATH+filename] = content
+        if filename.split('.')[-1] in minify_extensions:
+            content = content.decode('utf-8')
+            if filename.endswith('.json'):
+                content = json.dumps(json.loads(content), indent=None, separators=(',', ':'))
+            else:
+                content = re.sub('/\\*(.|\n)*?\\*/', ' ', content)
+                content = re.sub('\\/\\/[^"\'\\n]*\n', ' ', content)
+                content = re.sub('^[\\s]*', '', content)
+                content = re.sub('[\\s]*$', '', content)
+                content = re.sub('[\\s]+', ' ', content)
+                # for operator in operators:
+                #     no_escaped = operator if operator[0] != '\\' else operator[1:]
+                #     content = re.sub('[\\s]*'+operator+'[\\s]*', no_escaped, content)
+            while len(content) < 16: content += " "
+            content = content.encode('utf-8')
+
+        while len(content) < 16: content += b"\0"
+        compressed = compress_data(content)
+        decompressed = decompress_data(compressed)
         assert content == decompressed        
         var_name = filename.replace('.', '_')
         resource_names.append('resource_'+var_name)
@@ -190,9 +196,9 @@ print("Compression rate: %.4f"%(total_compressed/total_decompressed))
 
 all_srcs_keys = list(all_srcs)
 all_srcs_keys.sort()
-whole_src = "\n".join([all_srcs[k] for k in all_srcs_keys])
+whole_src = b"\n\n".join([all_srcs[k] for k in all_srcs_keys])
 sha1 = hashlib.sha1()
-sha1.update(whole_src.encode('utf-8'))
+sha1.update(whole_src)
 
 result_header.append('extern const struct Resource* resources[];')
 result_header.append('extern const unsigned int resources_count;')

@@ -37,17 +37,7 @@
                                 <input id="enable-default-color" type="checkbox"/>
                                 <label for="enable-default-color">Enable default color</label>
                             </p>
-                            <p>
-                                <input id="default-color-hue" type="number" min="0" max="1" step="0.01"/>
-                                <input id="default-color-saturation" type="number" min="0" max="1" step="0.01"/>
-                                <input id="default-color-value" type="number" min="0" max="1" step="0.01"/>
-                                <input id="default-color-white" type="number" min="0" max="1" step="0.01"/>
-                            </p>
-                            <p>
-                                <button onclick="setDefaultsBlack()">Set black</button>
-                                <button onclick="setDefaultsCurrent()">Set current</button>
-                                <button onclick="setDefaultsWhite()">Set white</button>
-                            </p>
+                            <raw-color-picker id="default-color-picker"></raw-color-picker>
                         </p>
                         <p>
                             Shutdown timeout:
@@ -381,6 +371,7 @@
         <script src="/conversions.js" defer="defer"></script>
         <script src="/chart.js" defer="defer"></script>
         <script src="/component_list.js" defer="defer"></script>
+        <script src="/raw_color_picker.js" defer="defer"></script>
         
         <script src="/config_fetcher.js" defer="defer"></script>
         <script src="/filter_selector.js" defer="defer"></script>

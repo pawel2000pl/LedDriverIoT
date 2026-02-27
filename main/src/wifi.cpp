@@ -33,9 +33,9 @@ namespace wifi {
 
     float occupedChannels[MAX_WIFI_CHANNEL+1] = {0};
 
-    void updateConfiguration(const JsonVariant& configuration) {
+    void updateConfiguration(const JsonVariantConst configuration) {
         hostname = configuration["wifi"]["hostname"].as<String>();
-        const auto& apConfigJson = configuration["wifi"]["access_point"];
+        const auto apConfigJson = configuration["wifi"]["access_point"];
         apAddress = str2ip(apConfigJson["address"].as<String>());
         apGateway = str2ip(apConfigJson["gateway"].as<String>());
         apSubnet = str2ip(apConfigJson["subnet"].as<String>());
@@ -45,13 +45,13 @@ namespace wifi {
         apChannel = apConfigJson["channel"].as<int>();
         apEnabled = apConfigJson["enabled"].as<bool>();
 
-        const auto& staPriorityJson = configuration["wifi"]["sta_priority"];
+        const auto staPriorityJson = configuration["wifi"]["sta_priority"];
         unsigned size = staPriorityJson.size();
         staPriority.clear();
         staPriority.shrink_to_fit();
         staPriority.reserve(size);
         for (unsigned i=0;i<size;i++) {
-            const auto& entryJson = staPriorityJson[i];
+            const auto entryJson = staPriorityJson[i];
             WiFiConfigEntry entry;
             entry.ssid = entryJson["ssid"].as<String>();
             entry.password = entryJson["password"].as<String>();

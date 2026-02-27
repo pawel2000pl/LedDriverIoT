@@ -29,15 +29,17 @@ namespace endpoints {
         JsonDocument testJson;
         if (!server::readJson(req, res, testJson)) return;
         const auto configSchema = configuration::getConfigSchema();
-        const String assertMessage = 
-            testJson["type"].is<JsonString>() ? 
-            validateJson(testJson["data"], configSchema, configSchema[testJson["type"].as<String>()]) : 
-            validateJson(testJson["data"], testJson["schema"], testJson["schema"]["main"]);
+        const String schemaName = testJson["type"].as<String>();
+        auto data = testJson["data"];
+        const String assertMessage = validateJson(data, configSchema, configSchema[schemaName], ".", testJson["default"]);
         if (assertMessage != "") {
             server::sendError(res, assertMessage, 422);
             return;
         }
-        server::sendOk(res);
+        JsonDocument resultData;
+        resultData["status"] = "ok";
+        resultData["data"] = data;
+        server::sendJson(res, resultData);
     }
 
 

@@ -1,7 +1,9 @@
 #include "server.h"
 
 #include <sstream>
+#include <vector>
 #include <esp_system.h>
+#include <esp_random.h>
 
 #include "lib/fastlz/fastlz.h"
 
@@ -22,7 +24,7 @@ namespace server {
     bool captivePortalEnabled = false;
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
+    void updateConfiguration(const JsonVariantConst configuration) {
         captivePortalEnabled = configuration["wifi"]["access_point"]["captive"].as<bool>();
     }
 
@@ -163,32 +165,31 @@ namespace server {
     }
 
 
-    void sendJsonStatic(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize) {
-        char* buf = new char[bufSize];
-        unsigned int size = serializeJson(data, buf, bufSize-1);
+    bool sendJsonStatic(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize) {
+        std::vector<char> buf(bufSize);
+        unsigned int size = serializeJson(data, buf.data(), bufSize);
+        if (size >= bufSize) return false;
         buf[size] = 0;
         char size_str[24];
         res->setHeader("Content-Length", itoa(size, size_str, 10));
-        res->write((uint8_t*)buf, size);
-        delete [] buf;
+        res->write((uint8_t*)(buf.data()), size);
+        return true;
     }
 
 
-    void sendJsonDynamic(HTTPResponse* res, const JsonVariantConst& data) {
+    void sendJsonDynamic(HTTPResponse* res, const JsonVariantConst data) {
         ResponseWriter writer(res);
         serializeJson(data, writer);
     }
 
 
-    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize, int costatusCode) {
+    void sendJson(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize, int statusCode) {
         unsigned freeHeap = esp_get_free_heap_size();
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
-        res->setStatusCode(costatusCode);
-        if ((bufSize==0) || (4 * bufSize >= freeHeap)) 
+        res->setStatusCode(statusCode);
+        if ((bufSize==0) || (4 * bufSize >= freeHeap) || !sendJsonStatic(res, data, bufSize)) 
             sendJsonDynamic(res, data);
-        else
-            sendJsonStatic(res, data, bufSize);
     }
 
 
@@ -215,7 +216,7 @@ namespace server {
     void sendCacheControlHeader(HTTPResponse* res) {
         int minAge = 432000; 
         int maxAge = 604800; 
-        int randomAge = random(minAge, maxAge + 1);
+        int randomAge = minAge + (esp_random() % (maxAge - minAge));
         String headerValue = "max-age=" + String(randomAge);
         res->setHeader("Cache-Control", headerValue.c_str());
     }

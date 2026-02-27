@@ -7,7 +7,7 @@
 #include "filter_functions.h"
 #include "hardware_configuration.h"
 
-std::vector<fixed32_f> toFixedpointVector(const JsonVariantConst& source) {
+std::vector<fixed32_f> toFixedpointVector(const JsonVariantConst source) {
     std::vector<fixed32_f> result;
     unsigned size = source.size();
     result.reserve(size);
@@ -40,9 +40,9 @@ namespace outputs {
 
     }
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& filters = configuration["filters"];
-        const auto& outputFilters = filters["outputFilters"];
+    void updateConfiguration(const JsonVariantConst configuration) {
+        const auto filters = configuration["filters"];
+        const auto outputFilters = filters["outputFilters"];
 
         filters::outputRed = mixFilterFunctions(toFixedpointVector(outputFilters["red"]));
         filters::outputGreen = mixFilterFunctions(toFixedpointVector(outputFilters["green"]));
@@ -50,20 +50,20 @@ namespace outputs {
         filters::outputWhite = mixFilterFunctions(toFixedpointVector(outputFilters["white"]));   
         filters::globalOutput = mixFilterFunctions(toFixedpointVector(filters["globalOutputFilters"])); 
 
-        const auto& hardwareConfiguration = configuration["hardware"];
+        const auto hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();
         gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fixed32_c>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
         unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
         checkNewFrequency(outputFrequency);
 
-        const auto& scallingJson = configuration["hardware"]["scalling"];
+        const auto scallingJson = configuration["hardware"]["scalling"];
         scalling[0] = scallingJson["red"].as<fixed32_c>();
         scalling[1] = scallingJson["green"].as<fixed32_c>();
         scalling[2] = scallingJson["blue"].as<fixed32_c>();
         scalling[3] = scallingJson["white"].as<fixed32_c>();
 
-        const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
+        const auto transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
         int idx;
         for (idx=0;key[idx]!='#';idx++);
