@@ -131,6 +131,7 @@ python3 ./compilation_utils/compile_resources.py
 ~~~
 
 #### For idf:
+On the first usage of microcontroller you should run `idf.py erase_flash` to ensure that flash partitions will be initialized properly.<br>
 Run `idf.py build` in the project directory.
 
 #### For Arduino:
