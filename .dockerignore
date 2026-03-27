@@ -18,3 +18,5 @@ logs.old
 dependencies.lock
 version.txt
 sdkconfig.old
+.cache
+.mypy_cache

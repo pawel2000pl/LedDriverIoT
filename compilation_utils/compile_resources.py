@@ -129,6 +129,7 @@ minify_extensions = {'html', 'js', 'json', 'svg', 'css'}
 
 for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
+        content: bytes|str
         with open(PATH+filename, 'br') as f: content = f.read()
         orginal_content = content
         all_srcs[PATH+filename] = content
@@ -167,7 +168,7 @@ for root, dirs, files in os.walk(PATH, topdown=False):
 
         result_content.append('const unsigned char '+var_name+'_data[] = {'+str2c(compressed)+'};')
         result_content.append('const char '+var_name+'_filename[] = {'+str2c('/'+filename+"\0")+'};')
-        result_content.append('const char '+var_name+'_mime_type[] = {'+str2c(mimetypes.guess_type(PATH+filename)[0]+"\0")+'};')
+        result_content.append('const char '+var_name+'_mime_type[] = {'+str2c(str(mimetypes.guess_type(PATH+filename)[0])+"\0")+'};')
         result_content.append('const char '+var_name+'_etag[] = {'+str2c(etag)+'};')
         result_content.append('const unsigned int '+var_name+'_size = '+str(len(compressed))+';')
         result_content.append('const unsigned int '+var_name+'_decompressed_size = '+str(len(content))+';')
@@ -226,5 +227,5 @@ result_content.append(create_name_resolver([rs[len('resources'):] for rs in all_
 result_content.append('}')
 result_content.append('')
 
-with open('main/src/resources.h', 'w') as f: f.write("\n".join(result_header))
-with open('main/src/resources.cpp', 'w') as f: f.write("\n".join(result_content))
+with open('main/src/resources.h', 'w') as fw: fw.write("\n".join(result_header))
+with open('main/src/resources.cpp', 'w') as fw: fw.write("\n".join(result_content))
