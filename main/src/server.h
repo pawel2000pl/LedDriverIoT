@@ -36,7 +36,7 @@ namespace server {
     void sendError(HTTPResponse* res, String message, int code);
     void sendOk(HTTPResponse* res);
     void sendCacheControlHeader(HTTPResponse* res);    
-    int sendDecompressedData(HTTPResponse* res, const Resource& resource, int statusCode=200);
+    int sendResourceData(HTTPResponse* res, const Resource& resource, int statusCode=200);
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err);
     void sendResource(HTTPRequest* req, HTTPResponse* res);
     std::vector<char>* readBuffer(HTTPRequest* req, bool addZero=true);

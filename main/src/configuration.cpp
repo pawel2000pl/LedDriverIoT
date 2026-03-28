@@ -3,20 +3,14 @@
 #include <FS.h>
 #include <SPIFFS.h>
 
-#include "lib/fastlz/fastlz.h"
-
 #include "validate_json.h"
 #include "hardware_configuration.h"
 
 
 namespace configuration {
 
-
     String getResourceStr(const Resource& resource) {
-        char decompressed_buffer [resource.decompressed_size+1];
-        size_t decompressed_size = fastlz_decompress(resource.data, resource.size, decompressed_buffer, resource.decompressed_size);
-        decompressed_buffer[decompressed_size] = 0;
-        return String(decompressed_buffer);
+        return String((char*)resource.data);
     }
 
 
