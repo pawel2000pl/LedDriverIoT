@@ -7,6 +7,8 @@ import base64
 import hashlib
 import mimetypes
 
+from typing import Union
+
 
 def filehash(filename):
     sha1 = hashlib.sha1()
@@ -93,7 +95,7 @@ minify_extensions = {'html', 'js', 'json', 'svg', 'css'}
 
 for root, dirs, files in os.walk(PATH, topdown=False):
     for filename in files:
-        content: bytes|str
+        content: Union[bytes,str]
         with open(PATH+filename, 'br') as f: content = f.read()
         orginal_content = content
         all_srcs[PATH+filename] = content
