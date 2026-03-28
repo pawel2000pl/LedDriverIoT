@@ -6,6 +6,8 @@
 
 namespace inputs {
 
+    SourceControl source_control = scKnobs;
+
     namespace filters {
         MixedFunction inputSaturation;
         MixedFunction inputHueBasic;
@@ -66,9 +68,14 @@ namespace inputs {
     }
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& filters = configuration["filters"];
-        const auto& inputFilters = filters["inputFilters"];
+    fixed32_f filter_value(fixed32_f value) {
+        return filters::globalInput(filters::inputValue(value));
+    }
+
+
+    void updateConfiguration(const JsonVariantConst configuration) {
+        const auto filters = configuration["filters"];
+        const auto inputFilters = filters["inputFilters"];
         
         filters::inputSaturation = mixFilterFunctions(toFixedpointVector(inputFilters["saturation"]));
         filters::inputHueBasic = mixFilterFunctions(toFixedpointVector(inputFilters["hue"]));

@@ -23,7 +23,7 @@ namespace server {
 
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
     
-    void updateConfiguration(const JsonVariantConst& configuration);
+    void updateConfiguration(const JsonVariantConst configuration);
     
     void addCallback(const char* address, const char* method, const CallbackFunction* callback);
     void configure();
@@ -32,7 +32,7 @@ namespace server {
     void stop();
     void restart();
 
-    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize = 1024, int costatusCode = 200);
+    void sendJson(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize = 4096, int statusCode = 200);
     void sendError(HTTPResponse* res, String message, int code);
     void sendOk(HTTPResponse* res);
     void sendCacheControlHeader(HTTPResponse* res);    

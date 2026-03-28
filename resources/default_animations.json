@@ -1,0 +1,194 @@
+[
+    {
+        "name": "All colors",
+        "data": [
+            {
+                "fade_in_ms": 1000,
+                "fade_in_randomness": 1000,
+                "period_ms": 1000,
+                "period_randomness": 1000,
+                "use_white": false,
+                "base_color": [
+                    0,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    1,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Fire",
+        "data": [
+            {
+                "fade_in_ms": 200,
+                "fade_in_randomness": 300,
+                "period_ms": 0,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.06,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0.04,
+                    0.01,
+                    0.15,
+                    0
+                ],
+                "next_stages": []
+            }
+        ]
+    },
+    {
+        "name": "Disco",
+        "data": [
+            {
+                "fade_in_ms": 0,
+                "fade_in_randomness": 0,
+                "period_ms": 400,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    1
+                ]
+            },
+            {
+                "fade_in_ms": 0,
+                "fade_in_randomness": 0,
+                "period_ms": 400,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.63,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    2
+                ]
+            },
+            {
+                "fade_in_ms": 0,
+                "fade_in_randomness": 0,
+                "period_ms": 400,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.36,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    3
+                ]
+            },
+            {
+                "fade_in_ms": 0,
+                "fade_in_randomness": 0,
+                "period_ms": 400,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.83,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    4
+                ]
+            },
+            {
+                "fade_in_ms": 0,
+                "fade_in_randomness": 0,
+                "period_ms": 400,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.16,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "next_stages": [
+                    0
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Ocean",
+        "data": [
+            {
+                "fade_in_ms": 700,
+                "fade_in_randomness": 200,
+                "period_ms": 900,
+                "period_randomness": 200,
+                "use_white": false,
+                "base_color": [
+                    0.54,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0.17,
+                    0,
+                    0.03,
+                    0
+                ],
+                "next_stages": []
+            }
+        ]
+    }
+]

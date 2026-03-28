@@ -47,7 +47,7 @@ function favoriteColorFactory(paramColor=null, white=false) {
 
 
 const favoritePromise = (async ()=>{
-    const response = await fetch('get_favorites');
+    const response = await fetch('/get_favorites');
     const data = await response.json();
     return data;
 })();

@@ -8,7 +8,10 @@
 
 namespace inputs {
 
-    void updateConfiguration(const JsonVariantConst& configuration);
+    enum SourceControl {scKnobs, scWeb, scFadingOut, scDefault, scAnimation};
+    extern SourceControl source_control;
+
+    void updateConfiguration(const JsonVariantConst configuration);
     void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w);
     void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w);
     void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w);
@@ -28,5 +31,6 @@ namespace inputs {
     ColorChannels decodeFavoriteColor(const String& formattedColor, bool* useWhitePtr);
     ColorChannels favoriteColorPreview(const String& colorspace, const String& formattedColor);
     void applyFavoriteColor(const String& formattedColor);
+    fixed32_f filter_value(fixed32_f value);
 
 }

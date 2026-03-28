@@ -10,7 +10,7 @@
 #include "validate_json.h"
 
 
-bool validateRange(const JsonVariantConst& object, const JsonVariantConst& schema) {
+bool validateRange(const JsonVariantConst object, const JsonVariantConst schema) {
 	float value = object.as<float>();
 	if (schema["min_value"].is<float>() && value < schema["min_value"]) return 0;
 	if (schema["max_value"].is<float>() && value > schema["max_value"]) return 0;
@@ -40,21 +40,21 @@ bool loadJsonEmpty() {
 }
 bool JsonEmptyLoaded = loadJsonEmpty();
 
-String validateJson(const JsonVariant& object, const JsonVariantConst& schema, const JsonVariantConst& objectType, String path, const JsonVariantConst& defaults) {
+String validateJson(JsonVariant object, const JsonVariantConst schema, const JsonVariantConst objectType, String path, const JsonVariantConst defaults) {
 
 	bool objectTypeIsInline = objectType.is<const char*>();
 
 	if (objectTypeIsInline && !isSimpleJsonType(objectType.as<String>()))
 		return validateJson(object, schema, schema[objectType.as<String>()], path, defaults);
 	
-	const JsonVariantConst& objectSchema = objectTypeIsInline ? JsonEmpty.as<JsonVariantConst>() : objectType;
+	const JsonVariantConst objectSchema = objectTypeIsInline ? JsonEmpty.as<JsonVariantConst>() : objectType;
 	String type = objectTypeIsInline ? objectType : objectSchema["type"].is<const char*>() ? objectSchema["type"] : String("object");
 
 	if (type == "object") {
 		if (!object.is<JsonObject>()) return "Invalid type: " + path + " expected: object";
-		const auto& fields = (objectSchema["type"] == "object" ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
+		const auto fields = (objectSchema["type"] == "object" ? objectSchema["fields"] : objectSchema).as<JsonObjectConst>();
 		for (const JsonPairConst& keyValue: fields) {
-			const auto& key = keyValue.key();
+			const auto key = keyValue.key();
 			if (object[key].isNull()) {
 				if (defaults.isNull())
 					return "Missing key: " + path + "/" + key.c_str();
@@ -67,7 +67,7 @@ String validateJson(const JsonVariant& object, const JsonVariantConst& schema, c
 
 	if (type == "array") {
 		if (!object.is<JsonArray>()) return "Invalid type: " + path + " expected: array";
-		const auto& item = objectSchema["item"];
+		const auto item = objectSchema["item"];
 		int size = object.size();
 		int defaultsSize = defaults.size();
 		if (!defaults.isNull() && size < defaultsSize && (objectSchema["min_length"].is<int>() || objectSchema["length"].is<int>())) {

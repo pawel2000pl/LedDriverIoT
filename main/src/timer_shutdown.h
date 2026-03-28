@@ -8,6 +8,6 @@ namespace timer_shutdown {
 
     void checkTimer();
     void resetTimer();
-    void updateConfiguration(const JsonVariantConst& configuration);
+    void updateConfiguration(const JsonVariantConst configuration);
 
 }
