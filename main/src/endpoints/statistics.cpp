@@ -10,14 +10,14 @@
 namespace endpoints {
     
     void sendStatistics(HTTPRequest* req, HTTPResponse* res) {
-        unsigned max_size = 16*1024;
-        char* buf = new char[max_size];
+        static const unsigned max_size = 2*1024;
+        static const unsigned max_tasks = 24;
+        static TaskStatus_t taskList[max_tasks];
+        static char buf[max_size] = {0};
         int size = 0;
 
         uint32_t ulTotalRunTime;
-        UBaseType_t taskCount = uxTaskGetNumberOfTasks();
-        TaskStatus_t *taskList = new TaskStatus_t[taskCount];
-        taskCount = uxTaskGetSystemState(taskList, taskCount, &ulTotalRunTime);
+        UBaseType_t taskCount = uxTaskGetSystemState(taskList, max_tasks, &ulTotalRunTime);
         size += sprintf(buf+size, "=== Tasks info ===\n");
         unsigned size_before_header = size;
         size += sprintf(buf+size, "%-16s | %12s | %5s | %10s | %10s\n", "Name", "Ticks", "CPU %", "Free stack", "Stack ptr");
@@ -39,8 +39,8 @@ namespace endpoints {
             );
         }
 
-        delete [] taskList;
-
+        if (taskCount == max_tasks)
+            size += sprintf(buf+size, "\n[Max tasks count reached]\n");
 
         multi_heap_info_t info;
         heap_caps_get_info(&info, MALLOC_CAP_8BIT);
@@ -72,7 +72,6 @@ namespace endpoints {
         res->setHeader("Content-Type", "text/plain");
         res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->write((uint8_t*)buf, size);
-        delete [] buf;
     }
 
 }

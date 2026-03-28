@@ -222,12 +222,12 @@ namespace server {
     }
 
 
+    uint8_t decompression_buffer[MAX_RESOURCE_DECOMPRESSED_BUFFER+4] = {0};
+
     int sendDecompressedData(HTTPResponse* res, const Resource& resource, int statusCode) {
-		uint8_t* decompressed_buffer = new uint8_t[resource.decompressed_size];
-		size_t decompressed_size = fastlz_decompress(resource.data, resource.size, decompressed_buffer, resource.decompressed_size);
+		size_t decompressed_size = fastlz_decompress(resource.data, resource.size, decompression_buffer, resource.decompressed_size);
 		if (decompressed_size == 0) {
 				sendError(res, "Decompression error");
-				delete [] decompressed_buffer;
 				return 0;
 		}
 		if (statusCode >= 200 && statusCode < 300) 
@@ -240,10 +240,9 @@ namespace server {
         size_t sent = 0;
         while (sent < decompressed_size) {
             size_t send_size = std::min<size_t>(256, decompressed_size - sent);
-		    res->write((uint8_t*)(decompressed_buffer+sent), send_size);
+		    res->write((uint8_t*)(decompression_buffer+sent), send_size);
             sent += send_size;
         }
-		delete [] decompressed_buffer;
 		return 1;
     }
 
