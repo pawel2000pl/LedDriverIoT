@@ -165,5 +165,30 @@
                 ]
             }
         ]
+    },
+    {
+        "name": "Ocean",
+        "data": [
+            {
+                "fade_in_ms": 700,
+                "fade_in_randomness": 200,
+                "period_ms": 900,
+                "period_randomness": 200,
+                "use_white": false,
+                "base_color": [
+                    0.54,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0.17,
+                    0,
+                    0.03,
+                    0
+                ],
+                "next_stages": []
+            }
+        ]
     }
 ]

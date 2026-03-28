@@ -68,6 +68,11 @@ namespace inputs {
     }
 
 
+    fixed32_f filter_value(fixed32_f value) {
+        return filters::globalInput(filters::inputValue(value));
+    }
+
+
     void updateConfiguration(const JsonVariantConst configuration) {
         const auto filters = configuration["filters"];
         const auto inputFilters = filters["inputFilters"];

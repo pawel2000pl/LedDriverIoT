@@ -8,12 +8,34 @@ const maxNextStagesCount = 16;
 async function fetchAnimations() {
     let response = await fetch('/animations.json');
     if (response.status !== 200)
-    response = await fetch('/default_animations.json');
+        response = await fetch('/default_animations.json');
     const data = await response.json();
     return data;
 }
 
+
+async function fetchAnimationLightness() {
+    let response = await fetch('/animation_lightness.json');
+    const data = await response.json();
+    return data;
+}
+
+
+async function setAnimationLightness() {
+    fetch('/animation_lightness.json', {
+        method: 'POST',
+        headers: {"Content-Type": "application/json"},
+        body: $id('animation-lightness').value
+    });
+}
+
+
 const animationsPromise = fetchAnimations();
+animationsPromise.then(async() => {
+    const lightness = await fetchAnimationLightness();
+    $id('animation-lightness').value = lightness;
+});
+animationsPromise.then(updateClientApp);
 
 
 function saveStage(stageDiv) {

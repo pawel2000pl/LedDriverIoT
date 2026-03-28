@@ -318,3 +318,7 @@ raw-color-picker input[type="range"][class="white_input"] {
   float: right;
   margin: -1px;
 }
+
+#animation-lightness {
+    width: 100%;
+}

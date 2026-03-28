@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common_types.h"
 #include "lib/ArduinoJson/ArduinoJson.h"
 
 namespace animations {
@@ -7,5 +8,7 @@ namespace animations {
     void checkTimer();
     void startAnimation(unsigned id);
     void startAnimationFromJson(const JsonVariantConst animationSequence);
+    void setGlobalLightness(fixed32_c);
+    fixed32_c getGlobalLightness();
 
 }

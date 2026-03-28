@@ -31,5 +31,6 @@ namespace inputs {
     ColorChannels decodeFavoriteColor(const String& formattedColor, bool* useWhitePtr);
     ColorChannels favoriteColorPreview(const String& colorspace, const String& formattedColor);
     void applyFavoriteColor(const String& formattedColor);
+    fixed32_f filter_value(fixed32_f value);
 
 }

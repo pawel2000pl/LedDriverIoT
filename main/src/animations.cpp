@@ -4,7 +4,6 @@
 #include <esp_random.h>
 
 #include "constrain.h"
-#include "common_types.h"
 #include "animations.h"
 #include "inputs.h"
 #include "outputs.h"
@@ -46,6 +45,19 @@ namespace animations {
 
     StagesArray loaded_stages;
     AnimationTransition current_transition;
+    fixed32_c global_lightness = 1;
+    fixed32_c global_lightness_front = 1;
+
+    
+    void setGlobalLightness(fixed32_c value) {
+        global_lightness_front = value;
+        global_lightness = inputs::filter_value(global_lightness_front);
+    }
+
+
+    fixed32_c getGlobalLightness() {
+        return global_lightness_front;
+    }
 
 
     void checkTimer() {
@@ -97,17 +109,17 @@ namespace animations {
 
 
     void AnimationTransition::setColor() {
+        ColorChannels out_color;
         unsigned long current_time = millis();
         if (current_time >= end_ms) {
-            outputs::setColor(end_color);
+            out_color = end_color;
         } else {
             fixed32_c frac = fixed32_c::fraction(current_time - start_ms, end_ms - start_ms);
             fixed32_c rest = 1 - frac;
-            ColorChannels out_color;
             for (int i=0;i<4;i++)
                 out_color[i] = start_color[i] * rest + end_color[i] * frac;
-            outputs::setColor(out_color);
         }
+        outputs::setColor(out_color);
         outputs::writeOutput();
         if (current_time >= next_ms)
             next_stage->generateTransition(this);
@@ -125,10 +137,23 @@ namespace animations {
         transition->start_color = outputs::getColor();
         ColorChannels color;
         for (int i=0;i<4;i++) {
-            if (color_randomness[i] > 0)
-                color[i] = constrain<fixed32_c>(base_color[i] + fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1), 0, 1);
-            else
+            if (color_randomness[i] > 0) {
+                color[i] = base_color[i] + fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1);
+                switch (i) {
+                    case 0:
+                        while (color[i] > 1) color[i] -= 1;
+                        while (color[i] < 0) color[i] += 1;
+                        break;
+                    case 2:
+                    case 3:
+                        color[i] *= global_lightness;
+                        // fall through
+                    case 1:
+                        color[i] = constrain<fixed32_c>(color[i], 0, 1);
+                }
+            } else {
                 color[i] = base_color[i];
+            }
         }
         if (!use_white)
             color[3] = transition->start_color[3];

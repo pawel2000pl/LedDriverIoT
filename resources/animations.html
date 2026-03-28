@@ -13,6 +13,10 @@
     <body>
         <h1 class="name-header">Animations</h1>
         <p class="upper-menu main-menu"></p>
+        <p>
+            <span>Animation lightness</span>
+            <input id="animation-lightness" type="range" min="0" max="1" step="0.0001" onchange="setAnimationLightness()"/>
+        </p>
         <div id="animations-div"></div>
         <button onclick="addAnimation()">Add animation</button>
         <button onclick="saveAnimations()">Save</button>
