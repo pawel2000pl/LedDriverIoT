@@ -237,7 +237,12 @@ namespace server {
         res->setHeader("Content-Length", itoa(decompressed_size, size_str, 10));
         res->setHeader("ETag", resource.etag);
         res->setStatusCode(statusCode);
-		res->write((uint8_t*)decompressed_buffer, decompressed_size);
+        size_t sent = 0;
+        while (sent < decompressed_size) {
+            size_t send_size = std::min<size_t>(256, decompressed_size - sent);
+		    res->write((uint8_t*)(decompressed_buffer+sent), send_size);
+            sent += send_size;
+        }
 		delete [] decompressed_buffer;
 		return 1;
     }
