@@ -116,13 +116,17 @@ namespace animations {
 
     void AnimationStage::generateTransition(AnimationTransition* transition) const {
         transition->start_ms = millis();
-        transition->end_ms = transition->start_ms + fade_in_ms + (esp_random() % fade_in_randomness);
-        transition->next_ms = transition->end_ms + period_ms + (esp_random() % period_randomness);
+        transition->end_ms = transition->start_ms + fade_in_ms;
+        if (fade_in_randomness)
+            transition->end_ms += (esp_random() % (fade_in_randomness+1));
+        transition->next_ms = transition->end_ms + period_ms;
+        if (period_randomness)
+            transition->next_ms += (esp_random() % (period_randomness+1));
         transition->start_color = outputs::getColor();
         ColorChannels color;
         for (int i=0;i<4;i++) {
             if (color_randomness[i] > 0)
-                color[i] = constrain<fixed32_c>(base_color[i] + fixed32_c::buf_cast(esp_random() % color_randomness[i].getBuf()) - (color_randomness[i] >> 1), 0, 1);
+                color[i] = constrain<fixed32_c>(base_color[i] + fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1), 0, 1);
             else
                 color[i] = base_color[i];
         }
