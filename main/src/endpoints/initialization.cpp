@@ -32,7 +32,7 @@ namespace endpoints {
 
 
     void sendFavicon(HTTPRequest* req, HTTPResponse* res) {
-        server::sendDecompressedData(res, resource_favicon_svg);
+        server::sendResourceData(res, resource_favicon_svg);
     }
 
 

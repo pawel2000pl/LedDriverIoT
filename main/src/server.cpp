@@ -5,8 +5,6 @@
 #include <esp_system.h>
 #include <esp_random.h>
 
-#include "lib/fastlz/fastlz.h"
-
 #include "wifi.h"
 #include "constrain.h"
 #include "resources.h"
@@ -222,25 +220,18 @@ namespace server {
     }
 
 
-    uint8_t decompression_buffer[MAX_RESOURCE_DECOMPRESSED_BUFFER+4] = {0};
-
-    int sendDecompressedData(HTTPResponse* res, const Resource& resource, int statusCode) {
-		size_t decompressed_size = fastlz_decompress(resource.data, resource.size, decompression_buffer, resource.decompressed_size);
-		if (decompressed_size == 0) {
-				sendError(res, "Decompression error");
-				return 0;
-		}
+    int sendResourceData(HTTPResponse* res, const Resource& resource, int statusCode) {
 		if (statusCode >= 200 && statusCode < 300) 
             sendCacheControlHeader(res);
         char size_str[24];
         res->setHeader("Content-Type", resource.mime_type);
-        res->setHeader("Content-Length", itoa(decompressed_size, size_str, 10));
+        res->setHeader("Content-Length", itoa(resource.size, size_str, 10));
         res->setHeader("ETag", resource.etag);
         res->setStatusCode(statusCode);
         size_t sent = 0;
-        while (sent < decompressed_size) {
-            size_t send_size = std::min<size_t>(256, decompressed_size - sent);
-		    res->write((uint8_t*)(decompression_buffer+sent), send_size);
+        while (sent < resource.size) {
+            size_t send_size = std::min<size_t>(256, resource.size - sent);
+		    res->write((uint8_t*)(resource.data+sent), send_size);
             sent += send_size;
         }
 		return 1;
@@ -290,7 +281,7 @@ namespace server {
             res->setStatusCode(304);
             return;
         }
-        sendDecompressedData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200); 
+        sendResourceData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200); 
     }
 
 
@@ -322,7 +313,7 @@ namespace server {
 
 
     bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName) {
-        unsigned freeHeap = esp_get_free_heap_size() - (assertEntryName.length() ? resource_config_schema_json.decompressed_size * 2 : 0);
+        unsigned freeHeap = esp_get_free_heap_size() - (assertEntryName.length() ? resource_config_schema_json.size * 2 : 0);
         unsigned maximumContentLength = min(freeHeap / 2, (unsigned)MAX_POST_SIZE);
         unsigned contentLength = getContentLength(req, maximumContentLength);
         if (contentLength > maximumContentLength) {
