@@ -157,11 +157,15 @@ function nextStageInputFactory(mainDiv, value=0) {
 function attachStageOptionsEvents(target) {
     Array.from(target.getElementsByClassName('options-panel')).forEach(panel => {
         Array.from(panel.getElementsByClassName('copy-btn')).forEach(btn => {
+            if (navigator.clipboard === undefined)
+                btn.style.display = 'none'; 
             btn.addEventListener('click', async ()=>{
                 await navigator.clipboard.writeText(JSON.stringify(target.saveData()));
             });
         });
         Array.from(panel.getElementsByClassName('paste-btn')).forEach(btn => {
+            if (navigator.clipboard === undefined)
+                btn.style.display = 'none'; 
             btn.addEventListener('click', async ()=>{
                 const text = await navigator.clipboard.readText();
                 const json = JSON.parse(text);
