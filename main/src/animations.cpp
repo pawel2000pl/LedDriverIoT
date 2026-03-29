@@ -153,6 +153,8 @@ namespace animations {
                 }
             } else {
                 color[i] = base_color[i];
+                if (i == 2 || i == 3) 
+                    color[i] *= global_lightness;
             }
         }
         if (!use_white)

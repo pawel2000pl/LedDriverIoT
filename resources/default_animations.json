@@ -42,17 +42,47 @@
                     0
                 ],
                 "color_randomness": [
-                    0.04,
+                    0.02,
                     0.01,
                     0.15,
                     0
                 ],
-                "next_stages": []
+                "next_stages": [
+                    0,
+                    0,
+                    1,
+                    0,
+                    0
+                ]
+            },
+            {
+                "fade_in_ms": 50,
+                "fade_in_randomness": 50,
+                "period_ms": 0,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.06,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0.02,
+                    0.01,
+                    0.15,
+                    0
+                ],
+                "next_stages": [
+                    0,
+                    0,
+                    1
+                ]
             }
         ]
     },
     {
-        "name": "Disco",
+        "name": "DubiDubi",
         "data": [
             {
                 "fade_in_ms": 0,
@@ -73,7 +103,9 @@
                     0
                 ],
                 "next_stages": [
-                    1
+                    1,
+                    2,
+                    3
                 ]
             },
             {
@@ -95,7 +127,9 @@
                     0
                 ],
                 "next_stages": [
-                    2
+                    2,
+                    3,
+                    4
                 ]
             },
             {
@@ -117,7 +151,9 @@
                     0
                 ],
                 "next_stages": [
-                    3
+                    3,
+                    0,
+                    4
                 ]
             },
             {
@@ -139,7 +175,9 @@
                     0
                 ],
                 "next_stages": [
-                    4
+                    4,
+                    1,
+                    0
                 ]
             },
             {
@@ -161,7 +199,110 @@
                     0
                 ],
                 "next_stages": [
+                    0,
+                    1,
+                    2
+                ]
+            }
+        ]
+    },
+    {
+        "name": "Caramelldansen",
+        "data": [
+            {
+                "fade_in_ms": 150,
+                "fade_in_randomness": 0,
+                "period_ms": 250,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.39,
+                    0.98,
+                    1,
+                    1
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0.2,
                     0
+                ],
+                "next_stages": [
+                    3
+                ]
+            },
+            {
+                "fade_in_ms": 150,
+                "fade_in_randomness": 0,
+                "period_ms": 250,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.93,
+                    1,
+                    1,
+                    1
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0.21,
+                    0
+                ],
+                "next_stages": [
+                    3,
+                    3,
+                    0,
+                    2,
+                    2
+                ]
+            },
+            {
+                "fade_in_ms": 150,
+                "fade_in_randomness": 0,
+                "period_ms": 250,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.11,
+                    1,
+                    1,
+                    1
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0.18,
+                    0
+                ],
+                "next_stages": [
+                    1
+                ]
+            },
+            {
+                "fade_in_ms": 150,
+                "fade_in_randomness": 0,
+                "period_ms": 250,
+                "period_randomness": 0,
+                "use_white": false,
+                "base_color": [
+                    0.67,
+                    1,
+                    1,
+                    1
+                ],
+                "color_randomness": [
+                    0,
+                    0,
+                    0.18,
+                    0
+                ],
+                "next_stages": [
+                    1,
+                    1,
+                    0,
+                    0,
+                    2
                 ]
             }
         ]
@@ -172,7 +313,7 @@
             {
                 "fade_in_ms": 700,
                 "fade_in_randomness": 200,
-                "period_ms": 900,
+                "period_ms": 200,
                 "period_randomness": 200,
                 "use_white": false,
                 "base_color": [
@@ -187,7 +328,34 @@
                     0.03,
                     0
                 ],
-                "next_stages": []
+                "next_stages": [
+                    0,
+                    1
+                ]
+            },
+            {
+                "fade_in_ms": 500,
+                "fade_in_randomness": 200,
+                "period_ms": 100,
+                "period_randomness": 50,
+                "use_white": false,
+                "base_color": [
+                    0.54,
+                    1,
+                    1,
+                    0
+                ],
+                "color_randomness": [
+                    0.17,
+                    0,
+                    0.03,
+                    0
+                ],
+                "next_stages": [
+                    0,
+                    1,
+                    0
+                ]
             }
         ]
     }
