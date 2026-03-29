@@ -78,7 +78,7 @@ namespace endpoints {
             inputs::setAuto(modules::webColorSpace, channels);
             outputs::writeOutput();
         }
-        String templateStr = configuration::getResourceStr(resource_simple_template_html);
+        const char* templateStr = (const char*)simple_template_html_data;
         const char* colorspaces[] = {"hsv", "hsl", "rgb"};
         const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
         const char** channelsInCurrentColorspace = channels[0];
@@ -89,7 +89,7 @@ namespace endpoints {
         ColorChannels filteredChannels = inputs::getAuto(modules::webColorSpace);
         char* render_buffer = new char[simple_template_html_size+256];
         int size = sprintf(
-            render_buffer, templateStr.c_str(), 
+            render_buffer, templateStr, 
             modules::colorKnobEnabled ? "" : "display: none;",
             channelsInCurrentColorspace[0],
             fixedpointFilter15(filteredChannels[0]),

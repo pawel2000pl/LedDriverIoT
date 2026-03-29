@@ -171,9 +171,6 @@ result_header.append('extern const char* RESOURCES_SHA1;')
 result_header.append('')
 result_header.append('const struct Resource& getResourceByName(const char* name, const struct Resource* def=0);')
 result_header.append('')
-result_header.append('#define MAX_RESOURCE_minified_BUFFER '+str(max_minified_size))
-result_header.append('#define MAX_RESOURCE_non_minified_BUFFER '+str(max_non_minified_size))
-
 
 result_content.append('const struct Resource* resources[] = {'+','.join(['&'+name for name in resource_names])+'};')
 result_content.append('const unsigned int resources_count = '+str(len(resource_names))+';')

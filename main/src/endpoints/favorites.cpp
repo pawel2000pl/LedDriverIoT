@@ -86,7 +86,7 @@ namespace endpoints {
 
 
     void renderFavoriteColor(HTTPRequest* req, HTTPResponse* res) {
-        String templateStr = configuration::getResourceStr(resource_favorite_color_template_html);
+        const char* templateStr = (const char*)favorite_color_template_html_data;
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
         inputs::applyFavoriteColor(String(code.c_str()));
@@ -103,7 +103,7 @@ namespace endpoints {
         if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         char* render_buffer = new char[favorite_color_template_html_size+256];
         int size = sprintf(
-            render_buffer, templateStr.c_str(),
+            render_buffer, templateStr,
             (int)std::floor(255*r), (int)std::floor(255*g), (int)std::floor(255*b)
         );
         render_buffer[size] = 0;

@@ -3,20 +3,17 @@
 #include <FS.h>
 #include <SPIFFS.h>
 
+#include "memory_stream.h"
 #include "validate_json.h"
 #include "hardware_configuration.h"
 
 
 namespace configuration {
 
-    String getResourceStr(const Resource& resource) {
-        return String((char*)resource.data);
-    }
-
 
     JsonDocument getResourceJson(const Resource& resource, unsigned size) {
         JsonDocument document;
-        deserializeJson(document, getResourceStr(resource));
+        deserializeJson(document, resource.data);
         return document;
     }
 
@@ -78,27 +75,26 @@ namespace configuration {
     }
 
 
-    std::vector<unsigned char>* getFileBin(const String& filename) {
+    unsigned getFileBin(const String& filename, std::vector<unsigned char>& buf) {
         File file = SPIFFS.open(filename);
-        if (file) {
-            std::vector<unsigned char>* result = new std::vector<unsigned char>();
-            result->resize(file.size());
-            file.read(result->data(), file.size());
+        if (file.available()) {
+            buf.resize(file.size());
+            file.readBytes((char*)buf.data(), file.size());
             file.close();
-            return result;
+            return buf.size();
         }
-        return new std::vector<unsigned char>();
+        return 0;
     }
 
 
-    String getFileStr(const String& filename) {
+    unsigned getFileBin(const String& filename, unsigned char* buf, unsigned max_size) {
         File file = SPIFFS.open(filename);
-        if (file) {
-            String buf = file.readString();
+        if (file.available()) {
+            unsigned result = file.readBytes((char*)buf, std::min(max_size, file.size()));
             file.close();
-            return buf;
+            return result;
         }
-        return "";
+        return 0;
     }
 
 
@@ -127,44 +123,56 @@ namespace configuration {
         saveFile(filename, (const unsigned char*)content.c_str(), content.length());
     }
 
+    
+    std::unique_ptr<Stream> getReadStream(const String& filename, const Resource* default_resource) {
+        std::unique_ptr<Stream> file = std::make_unique<File>(SPIFFS.open(filename, FILE_READ));
+        if (file->available()) 
+            return file;
+        if (default_resource)
+            return std::make_unique<MemoryStream>(default_resource->data, default_resource->size);
+        return NULL;
+    }
 
-    String getConfigurationStr() {
-        String buf = getFileStr(CONFIGURATION_FILENAME);
-        return buf == "" ? getResourceStr(resource_default_config_json) : buf;
+
+    std::unique_ptr<Stream> getConfigStream() {
+        return getReadStream(CONFIGURATION_FILENAME, &resource_default_config_json);
     }
 
 
     JsonDocument getConfiguration() {
         JsonDocument configuration;
-        String buf = getConfigurationStr();
-        DeserializationError err = deserializeJson(configuration, buf);
+        auto stream = getConfigStream();
+        DeserializationError err = deserializeJson(configuration, *stream);
         if (err != DeserializationError::Ok || assertConfiguration(configuration).length())
             configuration = getDefautltConfiguration();
         return configuration;
     }
 
 
+    std::unique_ptr<Stream> getFavoritesStream() {
+        return getReadStream(FAVORITES_FILENAME, &resource_default_favorites_json);
+    }
+
+
     JsonDocument getFavorites() {
         JsonDocument favorites;
-        String buf = getFileStr(FAVORITES_FILENAME);
-        DeserializationError err = deserializeJson(favorites, buf);
+        auto stream = getFavoritesStream();
+        DeserializationError err = deserializeJson(favorites, *stream);
         if (err != DeserializationError::Ok || assertJson(favorites, "favorites-list").length())
             favorites = getDefautltFavorites();
         return favorites;
     }
 
 
-    String getAnimationsStr() {
-        String data = getFileStr(ANIMATIONS_FILENAME);
-        if (data.length() != 0) return data;
-        return getResourceStr(resource_default_animations_json);
+    std::unique_ptr<Stream> getAnimationsStream() {
+        return getReadStream(ANIMATIONS_FILENAME, &resource_default_animations_json);
     }
 
 
     JsonDocument getAnimations() {
         JsonDocument animations;
-        String buf = getFileStr(ANIMATIONS_FILENAME);
-        DeserializationError err = deserializeJson(animations, buf);
+        auto stream = getAnimationsStream();
+        DeserializationError err = deserializeJson(animations, *stream);
         if (err != DeserializationError::Ok || assertJson(animations, "animations-list").length())
             animations = getDefautltAnimations();
         return animations;
@@ -178,25 +186,25 @@ namespace configuration {
     
 
     void rewriteFilesystem() {
-        std::vector<unsigned char>* configuration = SPIFFS.exists(CONFIGURATION_FILENAME) ? getFileBin(CONFIGURATION_FILENAME) : NULL;
-        std::vector<unsigned char>* favorites = SPIFFS.exists(FAVORITES_FILENAME) ? getFileBin(FAVORITES_FILENAME) : NULL;
-        std::vector<unsigned char>* animations = SPIFFS.exists(ANIMATIONS_FILENAME) ? getFileBin(ANIMATIONS_FILENAME) : NULL;        
-        std::vector<unsigned char>* cert_key = SPIFFS.exists(CERT_KEY_FILE_NAME) ? getFileBin(CERT_KEY_FILE_NAME) : NULL;
-        std::vector<unsigned char>* cert_pub = SPIFFS.exists(CERT_PUB_FILE_NAME) ? getFileBin(CERT_PUB_FILE_NAME) : NULL;    
+        std::vector<unsigned char> configuration;
+        std::vector<unsigned char> favorites;
+        std::vector<unsigned char> animations;
+        std::vector<unsigned char> cert_key;
+        std::vector<unsigned char> cert_pub;
+        getFileBin(CONFIGURATION_FILENAME, configuration);
+        getFileBin(FAVORITES_FILENAME, favorites);
+        getFileBin(ANIMATIONS_FILENAME, animations);
+        getFileBin(CERT_KEY_FILE_NAME, cert_key);
+        getFileBin(CERT_PUB_FILE_NAME, cert_pub);
         
         SPIFFS.format();
 
-        if (configuration) saveFile(CONFIGURATION_FILENAME, configuration->data(), configuration->size());
-        if (favorites) saveFile(FAVORITES_FILENAME, favorites->data(), favorites->size());
-        if (animations) saveFile(ANIMATIONS_FILENAME, animations->data(), animations->size());
-        if (cert_key) saveFile(CERT_KEY_FILE_NAME, cert_key->data(), cert_key->size());
-        if (cert_pub) saveFile(CERT_PUB_FILE_NAME, cert_pub->data(), cert_pub->size());
+        if (configuration.size()) saveFile(CONFIGURATION_FILENAME, configuration.data(), configuration.size());
+        if (favorites.size()) saveFile(FAVORITES_FILENAME, favorites.data(), favorites.size());
+        if (animations.size()) saveFile(ANIMATIONS_FILENAME, animations.data(), animations.size());
+        if (cert_key.size()) saveFile(CERT_KEY_FILE_NAME, cert_key.data(), cert_key.size());
+        if (cert_pub.size()) saveFile(CERT_PUB_FILE_NAME, cert_pub.data(), cert_pub.size());
         
-        if (configuration) delete configuration;
-        if (favorites) delete favorites;
-        if (animations) delete animations;
-        if (cert_key) delete cert_key;
-        if (cert_pub) delete cert_pub;
     }
 
 

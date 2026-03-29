@@ -14,9 +14,12 @@
 
 namespace server {
 
-    std::vector<unsigned char>* keyBuf = NULL;
-    std::vector<unsigned char>* certBuf = NULL;
-    httpsserver::SSLCert* cert = NULL;
+    const unsigned max_cert_size = 2048;
+    unsigned cert_pub_size = 0;
+    unsigned cert_key_size = 0;
+    uint8_t cert_pub_data[max_cert_size] = {0};
+    uint8_t cert_key_data[max_cert_size] = {0};
+    httpsserver::SSLCert cert;
     httpsserver::HTTPSServer* secureServer = NULL;
     httpsserver::HTTPServer* insecureServer = NULL;
     bool captivePortalEnabled = false;
@@ -74,7 +77,7 @@ namespace server {
     }
 
 
-    httpsserver::SSLCert* generateCert() {
+    void generateCert() {
         httpsserver::SSLCert* newCert = new httpsserver::SSLCert();
         std::string fromDate = getCertValidFromDate();
         std::string untilDate = getCertValidUntilDate();
@@ -85,35 +88,38 @@ namespace server {
             fromDate.c_str(),
             untilDate.c_str()
         );
-        configuration::saveFile(CERT_PUB_FILE_NAME, newCert->getCertData(), newCert->getCertLength());
-        configuration::saveFile(CERT_KEY_FILE_NAME, newCert->getPKData(), newCert->getPKLength());
-        return newCert;
+        cert_pub_size = newCert->getCertLength();
+        cert_key_size = newCert->getPKLength();
+        memcpy(cert_pub_data, newCert->getCertData(), cert_pub_size);
+        memcpy(cert_key_data, newCert->getPKData(), cert_key_size);
+        configuration::saveFile(CERT_PUB_FILE_NAME, cert_pub_data, cert_pub_size);
+        configuration::saveFile(CERT_KEY_FILE_NAME, cert_key_data, cert_key_size);
+        newCert->clear();
+        delete newCert;
+        cert.setCert(cert_pub_data, cert_pub_size);
+        cert.setPK(cert_key_data, cert_key_size);
     }
 
 
-    httpsserver::SSLCert* loadCert() {
-        if (certBuf) {delete certBuf; certBuf = NULL;}
-        if (keyBuf) {delete keyBuf; keyBuf = NULL;}
-        certBuf = configuration::getFileBin(CERT_PUB_FILE_NAME);
-        keyBuf = configuration::getFileBin(CERT_KEY_FILE_NAME);
-        if (certBuf->size() && keyBuf->size()) {
-            return new httpsserver::SSLCert(
-                certBuf->data(), certBuf->size(),
-                keyBuf->data(), keyBuf->size()
-            );
+    void loadCert() {
+        cert_pub_size = configuration::getFileBin(CERT_PUB_FILE_NAME, cert_pub_data, max_cert_size);
+        cert_key_size = configuration::getFileBin(CERT_KEY_FILE_NAME, cert_key_data, max_cert_size);
+        if (cert_pub_size && cert_key_size) {
+            cert.setCert(cert_pub_data, cert_pub_size);
+            cert.setPK(cert_key_data, cert_key_size);
+        } else {
+            generateCert();
         }
-        return generateCert();
     }
 
 
     void configure() {
-        if (cert) { delete cert; cert = NULL; }
         if (secureServer) { delete secureServer; secureServer = NULL; }
         if (insecureServer) { delete insecureServer; insecureServer = NULL; }
 
-        cert = loadCert();
+        loadCert();
 
-        secureServer = new httpsserver::HTTPSServer(cert);
+        secureServer = new httpsserver::HTTPSServer(&cert);
         insecureServer = new httpsserver::HTTPServer();
 
         ResourceNode* staticNode  = new ResourceNode("", "GET", &sendResource);
@@ -292,23 +298,19 @@ namespace server {
     }
 
 
-    std::vector<char>* readBuffer(HTTPRequest* req, bool addZero) {
-        std::vector<char>* result = new std::vector<char>();
+    void readBuffer(HTTPRequest* req, bool addZero, std::vector<char>& result) {
         std::string content_length = req->getHeader("Content-Length");
         int buf_size = constrain(atoi(content_length.c_str()), 0, MAX_POST_SIZE);
         if (!buf_size) buf_size = MAX_POST_SIZE;
-        result->resize(buf_size + !!addZero);
-        char* result_data = result->data();
+        result.resize(buf_size + !!addZero);
+        char* result_data = result.data();
         unsigned size = 0;
         while (!req->requestComplete() && size < buf_size) {
             size += req->readChars(result_data + size, buf_size-size);
         }
         if (addZero && (size == 0 || result_data[size-1] != 0)) 
             result_data[size++] = 0;
-        result->resize(size);
-        if (3*size < 2*buf_size)
-            result->shrink_to_fit();
-        return result;
+        result.resize(size);
     }
 
 
@@ -322,9 +324,9 @@ namespace server {
         }
         DeserializationError err = DeserializationError::Ok;
         if (4 * contentLength < freeHeap) {
-            std::vector<char>* rawData = server::readBuffer(req, true);
-            err = deserializeJson(json, (const char*)(rawData->data()));
-            delete rawData;
+            std::vector<char> rawData;
+            server::readBuffer(req, true, rawData);
+            err = deserializeJson(json, (const char*)(rawData.data()));
         } else {
             RequestReader reader = RequestReader(req);
             err = deserializeJson(json, reader);

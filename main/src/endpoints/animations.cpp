@@ -30,14 +30,18 @@ namespace endpoints {
 
 
     void sendAnimations(HTTPRequest* req, HTTPResponse* res) {
-        String buf = configuration::getAnimationsStr();
+        auto stream = configuration::getAnimationsStream();
         char size_str[24];
-        int size = buf.length();
+        int size = stream->available();
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
         res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setStatusCode(200);
-        res->write((uint8_t*)buf.c_str(), size);
+        uint8_t buf[256];
+        while (stream->available()) {
+            unsigned readed = stream->readBytes(buf, 256);
+            res->write(buf, readed);
+        }
     }
 
 
