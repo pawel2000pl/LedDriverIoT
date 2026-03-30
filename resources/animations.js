@@ -163,6 +163,21 @@ function updateAnimationName(target) {
     });
 }
 
+
+function checkNumberRanges(target) {
+    Array.from(target.querySelectorAll('input[type="number"]')).forEach(element=>{
+        if (element.min == undefined || element.max == undefined || element.value == undefined) return;
+        const org_val = Number(element.value);
+        let val = org_val;
+        const max = Number(element.max);
+        const min = Number(element.min);
+        if (val > max) val = max;
+        if (val < min) val = min;
+        if (val !== org_val) element.value = val;
+    })
+}
+
+
 var stageInputCounter = 0;
 
 function nextStageInputFactory(mainDiv, value=0) {
@@ -174,7 +189,7 @@ function nextStageInputFactory(mainDiv, value=0) {
     input.value = (value > maxv) ? maxv : value;
     input.name = `stage_input[${stageInputCounter++}]`;
     input.classList = ['stage-input'];
-    input.setValue = (value)=>{if (value <= input.max) input.value = value; };
+    input.setValue = (value)=>input.value = value;
     input.getValue = ()=>Number(input.value);
     return input;
 }
@@ -195,8 +210,10 @@ function attachStageOptionsEvents(target) {
             btn.addEventListener('click', async ()=>{
                 const text = await navigator.clipboard.readText();
                 const json = JSON.parse(text);
-                if (await assertJson(json, 'animation-stage'))
+                if (await assertJson(json, 'animation-stage')) {
                     target.loadData(json);
+                    checkNumberRanges(target);
+                }
             });
         });
         Array.from(panel.getElementsByClassName('export-btn')).forEach(btn => {
@@ -299,6 +316,7 @@ function addAnimation() {
         }));
     });
     div.querySelector('.animation-sequence-options .delete-btn').addEventListener('click', ()=>div.remove());
+    div.querySelector('.animation-sequence-options .export-btn').addEventListener('click', ()=>downloadJsonData([div.saveData()], 'animation.json'));
     return div;
 }
 
