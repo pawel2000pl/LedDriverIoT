@@ -4,11 +4,13 @@
 #include <vector>
 #include <esp_system.h>
 #include <esp_random.h>
+	
 
 #include "wifi.h"
 #include "constrain.h"
 #include "resources.h"
 #include "configuration.h"
+#include "inplace_vector.h"
 #include "dynamic_buffers.h"
 
 
@@ -20,8 +22,9 @@ namespace server {
     uint8_t cert_pub_data[max_cert_size] = {0};
     uint8_t cert_key_data[max_cert_size] = {0};
     httpsserver::SSLCert cert;
-    httpsserver::HTTPSServer* secureServer = NULL;
-    httpsserver::HTTPServer* insecureServer = NULL;
+    httpsserver::HTTPSServer secureServer(&cert, 443, 2);
+    httpsserver::HTTPServer insecureServer(80, 2);
+    inplace_vector<ResourceNode, 48> resourceNodes;
     bool captivePortalEnabled = false;
 
 
@@ -114,21 +117,22 @@ namespace server {
 
 
     void configure() {
-        if (secureServer) { delete secureServer; secureServer = NULL; }
-        if (insecureServer) { delete insecureServer; insecureServer = NULL; }
-
         loadCert();
 
-        secureServer = new httpsserver::HTTPSServer(&cert);
-        insecureServer = new httpsserver::HTTPServer();
+        for (int i=0;i<resourceNodes.size();i++) {
+            secureServer.unregisterNode(&resourceNodes[i]);
+            insecureServer.unregisterNode(&resourceNodes[i]);
+        }
+        resourceNodes.clear();
 
-        ResourceNode* staticNode  = new ResourceNode("", "GET", &sendResource);
-        secureServer->setDefaultNode(staticNode);
-        insecureServer->setDefaultNode(staticNode);
+        ResourceNode* staticNode = resourceNodes.emplace_back("", "GET", &sendResource);
+        secureServer.setDefaultNode(staticNode);
+        insecureServer.setDefaultNode(staticNode);
 
-        secureServer->start();
-        if (secureServer->isRunning())             
-            secureServer->stop();
+        secureServer.start();
+        // test start
+        if (secureServer.isRunning())             
+            secureServer.stop();
         else {
             configuration::removeFile(CERT_PUB_FILE_NAME);
             configuration::removeFile(CERT_KEY_FILE_NAME);
@@ -137,16 +141,16 @@ namespace server {
 
 
     void start() {
-        secureServer->start();
-        insecureServer->start();
-        Serial.println(secureServer->isRunning() ? "sec ok" : "sec err");
-        Serial.println(insecureServer->isRunning() ? "ins ok" : "ins err");
+        secureServer.start();
+        insecureServer.start();
+        Serial.println(secureServer.isRunning() ? "sec ok" : "sec err");
+        Serial.println(insecureServer.isRunning() ? "ins ok" : "ins err");
     }
 
 
     void stop() {
-        secureServer->stop();
-        insecureServer->stop();
+        secureServer.stop();
+        insecureServer.stop();
     }
 
 
@@ -157,15 +161,18 @@ namespace server {
 
 
     void loop() {
-        secureServer->loop();
-        insecureServer->loop();
+        unsigned freeBlock = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
+        if (freeBlock >= 4 * 1024)
+            insecureServer.loop();
+        if (freeBlock >= 32 * 1024)
+            secureServer.loop();
     }
 
 
     void addCallback(const char* address, const char* method, const CallbackFunction* callback) {
-        ResourceNode* node = new ResourceNode(address, method, callback);
-        secureServer->registerNode(node);
-        insecureServer->registerNode(node);
+        ResourceNode* node = resourceNodes.emplace_back(address, method, callback);
+        secureServer.registerNode(node);
+        insecureServer.registerNode(node);
     }
 
 
@@ -176,7 +183,13 @@ namespace server {
         buf[size] = 0;
         char size_str[24];
         res->setHeader("Content-Length", itoa(size, size_str, 10));
-        res->write((uint8_t*)(buf.data()), size);
+        uint8_t* buf_data = (uint8_t*)buf.data();
+        size_t sent = 0;
+        while (sent < size) {
+            size_t send_size = std::min<size_t>(256, size - sent);
+		    res->write(buf_data + sent, send_size);
+            sent += send_size;
+        }
         return true;
     }
 
@@ -188,11 +201,11 @@ namespace server {
 
 
     void sendJson(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize, int statusCode) {
-        unsigned freeHeap = esp_get_free_heap_size();
+        unsigned freeBlock = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
         res->setStatusCode(statusCode);
-        if ((bufSize==0) || (4 * bufSize >= freeHeap) || !sendJsonStatic(res, data, bufSize)) 
+        if ((bufSize==0) || (4 * bufSize >= freeBlock) || !sendJsonStatic(res, data, bufSize)) 
             sendJsonDynamic(res, data);
     }
 
