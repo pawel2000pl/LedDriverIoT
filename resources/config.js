@@ -45,6 +45,8 @@ function dumpConfig() {
             "knobMode": $id('knobs-mode-colorspace').value,
             "defaultColorEnabled": $id('enable-default-color').checked,
             "defaultColor": $id('default-color-picker').color,
+            "defaultAnimation": Number($id('default-animation').value),
+            "defaultAnimationLightness": Number($id('default-animation-lightness').value),
             "autoShutdown": {
                 "enabled": $id('enable-shutdown-timeout').checked,
                 "timeout": time2sec($id('shutdown-timeout').value),
@@ -114,6 +116,8 @@ function fillConfig(config) {
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
     $id('enable-default-color').checked = config.channels.defaultColorEnabled;
     $id('default-color-picker').color = config.channels.defaultColor;
+    $id('default-animation').value = config.channels.defaultAnimation;
+    $id('default-animation-lightness').value = config.channels.defaultAnimationLightness;
     $id('enable-shutdown-timeout').checked = config.channels.autoShutdown.enabled;
     $id('shutdown-timeout').value = sec2time(config.channels.autoShutdown.timeout);
     $id('fadeout-time').value = sec2time(config.channels.autoShutdown.fadeOutTime);

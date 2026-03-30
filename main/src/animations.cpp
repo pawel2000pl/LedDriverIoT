@@ -9,6 +9,7 @@
 #include "outputs.h"
 #include "knobs.h"
 #include "configuration.h"
+#include "timer_shutdown.h"
 
 namespace animations {
 
@@ -67,11 +68,12 @@ namespace animations {
     }
 
 
-    void startAnimation(unsigned id) {
+    bool startAnimation(unsigned id) {
         JsonDocument animations = configuration::getAnimations();
         unsigned size = animations.size();
-        if (id >= size) return;
+        if (id >= size) return false;
         startAnimationFromJson(animations[id]);
+        return true;
     }
 
     
@@ -105,6 +107,7 @@ namespace animations {
         }
         loaded_stages[0].generateTransition(&current_transition);
         inputs::source_control = inputs::scAnimation;
+        timer_shutdown::resetTimer();
     }
 
 
@@ -139,23 +142,17 @@ namespace animations {
         for (int i=0;i<4;i++) {
             if (color_randomness[i] > 0) {
                 color[i] = base_color[i] + fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1);
-                switch (i) {
-                    case 0:
-                        while (color[i] > 1) color[i] -= 1;
-                        while (color[i] < 0) color[i] += 1;
-                        break;
-                    case 2:
-                    case 3:
-                        color[i] *= global_lightness;
-                        // fall through
-                    case 1:
-                        color[i] = constrain<fixed32_c>(color[i], 0, 1);
+                if (i == 0) {
+                    while (color[i] > 1) color[i] -= 1;
+                    while (color[i] < 0) color[i] += 1;
+                } else {
+                    color[i] = constrain<fixed32_c>(color[i], 0, 1);
                 }
             } else {
                 color[i] = base_color[i];
-                if (i == 2 || i == 3) 
-                    color[i] *= global_lightness;
             }
+            if (i >= 2)
+                color[i] *= global_lightness;
         }
         if (!use_white)
             color[3] = transition->start_color[3];

@@ -25,8 +25,6 @@ namespace knobs {
     const char* colorspaces[] = {"hsv", "hsl", "rgb"};
     const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
 
-    bool enableDefaultColor = false;
-    ColorChannels defaultColor = {0,0,0,0};
 
 
     void updateConfiguration(const JsonVariantConst configuration) {
@@ -45,25 +43,6 @@ namespace knobs {
         const auto potentionemterConfiguration = configuration["hardware"]["potentionemterConfiguration"];
         for (int i=0;i<4;i++)
             potentionemterMapping[i] = (unsigned)potentionemterConfiguration[channelsInCurrentColorspace[i]].as<unsigned>();
-
-        enableDefaultColor = channelsJson["defaultColorEnabled"].as<bool>();
-        const auto defaultColorJson = channelsJson["defaultColor"];
-        defaultColor = {
-            defaultColorJson["hue"].as<fixed32_c>(),
-            defaultColorJson["saturation"].as<fixed32_c>(),
-            defaultColorJson["value"].as<fixed32_c>(),
-            defaultColorJson["white"].as<fixed32_c>()
-        };
-    }
-
-
-    void setDefaultColor() {
-        if (!enableDefaultColor) return;
-        delay(100); // let timer do some iterations
-        inputs::source_control = inputs::scDefault;
-        timer_shutdown::resetTimer();
-        inputs::setHSVW(defaultColor[0], defaultColor[1], defaultColor[2], defaultColor[3]);
-        outputs::writeOutput();
     }
 
 
@@ -108,6 +87,15 @@ namespace knobs {
         for (int i=0;i<4;i++)
             knobsAmortisation[i] = cReduction * (fixed32_c)(hardware_configuration.potentiometers[i].read()) + opReductionc * (fixed32_c)knobsAmortisation[i];
         checkIfKnobsMoved(knobsAmortisation, force);
+    }
+
+
+    void init() {
+        check(true);
+        for (int i=0;i<20;i++) {
+            delay(5);
+            check(false);
+        }
     }
 
 

@@ -7,6 +7,7 @@
 #include "outputs.h"
 #include "threads_mgr.h"
 #include "configuration.h"
+#include "default_color.h"
 #include "timer_shutdown.h"
 
 namespace modules {
@@ -20,6 +21,7 @@ namespace modules {
     void updateModules(JsonVariant configuration) {
         threads_mgr::setLock(true);
         knobs::updateConfiguration(configuration);
+        default_color::updateConfiguration(configuration);
         inputs::updateConfiguration(configuration);
         outputs::updateConfiguration(configuration);
         wifi::updateConfiguration(configuration);

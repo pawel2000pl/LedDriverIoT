@@ -77,6 +77,12 @@
             "knobMode": "channel-setting",
             "defaultColorEnabled": "bool",
             "defaultColor": "hsvw-color",
+            "defaultAnimation": {
+                "type": "integer",
+                "min_value": -1,
+                "max_value": 63
+            },
+            "defaultAnimationLightness": "fraction",
             "autoShutdown": "auto-shutdown-settings"
         }
     },

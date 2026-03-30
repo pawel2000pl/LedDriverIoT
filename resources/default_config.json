@@ -30,6 +30,8 @@
             "value": 0,
             "white": 0
         },
+        "defaultAnimation": -1,
+        "defaultAnimationLightness": 1.0,
         "autoShutdown": {
             "enabled": false,
             "timeout": 21600,

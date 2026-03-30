@@ -8,6 +8,7 @@
 #include "src/ledc_driver.h"
 #include "src/temperature.h"
 #include "src/configuration.h"
+#include "src/default_color.h"
 #include "src/hardware_configuration.h"
 #include "src/endpoints/initialization.h"
 
@@ -47,10 +48,10 @@ void setup() {
 	initLedC();
 	modules::updateModules();
 	wifi::fastInit();
-	knobs::check(true);
+	knobs::init();
 	threads_mgr::attachTimer();
 	endpoints::configureServer();
-	knobs::setDefaultColor();
+	default_color::setDefaultColor();
 }
 
 unsigned long long int rareChecksTime = 0;
