@@ -45,6 +45,7 @@ class RawColorPicker extends HTMLElement {
             inputs_div.appendChild(table);
         }
 
+        this.onbuttonset = ()=>{};
         const buttons_div = $new('div');
         let btn = null;
         buttons_div.appendChild((btn = $new('button'), btn.textContent = 'Set black', btn.onclick=()=>{this.__setBlack()}, btn));
@@ -109,6 +110,7 @@ class RawColorPicker extends HTMLElement {
         this.colorpicker.value = '#000000';
         this.white_input.value = 0;
         this.__updateFromColorpicker();
+        this.onbuttonset();
     }
 
 
@@ -116,17 +118,19 @@ class RawColorPicker extends HTMLElement {
         this.colorpicker.value = '#ffffff';
         this.white_input.value = 1;
         this.__updateFromColorpicker();
+        this.onbuttonset();
     }
 
 
     async __setCurrent() {
-        const response = await fetch('/color.json?colorspace=hsv');
+        const response = await fetch('/color.json?colorspace=hsv');;
         const data = await response.json();
         this.hue_input.value = data[0];
         this.saturation_input.value = data[1];
         this.value_input.value = data[2];
         this.white_input.value = data[3];
         this.__updateFromNumbers();
+        this.onbuttonset();
     }
 
 

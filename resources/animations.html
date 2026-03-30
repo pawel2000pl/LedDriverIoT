@@ -20,7 +20,7 @@
         <div id="animations-div"></div>
         <button onclick="addAnimation()">Add animation</button>
         <button onclick="saveAnimations()">Save</button>
-        <button onclick="fetchAnimations().then(loadAnimations)">Revert</button>
+        <button onclick="fetchAnimations().then(()=>{$id('animations-div').innerHTML = ''; loadAnimations();})">Revert</button>
         <button onclick="importAnimationsFromFile()">Import</button>
         <button onclick="exportAnimationsToFile()">Export</button>
 
@@ -42,19 +42,19 @@
                 <div class="like-color-picker">
                     <table>
                         <tr><td>Fade-in time [ms]</td></tr>
-                        <tr><td><input type="number" name="fade_in_ms" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                        <tr><td><input type="number" name="fade_in_ms" value="1000" step="25" min="0" max="86400000"/></td></tr>
                     </table>
                     <table>
                         <tr><td>Fade-in time - randomness [+ms]</td></tr>
-                        <tr><td><input type="number" name="fade_in_randomness" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                        <tr><td><input type="number" name="fade_in_randomness" value="1000" step="25" min="0" max="86400000"/></td></tr>
                     </table>
                     <table>
                         <tr><td>Duration time [ms]</td></tr>
-                        <tr><td><input type="number" name="period_ms" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                        <tr><td><input type="number" name="period_ms" value="1000" step="25" min="0" max="86400000"/></td></tr>
                     </table>                
                     <table>
                         <tr><td>Duration time - randomness [+ms]</td></tr>
-                        <tr><td><input type="number" name="period_randomness" value="1000" step="100" min="0" max="86400000"/></td></tr>
+                        <tr><td><input type="number" name="period_randomness" value="1000" step="25" min="0" max="86400000"/></td></tr>
                     </table>                
                     <div class="white-channel-related">
                         <input type="checkbox" name="use_white"/>

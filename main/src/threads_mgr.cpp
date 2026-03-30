@@ -67,7 +67,7 @@ namespace threads_mgr {
 
     TaskThread knobsThread(knobs::checkTimer, 20, "knobs");
     TaskThread shutdownThread(timer_shutdown::checkTimer, 20, "shutdown");
-    TaskThread animationsThread(animations::checkTimer, 20, "animations");
+    TaskThread animationsThread(animations::checkTimer, 8, "animations");
 
 
     void attachTimer() {

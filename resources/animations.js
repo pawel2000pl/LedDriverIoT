@@ -147,6 +147,9 @@ function attachSampleEvents(target) {
         element.attachedUpdatingSamples = true;
         element.addEventListener('change', event => generateColorRandomSample(event.target));
         element.addEventListener('input', event => generateColorRandomSample(event.target));
+        Array.from(element.getElementsByTagName('raw-color-picker')).forEach(picker => {
+            picker.onbuttonset = () => generateColorRandomSample(element);
+        });
     });
 }
 
@@ -166,11 +169,12 @@ function nextStageInputFactory(mainDiv, value=0) {
     const input = $new('input');
     input.type = 'number';
     input.min = 0;
-    input.value = value;
-    input.max = mainDiv.getElementsByClassName('animation-stage').length-1;
+    const maxv = mainDiv.getElementsByClassName('animation-stage').length-1;
+    input.max = maxv;
+    input.value = (value > maxv) ? maxv : value;
     input.name = `stage_input[${stageInputCounter++}]`;
     input.classList = ['stage-input'];
-    input.setValue = (value)=>input.value = value;
+    input.setValue = (value)=>{if (value <= input.max) input.value = value; };
     input.getValue = ()=>Number(input.value);
     return input;
 }
@@ -218,11 +222,10 @@ function attachStageOptionsEvents(target) {
                     else if (input.value > target.stageNumber)
                         input.value = input.value - 1;
                 });
-                let stages = element.childNodes;
-                for (let i=0;i<stages.length;i++)
-                    if (stages.stageNumber !== undefined)
-                        stages.setStageNumber(i);
                 target.remove();
+                let stages = element.getElementsByClassName('animation-stage');
+                for (let i=0;i<stages.length;i++)
+                    stages[i].parentElement.setStageNumber(i);
             });
         });
     });
@@ -242,15 +245,15 @@ function addStage(target) {
     const template = $id('animation-stage-template');
     const div = $new('div');
     div.appendChild(template.content.cloneNode(true));
-    div.setStageNumber = (number) => {
+    div.setStageNumber = (number, count_inc=0) => {
         number = Number(number);
         div.stageNumber = number;
         const currentStagesCount = targetSequence.getElementsByClassName('animation-stage').length;
         Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = number.toString());
-        Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+1} / ${maxStageCount}`);
+        Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+count_inc} / ${maxStageCount}`);
         Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);    
     };
-    div.setStageNumber(currentStagesCount);
+    div.setStageNumber(currentStagesCount, 1);
     const nextStagesDiv = div.querySelector('.next-stage-div');
     componentList(nextStagesDiv, (...params)=>nextStageInputFactory(targetSequence, ...params), maxNextStagesCount);
     div.nextStagesDiv = nextStagesDiv;
