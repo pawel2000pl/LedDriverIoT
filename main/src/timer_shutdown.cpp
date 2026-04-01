@@ -34,16 +34,14 @@ namespace timer_shutdown {
         std::int64_t ctime = millis();
 
         if (ctime > shutdown_time) {
-            if (!fading_out) {
-                inputs::source_control = inputs::scFadingOut;
-                fading_out = true;
-            }
+            fading_out = true;
             std::int64_t diff = ctime - shutdown_time;
             if (diff < fade_out_time) {
                 fixed64 fade_part = fixed64::fraction(fade_out_time - diff, fade_out_time);                
                 outputs::setFadeoutScalling(fade_part * fade_part);
                 outputs::writeOutput();
             } else if (diff < fade_out_time + 1000) {
+                inputs::source_control = inputs::scNone;
                 outputs::setFadeoutScalling(0);
                 outputs::writeOutput();
             }

@@ -33,7 +33,7 @@ namespace default_color {
     
     void setDefaultColor() {
         if (!enableDefaultColor) return;
-        inputs::source_control = inputs::scDefault;
+        inputs::source_control = inputs::scWeb;
         if (defaultAnimation >= 0 && animations::startAnimation(defaultAnimation)) 
             return;
         timer_shutdown::resetTimer();

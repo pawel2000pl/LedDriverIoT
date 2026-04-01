@@ -38,14 +38,14 @@ void checkReset() {
 
 
 void setup() {
-	delay(50); // await for stable voltage in peripherals
+	delay(50); // await for stable voltage
 	Serial.begin(115200);  
 	Serial.println("Initialization");
 	hardware::detectHardware();
 	temperature::init();
 	temperature::block_until_is_ok();
 	configuration::init();
-	initLedC();
+	ledc::init();
 	modules::updateModules();
 	wifi::fastInit();
 	knobs::init();

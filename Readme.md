@@ -148,27 +148,28 @@ The last system statistics:
 === Tasks info ===
 Name             |        Ticks | CPU % | Free stack |  Stack ptr
 -----------------+--------------+-------+------------+------------
-loopTask         |      9904040 |    5% |       1120 | 0x3fca4c4c
-IDLE             |    166867918 |   88% |       1240 | 0x3fca3318
-shutdown         |       263624 |    0% |       1700 | 0x3fcb2a1c
-tiT              |       382535 |    0% |       2764 | 0x3fca7894
-knobs            |      8344395 |    4% |       1516 | 0x3fcb20b4
-sys_evt          |         1150 |    0% |       2264 | 0x3fca8d04
-arduino_events   |         1293 |    0% |       2836 | 0x3fca996c
-wifi             |      3163878 |    1% |       2140 | 0x3fcab7f4
-esp_timer        |       604891 |    0% |       3672 | 0x3fca1008
-Tmr Svc          |            8 |    0% |       1792 | 0x3fca3a80
-mdns             |        28925 |    0% |       3092 | 0x3fcb67ec
+loopTask         |     19490255 |   11% |       3292 | 0x3fca83fc
+IDLE             |    140466428 |   80% |       1240 | 0x3fca6ac8
+shutdown         |       135537 |    0% |       1772 | 0x3fcb61b4
+knobs            |      8396840 |    4% |       1508 | 0x3fcb584c
+tiT              |       572440 |    0% |       2760 | 0x3fcabfd8
+animations       |      2336450 |    1% |       1556 | 0x3fcb6b1c
+arduino_events   |         1323 |    0% |       2832 | 0x3fcad8e0
+mdns             |         5839 |    0% |       3108 | 0x3fcb935c
+esp_timer        |       583335 |    0% |       3672 | 0x3fca47b8
+wifi             |      2865097 |    1% |       2132 | 0x3fcaf04c
+Tmr Svc          |            8 |    0% |       1792 | 0x3fca7230
+sys_evt          |         1157 |    0% |       2256 | 0x3fcacddc
 
 
 === Heap info ===
-Total size:            	262140
-Minimum free heap:     	134184	( 51% )
-Total free bytes:      	148400	( 56% )
-Total allocated bytes: 	113740	( 43% )
-Largest free block:    	114688	( 43% )
-Blocks free:           	     6
-Blocks allocated:      	   450
+Total size:            	248480
+Minimum free heap:     	 89768	( 36% )
+Total free bytes:      	130740	( 52% )
+Total allocated bytes: 	117740	( 47% )
+Largest free block:    	106496	( 42% )
+Blocks free:           	    10
+Blocks allocated:      	   434
 ~~~
 
 ## How to connect for the first time

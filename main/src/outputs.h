@@ -1,11 +1,12 @@
 #pragma once
 #include <array>
+#include <vector>
 
 #include "lib/ArduinoJson/ArduinoJson.h"
 #include "common_types.h"
 #include "json_utils.h"
 
-std::vector<fixed32_f> toFixedpointVector(const JsonVariantConst source);
+std::vector<float> toFloatVector(const JsonVariantConst source);
 
 namespace outputs {
 

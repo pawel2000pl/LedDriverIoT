@@ -8,7 +8,7 @@
 
 namespace inputs {
 
-    enum SourceControl {scKnobs, scWeb, scFadingOut, scDefault, scAnimation};
+    enum SourceControl {scNone, scKnobs, scWeb, scFadingOut, scAnimation};
     extern SourceControl source_control;
 
     void updateConfiguration(const JsonVariantConst configuration);

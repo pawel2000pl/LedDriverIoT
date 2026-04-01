@@ -5,6 +5,8 @@
 #include "json_utils.h"
 
 namespace timer_shutdown {
+    
+    extern bool fading_out;
 
     void checkTimer();
     void resetTimer();

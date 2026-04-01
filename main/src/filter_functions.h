@@ -9,6 +9,7 @@
 #include "lib/fixedpoint/polyapprox.h"
 
 using ArithmeticFunction = std::function<fixed32_f(fixed32_f)>;
+using ArithmeticFloatFunction = std::function<float(float)>;
 
 
 class MixedFunction {
@@ -18,6 +19,7 @@ class MixedFunction {
         MixedFunction(const MixedFunction&) = default;
         MixedFunction(MixedFunction&&) = default;
         MixedFunction(ArithmeticFunction fun);
+        MixedFunction(ArithmeticFloatFunction fun);
         fixed32_f operator()(fixed32_f) const;
 
         MixedFunction& operator=(const MixedFunction&) = default;
@@ -32,9 +34,5 @@ class MixedFunction {
 };
 
 
-ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed32_f min_x=0, fixed32_f max_x=1);
-ArithmeticFunction constrainFunction(ArithmeticFunction fun, fixed32_f min_y=0, fixed32_f max_y=1);
-ArithmeticFunction symFunction(ArithmeticFunction fun);
-
-MixedFunction mixFilterFunctions(const std::vector<fixed32_f>& filters);
+MixedFunction mixFilterFunctions(const std::vector<float>& filters);
 fixed32_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed32_f y, fixed32_f epsilon=std::numeric_limits<fixed32_f>::min());

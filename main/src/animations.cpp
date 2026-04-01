@@ -103,7 +103,7 @@ namespace animations {
                 if (val >= stages_count) val %= stages_count;
                 stage.next_stages[j] = val;
             }
-            stage.use_white = stage_json.as<bool>();
+            stage.use_white = stage_json["use_white"].as<bool>();
         }
         loaded_stages[0].generateTransition(&current_transition);
         inputs::source_control = inputs::scAnimation;

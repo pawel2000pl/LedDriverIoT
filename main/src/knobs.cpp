@@ -7,7 +7,6 @@
 #include "outputs.h"
 #include "hardware_configuration.h"
 #include "common_types.h"
-#include "lib/fixedpoint/taylormath.h"
 #include "timer_shutdown.h"
 
 namespace knobs {
@@ -33,7 +32,7 @@ namespace knobs {
         fixed32_c biasUp = bias["up"].as<fixed32_c>();
         fixed32_c biasDown = bias["down"].as<fixed32_c>();
         epsilon = configuration["hardware"]["knobActivateDelta"].as<fixed32_c>();
-        reduction = taylor::exp<fixed32_c>(-std::abs(configuration["hardware"]["knobsNoisesReduction"].as<fixed32_c>()));
+        reduction = exp(-std::abs(configuration["hardware"]["knobsNoisesReduction"].as<float>()));
         applyBias = [=](fixed32_c x) { return constrain<fixed32_c>((x - biasDown) / (1 - biasUp - biasDown), 0, 1); };
         knobColorspace = channelsJson["knobMode"].as<String>();
         const char** channelsInCurrentColorspace = channels[0];
@@ -85,7 +84,7 @@ namespace knobs {
         fixed32_c cReduction = force ? (fixed32_c)1 : reduction;
         fixed32_c opReductionc = 1 - cReduction;
         for (int i=0;i<4;i++)
-            knobsAmortisation[i] = cReduction * (fixed32_c)(hardware_configuration.potentiometers[i].read()) + opReductionc * (fixed32_c)knobsAmortisation[i];
+            knobsAmortisation[i] = cReduction * hardware_configuration.potentiometers[i].read() + opReductionc * knobsAmortisation[i];
         checkIfKnobsMoved(knobsAmortisation, force);
     }
 
