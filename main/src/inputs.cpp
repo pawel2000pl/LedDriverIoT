@@ -19,56 +19,56 @@ namespace inputs {
         MixedFunction inputWhite;
         MixedFunction globalInput;
 
-        fixed32_f inputHue(fixed32_f x) {
+        fixed64_f inputHue(fixed64_f x) {
             constexpr const unsigned count = 6;
-            constexpr const fixed32_f frac = fixed32_f(1) / count;
+            constexpr const fixed64_f frac = fixed64_f(1) / count;
             unsigned i = std::floor(x * count);
-            fixed32_f ifrac = i * frac;
-            fixed32_f xf = (x - ifrac) * count;
-            fixed32_f rp = (i & 1) ? fixed32_f(1) - inputHueBasic(fixed32_f(1) - xf) : inputHueBasic(xf);
+            fixed64_f ifrac = i * frac;
+            fixed64_f xf = (x - ifrac) * count;
+            fixed64_f rp = (i & 1) ? fixed64_f(1) - inputHueBasic(fixed64_f(1) - xf) : inputHueBasic(xf);
             return rp * frac + ifrac;
         }
 
-        fixed32_f invertedInputHue(fixed32_f y) {
+        fixed64_f invertedInputHue(fixed64_f y) {
             return calulcateInversedValue(inputHue, y);
         }
 
-        fixed32_f invertedInputSaturation(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputSaturation(y);}, y);
+        fixed64_f invertedInputSaturation(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputSaturation(y);}, y);
         }
 
-        fixed32_f invertedInputValue(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputValue(y);}, y);
+        fixed64_f invertedInputValue(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputValue(y);}, y);
         }
 
-        fixed32_f invertedInputLightness(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputLightness(y);}, y);
+        fixed64_f invertedInputLightness(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputLightness(y);}, y);
         }
 
-        fixed32_f invertedInputRed(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputRed(y);}, y);
+        fixed64_f invertedInputRed(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputRed(y);}, y);
         }
 
-        fixed32_f invertedInputGreen(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputGreen(y);}, y);
+        fixed64_f invertedInputGreen(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputGreen(y);}, y);
         }
 
-        fixed32_f invertedInputBlue(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputBlue(y);}, y);
+        fixed64_f invertedInputBlue(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputBlue(y);}, y);
         }
 
-        fixed32_f invertedInputWhite(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return inputWhite(y);}, y);
+        fixed64_f invertedInputWhite(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputWhite(y);}, y);
         }
 
-        fixed32_f invertedGlobalInput(fixed32_f y) {
-            return calulcateInversedValue([&](fixed32_f y){return globalInput(y);}, y);
+        fixed64_f invertedGlobalInput(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return globalInput(y);}, y);
         }
 
     }
 
 
-    fixed32_f filter_value(fixed32_f value) {
+    fixed64_f filter_value(fixed64_f value) {
         return filters::globalInput(filters::inputValue(value));
     }
 

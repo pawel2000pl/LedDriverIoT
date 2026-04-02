@@ -4,7 +4,7 @@
 
 
 MixedFunction::MixedFunction(ArithmeticFunction fun) {
-	approximation.fit<fixed32_f>(fun, 0, 1);
+	approximation.fit<fixed64_f>(fun, 0, 1);
 	fmin = approximation(0);
 	fmax = approximation(1);
 	minff = std::min(fmin, fmax);
@@ -21,24 +21,24 @@ MixedFunction::MixedFunction(ArithmeticFloatFunction fun) {
 }
 
 
-fixed32_f MixedFunction::operator()(fixed32_f x) const {
-	fixed32_f y = (approximation(x)-minff) / absfdiff;
-	return (y < 0) ? fixed32_f(0) : (y > 1) ? fixed32_f(1) : y;
+fixed64_f MixedFunction::operator()(fixed64_f x) const {
+	fixed64_f y = (approximation(x)-minff) / absfdiff;
+	return (y < 0) ? fixed64_f(0) : (y > 1) ? fixed64_f(1) : y;
 }
 
 
-ArithmeticFloatFunction normalizeFunction(ArithmeticFloatFunction fun, fixed32_f min_x=0, fixed32_f max_x=1) {
-	const fixed32_f fmin = fun(min_x);
-	const fixed32_f fmax = fun(max_x);
-	const fixed32_f x_diff = max_x-min_x;
-	const fixed32_f minff = std::min(fmin, fmax);
-	const fixed32_f absfdiff = std::abs(fmax-fmin);
-	return [=](fixed32_f x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
+ArithmeticFloatFunction normalizeFunction(ArithmeticFloatFunction fun, fixed64_f min_x=0, fixed64_f max_x=1) {
+	const fixed64_f fmin = fun(min_x);
+	const fixed64_f fmax = fun(max_x);
+	const fixed64_f x_diff = max_x-min_x;
+	const fixed64_f minff = std::min(fmin, fmax);
+	const fixed64_f absfdiff = std::abs(fmax-fmin);
+	return [=](fixed64_f x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
 }
 
 
 ArithmeticFloatFunction symFunction(ArithmeticFloatFunction fun) {
-	return [=](fixed32_f x) { return 1-fun(1-x); };
+	return [=](fixed64_f x) { return 1-fun(1-x); };
 }
 
 
@@ -58,7 +58,7 @@ const std::array<ArithmeticFloatFunction, filterFunctionsCount> filterFunctions 
 
 MixedFunction mixFilterFunctions(const std::vector<float>& filters) {
 	return MixedFunction((ArithmeticFloatFunction)([&](float x) { 
-		fixed32_f sum = 0;
+		fixed64_f sum = 0;
 		unsigned loopEnd = std::min(filterFunctionsCount, filters.size());
 		for (int i=0;i<loopEnd;i++)
 			if (filters[i] != 0)
@@ -67,22 +67,22 @@ MixedFunction mixFilterFunctions(const std::vector<float>& filters) {
 	}));
 }
 
-fixed32_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed32_f y, fixed32_f epsilon) {
-	fixed32_f of_zero = originalFunction(0);
-	fixed32_f of_one = originalFunction(1);
+fixed64_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed64_f y, fixed64_f epsilon) {
+	fixed64_f of_zero = originalFunction(0);
+	fixed64_f of_one = originalFunction(1);
 	const bool minus = of_zero > of_one;  
-	if (of_zero == y) return (fixed32_f)0;
-	if (of_one == y) return (fixed32_f)1;
-	fixed32_f left = 0;
-	fixed32_f right = 1;
-	fixed32_f prev_mid = -1;
+	if (of_zero == y) return (fixed64_f)0;
+	if (of_one == y) return (fixed64_f)1;
+	fixed64_f left = 0;
+	fixed64_f right = 1;
+	fixed64_f prev_mid = -1;
 	unsigned it = 0;
 	if (minus) y = -y;
 	while (right - left >= epsilon && it++ < 64) {
-		const fixed32_f mid = (left + right) / 2;
+		const fixed64_f mid = (left + right) / 2;
 		if (mid == prev_mid) break;
 		prev_mid = mid;
-		fixed32_f value = originalFunction(mid);
+		fixed64_f value = originalFunction(mid);
 		if (minus) value = -value;
 		if (value < y)
 			left = mid;

@@ -8,7 +8,7 @@
 #include "common_types.h"
 #include "lib/fixedpoint/polyapprox.h"
 
-using ArithmeticFunction = std::function<fixed32_f(fixed32_f)>;
+using ArithmeticFunction = std::function<fixed64_f(fixed64_f)>;
 using ArithmeticFloatFunction = std::function<float(float)>;
 
 
@@ -20,19 +20,19 @@ class MixedFunction {
         MixedFunction(MixedFunction&&) = default;
         MixedFunction(ArithmeticFunction fun);
         MixedFunction(ArithmeticFloatFunction fun);
-        fixed32_f operator()(fixed32_f) const;
+        fixed64_f operator()(fixed64_f) const;
 
         MixedFunction& operator=(const MixedFunction&) = default;
         MixedFunction& operator=(MixedFunction&&) = default;
 
     private:
-        PolyApprox<fixed32_f, 31> approximation;
-        fixed32_f fmin;
-        fixed32_f fmax;
-        fixed32_f minff;
-        fixed32_f absfdiff;
+        PolyApprox<fixed64_f, 31> approximation;
+        fixed64_f fmin;
+        fixed64_f fmax;
+        fixed64_f minff;
+        fixed64_f absfdiff;
 };
 
 
 MixedFunction mixFilterFunctions(const std::vector<float>& filters);
-fixed32_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed32_f y, fixed32_f epsilon=std::numeric_limits<fixed32_f>::min());
+fixed64_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed64_f y, fixed64_f epsilon=std::numeric_limits<fixed64_f>::min());

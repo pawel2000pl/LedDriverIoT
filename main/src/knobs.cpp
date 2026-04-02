@@ -55,19 +55,26 @@ namespace knobs {
     }
 
 
-    fixed32_c maxAbsDifference(const ColorChannels& a, const ColorChannels& b) {
-        fixed32_c result = 0;
+    template<typename T, typename U=T>
+    T maxAbsDifference(const std::array<T, 4>& a, const std::array<U, 4>& b) {
+        T result = 0;
         for (int i=0;i<4;i++) {
-            fixed32_c test = std::abs(a[i] - b[i]);
+            T test = std::abs(a[i] - b[i]);
             if (test > result)
                 result = test;
         }
         return result;
     }
 
+    
+    template<typename T>
+    T sqr(T x) {
+        return x * x;
+    }
+
 
     void checkIfKnobsMoved(const ColorChannels& values, bool force) {
-        fixed32_c md = maxAbsDifference(values, lastKnobValues);
+        fixed32_c md = maxAbsDifference<fixed32_c>(values, lastKnobValues);
         bool largeChange = md > epsilon;
         if (largeChange || force)
             timer_shutdown::resetTimer();
@@ -81,10 +88,16 @@ namespace knobs {
 
 
     void check(bool force) {
-        fixed32_c cReduction = force ? (fixed32_c)1 : reduction;
-        fixed32_c opReductionc = 1 - cReduction;
+        std::array<fixed64, 4> readed;
         for (int i=0;i<4;i++)
-            knobsAmortisation[i] = cReduction * hardware_configuration.potentiometers[i].read() + opReductionc * knobsAmortisation[i];
+            readed[i] = hardware_configuration.potentiometers[i].read();
+        fixed64 md = maxAbsDifference<fixed64, fixed32_c>(readed, knobsAmortisation);
+        fixed64 cReduction = force ? (fixed32_c)1 : reduction;
+        fixed64 opReduction = 1 - cReduction;
+        opReduction *= sqr<fixed64>(1-md);
+        cReduction = 1 - opReduction;
+        for (int i=0;i<4;i++)
+            knobsAmortisation[i] = cReduction * readed[i] + opReduction * knobsAmortisation[i];
         checkIfKnobsMoved(knobsAmortisation, force);
     }
 
