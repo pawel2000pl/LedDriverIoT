@@ -25,7 +25,8 @@
             "hostname": "hostname-string",
             "sta_priority": {
                 "type": "array",
-                "item": "wifi-entry"
+                "item": "wifi-entry",
+                "max_length": 16
             },
             "access_point": {
                 "type": "object",
@@ -42,8 +43,14 @@
                     },
                     "address": "ip-address",
                     "gateway": "ip-address",
-                    "subnet": "ip-address"
+                    "subnet": "ip-address",
+                    "periodic_scan": "boolean"
                 }
+            },
+            "periodic_scan_time": {
+                "type": "integer",
+                "min_value": 120,
+                "max_value": 31536000
             }
         }
     },
@@ -62,7 +69,8 @@
         "fields": {
             "ssid": "wifi-ssid",
             "password": "wifi-password",
-            "hidden": "boolean"
+            "hidden": "boolean",
+            "periodic_scan": "boolean"
         }
     },
     "ap-password": {

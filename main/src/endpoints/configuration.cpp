@@ -109,11 +109,19 @@ namespace endpoints {
     void sendNetworks(HTTPRequest* req, HTTPResponse* res) {
         unsigned lengthSum = 0;
         const auto& scannedNetworks = wifi::getScannedNetworks();
-        for (auto s : scannedNetworks) lengthSum += s.length();
-        unsigned bufSize = lengthSum + 64 * scannedNetworks.size() + 32;
-        JsonDocument networkList;
-        for (auto s : scannedNetworks) networkList.add(s);
-        server::sendJson(res, networkList, bufSize);
+        if (scannedNetworks.size()) {
+            for (auto s : scannedNetworks) lengthSum += s.length();
+            unsigned bufSize = lengthSum + 64 * scannedNetworks.size() + 32;
+            JsonDocument networkList;
+            for (auto s : scannedNetworks) networkList.add(s);
+            server::sendJson(res, networkList, bufSize);
+        } else{
+            res->setHeader("Cache-Control", "no-cache");
+            res->setHeader("Content-Type", "application/json");
+            res->setHeader("Content-Length", "2");
+            res->setStatusCode(200);
+            res->print("[]");
+        }
     }
 
 }

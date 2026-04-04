@@ -148,34 +148,34 @@ The last system statistics:
 === Tasks info ===
 Name             |        Ticks | CPU % | Free stack |  Stack ptr
 -----------------+--------------+-------+------------+------------
-loopTask         |     19490255 |   11% |       3292 | 0x3fca83fc
-IDLE             |    140466428 |   80% |       1240 | 0x3fca6ac8
-shutdown         |       135537 |    0% |       1772 | 0x3fcb61b4
-knobs            |      8396840 |    4% |       1508 | 0x3fcb584c
-tiT              |       572440 |    0% |       2760 | 0x3fcabfd8
-animations       |      2336450 |    1% |       1556 | 0x3fcb6b1c
-arduino_events   |         1323 |    0% |       2832 | 0x3fcad8e0
-mdns             |         5839 |    0% |       3108 | 0x3fcb935c
-esp_timer        |       583335 |    0% |       3672 | 0x3fca47b8
-wifi             |      2865097 |    1% |       2132 | 0x3fcaf04c
-Tmr Svc          |            8 |    0% |       1792 | 0x3fca7230
-sys_evt          |         1157 |    0% |       2256 | 0x3fcacddc
+IDLE             |    390961538 |   85% |       1240 | 0x3fca6ef8
+loopTask         |     34119316 |    7% |       3992 | 0x3fca87a8
+knobs            |     20251982 |    4% |       1488 | 0x3fcb55d0
+wifi             |      2405020 |    0% |       2128 | 0x3fcaedb0
+tiT              |      1366588 |    0% |       2744 | 0x3fcaad80
+animations       |       790686 |    0% |       1568 | 0x3fcb68a0
+esp_timer        |       786223 |    0% |       3672 | 0x3fca4be8
+shutdown         |       472535 |    0% |       1720 | 0x3fcb5f38
+sys_evt          |         8169 |    0% |       2152 | 0x3fcac204
+mdns             |         5225 |    0% |       3116 | 0x3fcb0fe4
+arduino_events   |         4456 |    0% |       2836 | 0x3fcad03c
+Tmr Svc          |            8 |    0% |       1792 | 0x3fca7660
 
 
 === Heap info ===
-Total size:            	248480
-Minimum free heap:     	 89768	( 36% )
-Total free bytes:      	130740	( 52% )
-Total allocated bytes: 	117740	( 47% )
-Largest free block:    	106496	( 42% )
-Blocks free:           	    10
-Blocks allocated:      	   434
+Total size:             247524
+Minimum free heap:      111860  ( 45% )
+Total free bytes:       155624  ( 62% )
+Total allocated bytes:   91900  ( 37% )
+Largest free block:     114688  ( 46% )
+Blocks free:                10
+Blocks allocated:          405
 ~~~
 
 ## How to connect for the first time
 
 * Scan networks and find network with SSID `LedDriver` and connect to them with `ledDriver` password. Then type in browser `http://192.168.1.1`.
-* If you do not see any network with SSID `LedDriver`, create it (as a Hotspot) on your phone with password `ledDriver` and restart the driver.
+* If you do not see any network with SSID `LedDriver`, create it (as a Hotspot) on your phone with password `ledDriver` and restart the driver. The Hotspot must work with WiFi 5 or an older version.
 
 Unfortunately, there is no way to predetermine driver's IP address in a network other than its own AccessPoint. <br>
 The driver supports mDNS technology. After connecting to your network, try to enter the driver's hostname with suffix `.local` (f.e.: `http://led-driver.local`) in an address bar of a browser. Sometimes this technology requires a while to be detected by other devices in the network.<br>

@@ -5,7 +5,8 @@
             {
                 "ssid": "LedDriver",
                 "password": "ledDriver",
-                "hidden": false
+                "hidden": false,
+                "periodic_scan": false
             }
         ],
         "access_point": {
@@ -17,8 +18,10 @@
             "channel": 0,
             "address": "192.168.1.1",
             "gateway": "192.168.1.254",
-            "subnet": "255.255.255.0"
-        }
+            "subnet": "255.255.255.0",
+            "periodic_scan": false
+        },
+        "periodic_scan_time": 1800
     },
     "channels": {
         "webMode": "hsv",

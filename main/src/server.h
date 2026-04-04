@@ -13,8 +13,6 @@
 #include "resources.h"
 #include "json_utils.h"
 
-#define MAX_POST_SIZE (16*1024-1)
-
 using HTTPResponse = httpsserver::HTTPResponse;
 using HTTPRequest = httpsserver::HTTPRequest;
 using ResourceNode = httpsserver::ResourceNode;
@@ -24,6 +22,8 @@ namespace server {
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
     
     void updateConfiguration(const JsonVariantConst configuration);
+    unsigned getQueryId();
+    bool resetQueryFlag();
     
     void addCallback(const char* address, const char* method, const CallbackFunction* callback);
     void configure();

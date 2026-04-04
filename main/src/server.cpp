@@ -5,13 +5,16 @@
 #include <esp_system.h>
 #include <esp_random.h>
 	
-
+#include "logs.h"
 #include "wifi.h"
 #include "constrain.h"
 #include "resources.h"
 #include "configuration.h"
 #include "inplace_vector.h"
 #include "dynamic_buffers.h"
+
+
+#define MAX_POST_SIZE (16*1024-1)
 
 
 namespace server {
@@ -22,10 +25,24 @@ namespace server {
     uint8_t cert_pub_data[max_cert_size] = {0};
     uint8_t cert_key_data[max_cert_size] = {0};
     httpsserver::SSLCert cert;
-    httpsserver::HTTPSServer secureServer(&cert, 443, 2);
+    httpsserver::HTTPSServer secureServer(&cert, 443, 1);
     httpsserver::HTTPServer insecureServer(80, 2);
     inplace_vector<ResourceNode, 48> resourceNodes;
     bool captivePortalEnabled = false;
+    unsigned queryId = 0;
+    bool queryFlag = false;
+
+
+    unsigned getQueryId() {
+        return queryId;
+    }
+
+
+    bool resetQueryFlag() {
+        bool flag = queryFlag;
+        queryFlag = false;
+        return flag;
+    }
 
 
     void updateConfiguration(const JsonVariantConst configuration) {
@@ -116,6 +133,15 @@ namespace server {
     }
 
 
+    void middleware(HTTPRequest*, HTTPResponse*, std::function<void()> next) {
+        wifi::activity();
+        queryId++;
+        queryFlag = true;
+        next();
+        wifi::activity();
+    }
+
+
     void configure() {
         loadCert();
 
@@ -124,13 +150,17 @@ namespace server {
             insecureServer.unregisterNode(&resourceNodes[i]);
         }
         resourceNodes.clear();
+        secureServer.removeMiddleware(middleware);
+        insecureServer.removeMiddleware(middleware);
 
+        insecureServer.addMiddleware(middleware);
+        secureServer.addMiddleware(middleware);
         ResourceNode* staticNode = resourceNodes.emplace_back("", "GET", &sendResource);
-        secureServer.setDefaultNode(staticNode);
         insecureServer.setDefaultNode(staticNode);
+        secureServer.setDefaultNode(staticNode);
 
-        secureServer.start();
         // test start
+        secureServer.start();
         if (secureServer.isRunning())             
             secureServer.stop();
         else {
@@ -140,17 +170,25 @@ namespace server {
     }
 
 
+    bool serverStarted = false;
+
     void start() {
-        secureServer.start();
+        if (serverStarted) return;
         insecureServer.start();
-        Serial.println(secureServer.isRunning() ? "sec ok" : "sec err");
-        Serial.println(insecureServer.isRunning() ? "ins ok" : "ins err");
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        secureServer.start();
+        vTaskDelay(10 / portTICK_PERIOD_MS);
+        serverStarted = true;
+        logs::logger.println(insecureServer.isRunning() ? "inssecure server ok" : "inssecure server err");
+        logs::logger.println(secureServer.isRunning() ? "secure server ok" : "secure server err");
     }
 
 
     void stop() {
+        if (!serverStarted) return;
         secureServer.stop();
         insecureServer.stop();
+        serverStarted = false;
     }
 
 
@@ -161,6 +199,7 @@ namespace server {
 
 
     void loop() {
+        if (!serverStarted) return;
         unsigned freeBlock = heap_caps_get_largest_free_block(MALLOC_CAP_DEFAULT);
         if (freeBlock >= 4 * 1024)
             insecureServer.loop();
@@ -171,8 +210,8 @@ namespace server {
 
     void addCallback(const char* address, const char* method, const CallbackFunction* callback) {
         ResourceNode* node = resourceNodes.emplace_back(address, method, callback);
-        secureServer.registerNode(node);
         insecureServer.registerNode(node);
+        secureServer.registerNode(node);
     }
 
 

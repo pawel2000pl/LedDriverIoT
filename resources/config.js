@@ -37,8 +37,10 @@ function dumpConfig() {
                 "channel": Number($id('ap-channel').value),
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
-                "subnet": $id('ap-subnet').value
+                "subnet": $id('ap-subnet').value,
+                "periodic_scan": $id('ap-periodic-scan').checked
             },
+            "periodic_scan_time": time2sec($id('periodic-scan-time').value)
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
@@ -111,6 +113,8 @@ function fillConfig(config) {
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;
     $id('ap-subnet').value = config.wifi.access_point.subnet;
+    $id('ap-periodic-scan').checked = config.wifi.access_point.periodic_scan;
+    $id('periodic-scan-time').value = sec2time(config.wifi.periodic_scan_time);
 
     $id('web-mode-colorspace').value = config.channels.webMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;

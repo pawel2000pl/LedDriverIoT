@@ -9,12 +9,20 @@
 
 namespace wifi {
 
+    struct WiFiConfigEntry {
+        String ssid;
+        String password;
+        bool hidden;
+        bool periodicScan;
+    };
+
     const std::vector<String>& getScannedNetworks();
     IPAddress str2ip(const String& str);
+    void activity();
     void updateConfiguration(const JsonVariantConst configuration);
     void scanNetworks();
     void disconnect();
-    bool connectToNetwork(String ssid, String password);
+    bool connectToNetwork(const WiFiConfigEntry& entry);
     void fastInit();
     bool autoSta();
     bool connected();

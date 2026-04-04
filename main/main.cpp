@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "src/logs.h"
 #include "src/wifi.h"
 #include "src/knobs.h"
 #include "src/server.h"
@@ -39,8 +40,7 @@ void checkReset() {
 
 void setup() {
 	delay(50); // await for stable voltage
-	Serial.begin(115200);  
-	Serial.println("Initialization");
+	logs::logger.println("Initialization");
 	hardware::detectHardware();
 	temperature::init();
 	temperature::block_until_is_ok();
@@ -59,13 +59,10 @@ unsigned long long int rareChecksTime = 0;
 void loop() {
 
 	if (wifi::connected()) {
-		unsigned long long int ts = 0;
-		unsigned i = 0;
-		do {
-			unsigned long long int t = millis();
+		for (int i=0;i<100;i++) {
 			server::loop();
-			ts = millis() - t;
-		} while (ts > 1 && i++ < 100);
+			if (!server::resetQueryFlag()) break;
+		}
 	}
 
 	modules::execTaskQueue();

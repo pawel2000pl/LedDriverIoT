@@ -90,7 +90,7 @@
                         </p>                       
                     </p>
                     <h3>Access point</h3>
-                    <p> 
+                    <p>
                         <p>
                             <div><input id="enable-ap" type="checkbox"/><label for="enable-ap">Enabled</label></div>
                         </p>
@@ -100,6 +100,7 @@
                             <div><input id="ap-hidden" type="checkbox"/><label for="ap-hidden">Hide SSID</label></div>
                             <div><input id="ap-captive" type="checkbox"/><label for="ap-captive">Enable captive portal</label></div>
                             <div>Channel (set 0 for auto):<input id="ap-channel" type="number" min="0" max="13" value="1"/></div>
+                            <div><input id="ap-periodic-scan" type="checkbox"/><label for="ap-periodic-scan">Periodically scan networks when AP is active</label></div>
                         </p>
                         <p>
                             <div><span>IP Address:</span><input id="ap-address"/></div>
@@ -108,6 +109,15 @@
                         </p>
                     </p>
                     <button onclick="openAccessPoint()">Open access-point now</button>
+                    <h3>Periodic scan</h3>
+                    <p>
+                        <input type="time" min="00:02:00" max="23:59:00" id="periodic-scan-time"/>
+                        <span>[hours:minutes:seconds] / minimum 2 minutes</span>
+                    </p>
+                    <p>
+                        Periodic scan requires turning off the access point.
+                        Time is countend from the last connection to the web panel.
+                    </p>
                     <h3>Additional actions</h3>
                     <p>
                         <button onclick="deleteCert()">Remove HTTPS certificate</button>

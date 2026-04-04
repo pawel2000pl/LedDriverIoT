@@ -17,7 +17,9 @@ namespace endpoints {
         server::sendOk(res);
         const String ssid = data["ssid"].as<String>();
         const String password = data["password"].as<String>();
-        modules::taskQueue.push_back([=](){wifi::connectToNetwork(ssid, password);});
+        const bool hidden = data["hidden"].as<bool>();
+        const bool periodic_scan = data["periodic_scan"].as<bool>();
+        modules::taskQueue.push_back([=](){wifi::connectToNetwork(wifi::WiFiConfigEntry(ssid, password, hidden, periodic_scan));});
     }
 
 

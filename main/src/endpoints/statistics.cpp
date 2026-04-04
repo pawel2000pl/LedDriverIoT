@@ -71,6 +71,7 @@ namespace endpoints {
         char size_str[24];
         res->setHeader("Content-Type", "text/plain");
         res->setHeader("Content-Length", itoa(size, size_str, 10));
+        res->setHeader("Content-Disposition", "inline");
         res->write((uint8_t*)buf, size);
     }
 

@@ -49,6 +49,15 @@ function wifi_selector_factory(ssid="") {
     const hiddenLabel = $new('label');
     hiddenLabel.htmlFor = hiddenInput.id;
     hiddenLabel.textContent = 'Network is hidden ';
+
+    const periodicScanInput = $new('input');
+    periodicScanInput.type = 'checkbox';
+    periodicScanInput.id = uuidv4();
+    periodicScanInput.onchange = ()=>{wifiWasModified = true;};
+    const periodicScanLabel = $new('label');
+    periodicScanLabel.htmlFor = periodicScanInput.id;
+    periodicScanLabel.textContent = 'Periodic scans ';
+
     const connectBtn = $new('button');
     connectBtn.textContent = 'Connect';
     connectBtn.onclick = ()=>{
@@ -60,7 +69,8 @@ function wifi_selector_factory(ssid="") {
             body: JSON.stringify({
                 "ssid": ssid_input.value,
                 "password": password_input.value,
-                "hidden": hiddenInput.checked
+                "hidden": hiddenInput.checked,
+                "periodic_scan": periodicScanInput.checked
             })
         });
     };
@@ -72,16 +82,22 @@ function wifi_selector_factory(ssid="") {
     div.appendChild(div2);
     div.appendChild(hiddenInput);
     div.appendChild(hiddenLabel);
+    div.appendChild($new('br'));
+    div.appendChild(periodicScanInput);
+    div.appendChild(periodicScanLabel);
+    div.appendChild($new('br'));
     div.appendChild(connectBtn);
     div.getValue = ()=>{return {
         "ssid": ssid_input.value,
         "password": password_input.value,
-        "hidden": hiddenInput.checked
+        "hidden": hiddenInput.checked,
+        "periodic_scan": periodicScanInput.checked
     }};
     div.setValue = (value)=>{
         ssid_input.value = value.ssid;
         password_input.value = value.password;
-        hiddenInput.checked = value.checked;
+        hiddenInput.checked = value.hidden;
+        periodicScanInput.checked = value.periodic_scan;
     };
     return div;
 };
@@ -96,12 +112,25 @@ Array.from(document.getElementsByTagName('wifiselector')).forEach((element)=>{
 });
 
 
+function sleep(timeout) {
+    return new Promise((resolve, _) => {
+        setTimeout(() => {
+            resolve();
+        }, timeout);
+    });
+}
+
+
 async function getNetworks(rescan=true) {
-    if (rescan)
+    const listTable = $id('networks-list');
+    listTable.innerHTML = 'Scanning...';
+    if (rescan) {
         await refreshNetworks();
+        await sleep(15000);
+    }
+    listTable.innerHTML = 'Fetching...';
     const response = await fetch("/networks.json");
     const data = await response.json();
-    const listTable = $id('networks-list');
     listTable.innerHTML = '';
     data.forEach(element => {
         const entryTr = document.createElement('tr');

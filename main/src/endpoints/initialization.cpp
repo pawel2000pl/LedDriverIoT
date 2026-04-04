@@ -6,6 +6,7 @@
 
 #include "../lib/ArduinoJson/ArduinoJson.h"
 
+#include "logs.h"
 #include "update.h"
 #include "colors.h"
 #include "outputs.h"
@@ -39,6 +40,7 @@ namespace endpoints {
     void configureServer() {
         server::configure();	
         server::addCallback("/", "GET", handleIndex);
+        server::addCallback("/logs.txt", "GET", sendLogs);
         server::addCallback("/statistics.txt", "GET", sendStatistics);
         server::addCallback("/config.json", "GET", sendConfiguration);
         server::addCallback("/favicon.ico", "GET", sendFavicon);
