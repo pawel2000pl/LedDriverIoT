@@ -3,6 +3,7 @@
 #include <new>
 #include <utility>
 #include <type_traits>
+#include <initializer_list>
 
 
 // Remove this sheet when update to C++26
@@ -11,6 +12,21 @@ template <typename T, std::size_t Capacity>
 class inplace_vector {
 public:
     inplace_vector() noexcept : size_(0) {}
+    inplace_vector(std::initializer_list<T> l) : inplace_vector() {
+        for (auto& x: l)
+            push_back(x);
+    }
+
+    inplace_vector(const inplace_vector& another) : inplace_vector() {
+        for (const auto& x: another)
+            push_back(x);
+    }
+
+    inplace_vector(inplace_vector&& another) : inplace_vector() {
+        for (auto& x: another)
+            push_back(std::move(x));
+        another.clear();
+    }
 
     ~inplace_vector() {
         clear();
@@ -76,6 +92,41 @@ public:
     }
 
 
+    T* begin() {
+        return data();
+    }
+
+
+    T* end() {
+        return data() + size_;
+    }
+
+
+    const T* begin() const {
+        return data();
+    }
+
+
+    const T* end() const {
+        return data() + size_;
+    }
+
+
+    void operator=(const inplace_vector& another) {
+        clear();
+        for (const auto& x: another)
+            push_back(x);
+    }
+    
+
+    void operator=(inplace_vector&& another) {
+        clear();
+        for (auto& x: another)
+            push_back(std::move(x));
+        another.clear();
+    }
+
+    
 private:
 
     typename std::aligned_storage<sizeof(T), alignof(T)>::type buffer_[Capacity];

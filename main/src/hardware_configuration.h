@@ -6,6 +6,7 @@
 
 #include "lib/ArduinoJson/ArduinoJson.h"
 
+#include "inplace_vector.h"
 #include "common_types.h"
 #include "json_utils.h"
 
@@ -17,55 +18,42 @@ namespace hardware {
 
 	struct InputHardwareAction {
 		bool enabled;
-		int read_pin;
-		std::vector<int> hz_pins;
-		std::vector<int> low_pins;
-		std::vector<int> high_pins;
+		char read_pin;
+		inplace_vector<char, 4> hz_pins;
+		inplace_vector<char, 4> low_pins;
+		inplace_vector<char, 4> high_pins;
 		fixed64 read() const;
 
 		int getPin(int disabledValue=31) const;
+		void setInput() const;
 	};
 
 
-	struct DetectedHardware {
-		int fanPin;
-		int resetPin;
+	struct HardwareConfiguration {
+		const char* name;
+		char fanPin;
+		char resetPin;
 		std::array<InputHardwareAction, 4> potentiometers;
 		std::array<InputHardwareAction, 4> thermistors;
-		std::array<int, 4> outputs;
+		std::array<char, 4> outputs;
+		
+		// if pin 21 is required, IT MUST BE THE LAST ON THE LIST
+		inplace_vector<char, 4> requires_potentiometers = {};
+		inplace_vector<char, 4> requires_hz = {};
+		inplace_vector<char, 4> requires_lo = {};
+		inplace_vector<char, 4> requires_hi = {};
+		inplace_vector<char, 4> requires_shorted = {};
+		inplace_vector<char, 4> requires_not_shorted = {};
 
+		bool available() const;
+		void setup() const;
 		String getCode() const;
 	};
 
-
-	struct PinSets {
-		int analogReadMain;
-		int thermistorChecker;
-		std::vector<int> analogReadSecondary;
-		std::vector<int> analogSelect;
-		int fanPinMain;
-		int fanPinAlt;
-
-		// when no multiplexer connect to FAN 
-		// to select alt reset and alt output
-		int altOutputsPin;
-
-		std::vector<int> outputs;
-		int resetPin;
-
-		std::vector<int> outputsAlt;
-		int resetPinAlt;
-		
-		bool multiplexerAvailable() const;
-		void setAnalog(int x) const;
-		std::vector<int> getAnalogSelectPins(int x, bool value) const;
-		DetectedHardware detect() const;
-	};
-
-
 	void detectHardware();
+
 
 }
 
 
-const extern hardware::DetectedHardware& hardware_configuration;
+extern hardware::HardwareConfiguration* hardware_configuration;

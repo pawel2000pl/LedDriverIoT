@@ -26,7 +26,7 @@ void resetConfiguration() {
 
 
 void checkReset() {
-	if (digitalRead(hardware_configuration.resetPin) == 0) {
+	if (digitalRead(hardware_configuration->resetPin) == 0) {
 		if (reset_timer == 0)
 			reset_timer = millis();
 		else if (millis() - reset_timer >= RESET_CONF_TIME) {

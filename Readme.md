@@ -53,7 +53,7 @@ The software matches pins automatically.
 
 ...and possible hardware configurations
 
-Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|No multiplexer|No multiplexer 2|Comment
+Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|Simple #1|simple1 #2|Comment
 ---|----|----|---------|--------------|--------------|--------------|--------------|----------------|-------
 1|LNA_IN|ANT|ANT|ANT|ANT|ANT|ANT|ANT|
 2|VDD3P3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|
@@ -81,7 +81,7 @@ Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|No multiple
 24|SPIQ|internal|internal||||||
 25|GPIO18|internal|ESP_USB_DP||||||
 26|GPIO19|internal|ESP_USB_DM||||||
-27|U0RXD|D7|GP20|LED OUT 0|LED OUT 0|LED OUT 0|LED OUT 0|LED OUT 0|
+27|U0RXD|D7|GP20|LED OUT 0|LED OUT 0|LED OUT 0|LED OUT 0||
 28|U0TXD|D6|GP21|Mult. SEL2|Mult. SEL2|Mult. SEL2|FAN (short them all)|FAN (short them all)|
 29|XTAL_N|internal|internal||||||
 30|XTAL_P|internal|internal||||||
