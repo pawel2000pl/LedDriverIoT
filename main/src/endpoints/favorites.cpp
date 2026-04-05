@@ -3,9 +3,9 @@
 
 #include <string>
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
-#include "../knobs.h"
+#include "../lib/ArduinoJson/ArduinoJson.h"
+
 #include "../server.h"
 #include "../inputs.h"
 #include "../outputs.h"
@@ -33,7 +33,7 @@ namespace endpoints {
             colorJson.add(channels[2]);
             colorJson.add(channels[3]);
         }
-        server::sendJson(res, response, JSON_FAVORITES_BUF_SIZE);
+        server::sendJson(res, response);
     }
 
 
@@ -77,7 +77,7 @@ namespace endpoints {
     void applyFavorite(HTTPRequest* req, HTTPResponse* res) {
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
-        knobs::turnOff();
+        inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
         inputs::applyFavoriteColor(String(code.c_str()));
         outputs::writeOutput();
@@ -86,11 +86,11 @@ namespace endpoints {
 
 
     void renderFavoriteColor(HTTPRequest* req, HTTPResponse* res) {
-        String templateStr = configuration::getResourceStr(resource_favorite_color_template_html);
+        const char* templateStr = (const char*)favorite_color_template_html_data;
         std::string code = "000000000";
         req->getParams()->getQueryParameter("code", code);
         inputs::applyFavoriteColor(String(code.c_str()));
-        knobs::turnOff();
+        inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
         outputs::writeOutput();
 
@@ -101,9 +101,9 @@ namespace endpoints {
         if (channelsMode == "rgb") rgbToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsl") hslToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
         if (channelsMode == "hsv") hsvToRgb(filteredChannels[0], filteredChannels[1], filteredChannels[2], r, g, b);
-        char* render_buffer = new char[favorite_color_template_html_decompressed_size+256];
+        char* render_buffer = new char[favorite_color_template_html_size+256];
         int size = sprintf(
-            render_buffer, templateStr.c_str(),
+            render_buffer, templateStr,
             (int)std::floor(255*r), (int)std::floor(255*g), (int)std::floor(255*b)
         );
         render_buffer[size] = 0;

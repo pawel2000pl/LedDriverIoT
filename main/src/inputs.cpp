@@ -6,56 +6,90 @@
 
 namespace inputs {
 
+    SourceControl source_control = scKnobs;
+
     namespace filters {
-        ArithmeticFunction inputSaturation;
-        ArithmeticFunction inputHue;
-        ArithmeticFunction inputValue;
-        ArithmeticFunction inputLightness;
-        ArithmeticFunction inputRed;
-        ArithmeticFunction inputGreen;
-        ArithmeticFunction inputBlue;
-        ArithmeticFunction inputWhite;
-        ArithmeticFunction globalInput;
+        MixedFunction inputSaturation;
+        MixedFunction inputHueBasic;
+        MixedFunction inputValue;
+        MixedFunction inputLightness;
+        MixedFunction inputRed;
+        MixedFunction inputGreen;
+        MixedFunction inputBlue;
+        MixedFunction inputWhite;
+        MixedFunction globalInput;
 
-        ArithmeticFunction invertedInputHue;
-        ArithmeticFunction invertedInputSaturation;
-        ArithmeticFunction invertedInputValue;
-        ArithmeticFunction invertedInputLightness;
-        ArithmeticFunction invertedInputRed;
-        ArithmeticFunction invertedInputGreen;
-        ArithmeticFunction invertedInputBlue;
-        ArithmeticFunction invertedInputWhite;
-        ArithmeticFunction invertedGlobalInput;
+        fixed64_f inputHue(fixed64_f x) {
+            constexpr const unsigned count = 6;
+            constexpr const fixed64_f frac = fixed64_f(1) / count;
+            unsigned i = std::floor(x * count);
+            fixed64_f ifrac = i * frac;
+            fixed64_f xf = (x - ifrac) * count;
+            fixed64_f rp = (i & 1) ? fixed64_f(1) - inputHueBasic(fixed64_f(1) - xf) : inputHueBasic(xf);
+            return rp * frac + ifrac;
+        }
+
+        fixed64_f invertedInputHue(fixed64_f y) {
+            return calulcateInversedValue(inputHue, y);
+        }
+
+        fixed64_f invertedInputSaturation(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputSaturation(y);}, y);
+        }
+
+        fixed64_f invertedInputValue(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputValue(y);}, y);
+        }
+
+        fixed64_f invertedInputLightness(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputLightness(y);}, y);
+        }
+
+        fixed64_f invertedInputRed(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputRed(y);}, y);
+        }
+
+        fixed64_f invertedInputGreen(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputGreen(y);}, y);
+        }
+
+        fixed64_f invertedInputBlue(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputBlue(y);}, y);
+        }
+
+        fixed64_f invertedInputWhite(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputWhite(y);}, y);
+        }
+
+        fixed64_f invertedGlobalInput(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return globalInput(y);}, y);
+        }
+
     }
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& filters = configuration["filters"];
-        const auto& inputFilters = filters["inputFilters"];
-                
-        filters::inputSaturation = mixFilterFunctions(toFixedpointVector(inputFilters["saturation"]));
-        filters::inputHue = periodizeFunction(mixFilterFunctions(toFixedpointVector(inputFilters["hue"])), 6);
-        filters::inputValue = mixFilterFunctions(toFixedpointVector(inputFilters["value"]));
-        filters::inputLightness = mixFilterFunctions(toFixedpointVector(inputFilters["lightness"]));
-        filters::inputRed = mixFilterFunctions(toFixedpointVector(inputFilters["red"]));
-        filters::inputGreen = mixFilterFunctions(toFixedpointVector(inputFilters["green"]));
-        filters::inputBlue = mixFilterFunctions(toFixedpointVector(inputFilters["blue"]));
-        filters::inputWhite = mixFilterFunctions(toFixedpointVector(inputFilters["white"]));
-        filters::globalInput = mixFilterFunctions(toFixedpointVector(filters["globalInputFilters"]));  
-
-        filters::invertedInputHue = createInverseFunction(filters::inputHue);
-        filters::invertedInputSaturation = createInverseFunction(filters::inputSaturation);
-        filters::invertedInputValue = createInverseFunction(filters::inputValue);
-        filters::invertedInputLightness = createInverseFunction(filters::inputLightness);
-        filters::invertedInputRed = createInverseFunction(filters::inputRed);
-        filters::invertedInputGreen = createInverseFunction(filters::inputGreen);
-        filters::invertedInputBlue = createInverseFunction(filters::inputBlue);
-        filters::invertedInputWhite = createInverseFunction(filters::inputWhite);
-        filters::invertedGlobalInput = createInverseFunction(filters::globalInput);
+    fixed64_f filter_value(fixed64_f value) {
+        return filters::globalInput(filters::inputValue(value));
     }
 
 
-    void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w) {
+    void updateConfiguration(const JsonVariantConst configuration) {
+        const auto filters = configuration["filters"];
+        const auto inputFilters = filters["inputFilters"];
+        
+        filters::inputSaturation = mixFilterFunctions(toFloatVector(inputFilters["saturation"]));
+        filters::inputHueBasic = mixFilterFunctions(toFloatVector(inputFilters["hue"]));
+        filters::inputValue = mixFilterFunctions(toFloatVector(inputFilters["value"]));
+        filters::inputLightness = mixFilterFunctions(toFloatVector(inputFilters["lightness"]));
+        filters::inputRed = mixFilterFunctions(toFloatVector(inputFilters["red"]));
+        filters::inputGreen = mixFilterFunctions(toFloatVector(inputFilters["green"]));
+        filters::inputBlue = mixFilterFunctions(toFloatVector(inputFilters["blue"]));
+        filters::inputWhite = mixFilterFunctions(toFloatVector(inputFilters["white"]));
+        filters::globalInput = mixFilterFunctions(toFloatVector(filters["globalInputFilters"]));  
+    }
+
+
+    ColorChannels prepareRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w) {
         r = filters::globalInput(filters::inputRed(r));
         g = filters::globalInput(filters::inputGreen(g));
         b = filters::globalInput(filters::inputBlue(b));
@@ -70,20 +104,30 @@ namespace inputs {
             if (s != 0)
                 raw[0] = h;
         }
-        outputs::setColor(raw);
+        return raw;
     }
 
 
-    void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
+    void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w) {
+        outputs::setColor(prepareRGBW(r, g, b, w));
+    }
+
+
+    ColorChannels prepareHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         v = filters::globalInput(filters::inputValue(v));
         w = filters::globalInput(filters::inputWhite(w));
-        outputs::setColor(h, s, v, w);
+        return {h, s, v, w};
     }
 
 
-    void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
+    void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
+        outputs::setColor(prepareHSVW(h, s, v, w));
+    }
+
+
+    ColorChannels prepareHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         l = filters::globalInput(filters::inputLightness(l));
@@ -96,7 +140,20 @@ namespace inputs {
         raw[0] = hr;
         if (l != 1 && l != 0) 
             raw[1] = sr;
-        outputs::setColor(raw);
+        return raw;
+    }
+
+
+    void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
+        outputs::setColor(prepareHSLW(h, s, l, w));
+    }
+
+
+    ColorChannels prepareAuto(const String& colorspace, const ColorChannels& color) {
+        if (colorspace == "rgb") return prepareRGBW(color[0], color[1], color[2], color[3]);
+        if (colorspace == "hsv") return prepareHSVW(color[0], color[1], color[2], color[3]);
+        if (colorspace == "hsl") return prepareHSLW(color[0], color[1], color[2], color[3]);
+        return color;
     }
 
 

@@ -1,6 +1,6 @@
 #include "temperature.h"
 
-#include <ArduinoJson.h>
+#include "../lib/ArduinoJson/ArduinoJson.h"
 #include "../temperature.h"
 #include "../server.h"
 

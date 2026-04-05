@@ -3,13 +3,17 @@
 #include <list>
 #include <string>
 #include <Arduino.h>
-#include <ArduinoJson.h>
 
+#include "../lib/ArduinoJson/ArduinoJson.h"
+
+#include "logs.h"
 #include "update.h"
 #include "colors.h"
 #include "outputs.h"
 #include "network.h"
 #include "favorites.h"
+#include "animations.h"
+#include "statistics.h"
 #include "temperature.h"
 #include "configuration.h"
 #include "initialization.h"
@@ -29,13 +33,15 @@ namespace endpoints {
 
 
     void sendFavicon(HTTPRequest* req, HTTPResponse* res) {
-        server::sendDecompressedData(res, resource_favicon_svg);
+        server::sendResourceData(res, resource_favicon_svg);
     }
 
 
     void configureServer() {
         server::configure();	
         server::addCallback("/", "GET", handleIndex);
+        server::addCallback("/logs.txt", "GET", sendLogs);
+        server::addCallback("/statistics.txt", "GET", sendStatistics);
         server::addCallback("/config.json", "GET", sendConfiguration);
         server::addCallback("/favicon.ico", "GET", sendFavicon);
         server::addCallback("/config.json", "POST", recvConfiguration);
@@ -61,6 +67,12 @@ namespace endpoints {
         server::addCallback("/delete_cert", "GET", deleteCert);
         server::addCallback("/get_temp", "GET", getTemperature);
         server::addCallback("/get_tailored_scalling", "GET", getTailoredScalling);
+        server::addCallback("/animations.json", "GET", sendAnimations);
+        server::addCallback("/animations.json", "POST", saveAnimations);
+        server::addCallback("/start_animation", "POST", startAnimation);
+        server::addCallback("/test_animation", "POST", testAnimation);
+        server::addCallback("/animation_lightness.json", "GET", getAnimationLightness);
+        server::addCallback("/animation_lightness.json", "POST", setAnimationLightness);
         server::start();
     }
 

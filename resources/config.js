@@ -37,19 +37,18 @@ function dumpConfig() {
                 "channel": Number($id('ap-channel').value),
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
-                "subnet": $id('ap-subnet').value
+                "subnet": $id('ap-subnet').value,
+                "periodic_scan": $id('ap-periodic-scan').checked
             },
+            "periodic_scan_time": time2sec($id('periodic-scan-time').value)
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
             "knobMode": $id('knobs-mode-colorspace').value,
             "defaultColorEnabled": $id('enable-default-color').checked,
-            "defaultColor": {
-                "hue": Number($id('default-color-hue').value),
-                "saturation": Number($id('default-color-saturation').value),
-                "value": Number($id('default-color-value').value),
-                "white": Number($id('default-color-white').value)
-            },
+            "defaultColor": $id('default-color-picker').color,
+            "defaultAnimation": Number($id('default-animation').value),
+            "defaultAnimationLightness": Number($id('default-animation-lightness').value),
             "autoShutdown": {
                 "enabled": $id('enable-shutdown-timeout').checked,
                 "timeout": time2sec($id('shutdown-timeout').value),
@@ -114,14 +113,15 @@ function fillConfig(config) {
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;
     $id('ap-subnet').value = config.wifi.access_point.subnet;
+    $id('ap-periodic-scan').checked = config.wifi.access_point.periodic_scan;
+    $id('periodic-scan-time').value = sec2time(config.wifi.periodic_scan_time);
 
     $id('web-mode-colorspace').value = config.channels.webMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
     $id('enable-default-color').checked = config.channels.defaultColorEnabled;
-    $id('default-color-hue').value = config.channels.defaultColor.hue;
-    $id('default-color-saturation').value = config.channels.defaultColor.saturation;
-    $id('default-color-value').value = config.channels.defaultColor.value;
-    $id('default-color-white').value = config.channels.defaultColor.white;
+    $id('default-color-picker').color = config.channels.defaultColor;
+    $id('default-animation').value = config.channels.defaultAnimation;
+    $id('default-animation-lightness').value = config.channels.defaultAnimationLightness;
     $id('enable-shutdown-timeout').checked = config.channels.autoShutdown.enabled;
     $id('shutdown-timeout').value = sec2time(config.channels.autoShutdown.timeout);
     $id('fadeout-time').value = sec2time(config.channels.autoShutdown.fadeOutTime);
@@ -171,7 +171,7 @@ $id('default-settings-btn').addEventListener('click', async ()=>{
         await saveConfig();
     }
 });
-$id('export-settings-btn').addEventListener('click', exportConfigToJSON);
+$id('export-settings-btn').addEventListener('click', ()=>exportConfigToJSON(dumpConfig()));
 $id('import-settings-btn').addEventListener('click', async ()=>{
     try {
         const newConfig = await importConfigFromFile();
@@ -221,30 +221,11 @@ async function getTailoredScalling() {
 }
 
 
-function setDefaultsBlack() {
-    $id('default-color-hue').value = 0;
-    $id('default-color-saturation').value = 0;
-    $id('default-color-value').value = 0;
-    $id('default-color-white').value = 0;
-}
-
-
-function setDefaultsWhite() {
-    $id('default-color-hue').value = 0;
-    $id('default-color-saturation').value = 0;
-    $id('default-color-value').value = 1;
-    $id('default-color-white').value = 1;
-}
-
-
-async function setDefaultsCurrent() {
-    const response = await fetch('/color.json?colorspace=hsv');
-    const data = await response.json();
-    $id('default-color-hue').value = data[0];
-    $id('default-color-saturation').value = data[1];
-    $id('default-color-value').value = data[2];
-    $id('default-color-white').value = data[3];
-}
-
-
-updateClientApp();
+updateClientApp().then(()=>{
+    window.onbeforeunload = (event)=>{
+        if (config !== null && !deepEqual(dumpConfig(), config)) {
+            event.preventDefault();
+            event.returnValue = true;
+        }
+    };
+});

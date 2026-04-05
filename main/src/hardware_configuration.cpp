@@ -34,7 +34,7 @@ namespace hardware {
 	}
 
 
-	fixed32_c InputHardwareAction::read() const {
+	fixed64 InputHardwareAction::read() const {
 			if (!enabled) return 0;
 			for (auto& pin : hz_pins)
 					pinMode(pin, INPUT);
@@ -47,7 +47,8 @@ namespace hardware {
 					digitalWrite(pin, LOW);
 			}
 			pinMode(read_pin, INPUT);
-			delayMicroseconds(RELAXATION_DELAY);
+			auto wakeup = micros() + RELAXATION_DELAY;
+			do vTaskDelay(0); while (micros() < wakeup);
 			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
 	}
 

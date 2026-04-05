@@ -47,7 +47,7 @@ function favoriteColorFactory(paramColor=null, white=false) {
 
 
 const favoritePromise = (async ()=>{
-    const response = await fetch('get_favorites');
+    const response = await fetch('/get_favorites');
     const data = await response.json();
     return data;
 })();
@@ -61,14 +61,25 @@ Promise.all([configPromise, favoritePromise]).then(([config, favorites])=>{
     addWhiteBtn.onclick = ()=>{
         favoritesDiv.addElement(null, true);
     };
+    var savedFavorites = favoritesDiv.getValues();
     const saveBtn = $new('button');
     saveBtn.textContent = 'Save changes';
-    saveBtn.onclick = ()=>fetch('/save_favorites', {
+    saveBtn.onclick = async ()=>{
+        const dump = favoritesDiv.getValues();
+        await fetch('/save_favorites', {
             method: 'POST',
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(favoritesDiv.getValues())
+            body: JSON.stringify(dump)
         });
+        savedFavorites = dump;
+    };
     if (config.hardware.enableWhiteKnob)
         favoritesDiv.appendChild(addWhiteBtn);
     favoritesDiv.appendChild(saveBtn);
+    window.onbeforeunload = (event)=>{
+        if (config !== null && !deepEqual(favoritesDiv.getValues(), savedFavorites)) {
+            event.preventDefault();
+            event.returnValue = true;
+        }
+    };
 });

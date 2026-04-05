@@ -1,6 +1,5 @@
-#include <Arduino.h>
 #include "timer_shutdown.h"
-#include "knobs.h"
+#include "inputs.h"
 #include "common_types.h"
 #include "outputs.h"
 
@@ -13,7 +12,7 @@ namespace timer_shutdown {
     bool timer_shutdown_enabled = false;
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
+    void updateConfiguration(const JsonVariantConst configuration) {
         const auto auto_shutdown = configuration["channels"]["autoShutdown"];
         timer_shutdown_enabled = auto_shutdown["enabled"].as<bool>();
         timeout_value = (std::uint64_t)(auto_shutdown["timeout"].as<int>()) * 1000;
@@ -35,16 +34,14 @@ namespace timer_shutdown {
         std::int64_t ctime = millis();
 
         if (ctime > shutdown_time) {
-            if (!fading_out) {
-                knobs::turnOff();
-                fading_out = true;
-            }
+            fading_out = true;
             std::int64_t diff = ctime - shutdown_time;
             if (diff < fade_out_time) {
                 fixed64 fade_part = fixed64::fraction(fade_out_time - diff, fade_out_time);                
                 outputs::setFadeoutScalling(fade_part * fade_part);
                 outputs::writeOutput();
             } else if (diff < fade_out_time + 1000) {
+                inputs::source_control = inputs::scNone;
                 outputs::setFadeoutScalling(0);
                 outputs::writeOutput();
             }

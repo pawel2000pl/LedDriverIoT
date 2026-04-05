@@ -1,5 +1,4 @@
 #include "outputs.h"
-#include <Arduino.h>
 
 #include "constrain.h"
 #include "conversions.h"
@@ -7,12 +6,13 @@
 #include "filter_functions.h"
 #include "hardware_configuration.h"
 
-std::vector<fixed32_f> toFixedpointVector(const JsonVariantConst& source) {
-    std::vector<fixed32_f> result;
+
+std::vector<float> toFloatVector(const JsonVariantConst source) {
+    std::vector<float> result;
     unsigned size = source.size();
     result.reserve(size);
     for (unsigned i=0;i<size;i++)
-        result.push_back(source[i].as<fixed32_f>());
+        result.push_back(source[i].as<float>());
     return result;
 }
 
@@ -32,37 +32,38 @@ namespace outputs {
     std::array<unsigned, 4> transistorConnections;
 
     namespace filters {
-        ArithmeticFunction outputRed;
-        ArithmeticFunction outputGreen;
-        ArithmeticFunction outputBlue;
-        ArithmeticFunction outputWhite;
-        ArithmeticFunction globalOutput;
+        MixedFunction outputRed;
+        MixedFunction outputGreen;
+        MixedFunction outputBlue;
+        MixedFunction outputWhite;
+        MixedFunction globalOutput;
+
     }
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& filters = configuration["filters"];
-        const auto& outputFilters = filters["outputFilters"];
+    void updateConfiguration(const JsonVariantConst configuration) {
+        const auto filters = configuration["filters"];
+        const auto outputFilters = filters["outputFilters"];
 
-        filters::outputRed = mixFilterFunctions(toFixedpointVector(outputFilters["red"]));
-        filters::outputGreen = mixFilterFunctions(toFixedpointVector(outputFilters["green"]));
-        filters::outputBlue = mixFilterFunctions(toFixedpointVector(outputFilters["blue"]));
-        filters::outputWhite = mixFilterFunctions(toFixedpointVector(outputFilters["white"]));   
-        filters::globalOutput = mixFilterFunctions(toFixedpointVector(filters["globalOutputFilters"])); 
+        filters::outputRed = mixFilterFunctions(toFloatVector(outputFilters["red"]));
+        filters::outputGreen = mixFilterFunctions(toFloatVector(outputFilters["green"]));
+        filters::outputBlue = mixFilterFunctions(toFloatVector(outputFilters["blue"]));
+        filters::outputWhite = mixFilterFunctions(toFloatVector(outputFilters["white"]));   
+        filters::globalOutput = mixFilterFunctions(toFloatVector(filters["globalOutputFilters"])); 
 
-        const auto& hardwareConfiguration = configuration["hardware"];
+        const auto hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();
         gateLoadingTime = hardwareConfiguration["gateLoadingTime"].as<fixed32_c>();
         invertOutputs = hardwareConfiguration["invertOutputs"].as<bool>();
         unsigned outputFrequency = hardwareConfiguration["frequency"].as<unsigned>();
-        checkNewFrequency(outputFrequency);
+        ledc::checkNewFrequency(outputFrequency);
 
-        const auto& scallingJson = configuration["hardware"]["scalling"];
+        const auto scallingJson = configuration["hardware"]["scalling"];
         scalling[0] = scallingJson["red"].as<fixed32_c>();
         scalling[1] = scallingJson["green"].as<fixed32_c>();
         scalling[2] = scallingJson["blue"].as<fixed32_c>();
         scalling[3] = scallingJson["white"].as<fixed32_c>();
 
-        const auto& transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
+        const auto transistorConfiguration = configuration["hardware"]["transistorConfiguration"];
         char key[] = {'o', 'u', 't', 'p', 'u', 't', ' ', '#', 0};
         int idx;
         for (idx=0;key[idx]!='#';idx++);
@@ -84,7 +85,7 @@ namespace outputs {
     ColorChannels getPeriods(const ColorChannels& values) {
         ColorChannels periods;
         for (int i=0;i<4;i++)
-            periods[i] = addGateLoadingTime(values[i], gateLoadingTime);
+            periods[i] = ledc::addGateLoadingTime(values[i], gateLoadingTime);
         return periods;
     }
     
@@ -140,7 +141,7 @@ namespace outputs {
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
-            setLedC(
+            ledc::setChannel(
                 hardware_configuration.outputs[i], 
                 i, 
                 periods[i], 

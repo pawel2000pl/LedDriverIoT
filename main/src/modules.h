@@ -4,7 +4,7 @@
 #include <string>
 #include <Arduino.h>
 #include <functional>
-#include <ArduinoJson.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
 
 namespace modules {
 

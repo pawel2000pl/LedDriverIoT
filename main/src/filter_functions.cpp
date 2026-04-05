@@ -1,85 +1,94 @@
+#include <array>
 #include "filter_functions.h"
-#include "taylormath.h"
+#include "lib/fixedpoint/polyapprox.h"
 
-ArithmeticFunction normalizeFunction(ArithmeticFunction fun, fixed32_f min_x, fixed32_f max_x) {
-	const fixed32_f fmin = fun(min_x);
-	const fixed32_f fmax = fun(max_x);
-	const fixed32_f x_diff = max_x-min_x;
-	const fixed32_f minff = std::min(fmin, fmax);
-	const fixed32_f absfdiff = std::abs(fmax-fmin);
-	return [=](fixed32_f x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
-}
 
-ArithmeticFunction constrainFunction(ArithmeticFunction fun, fixed32_f min_y, fixed32_f max_y) {
-	return [=](fixed32_f x) {
-		fixed32_f y = fun(x);
-		return (y < min_y) ? min_y : (y > max_y) ? max_y : y;
-	};
-}
-
-ArithmeticFunction symFunction(ArithmeticFunction fun) {
-	return [=](fixed32_f x) { return 1-fun(1-x); };
+MixedFunction::MixedFunction(ArithmeticFunction fun) {
+	approximation.fit<fixed64_f>(fun, 0, 1);
+	fmin = approximation(0);
+	fmax = approximation(1);
+	minff = std::min(fmin, fmax);
+	absfdiff = std::abs(fmax-fmin);
 }
 
 
-const std::vector<ArithmeticFunction> filterFunctions = {
-	[](fixed32_f x) {return x; },
-	[](fixed32_f x) {return x*x; },
-	[](fixed32_f x) {return taylor::sqrt<fixed32_f>(x); },
-	normalizeFunction([](fixed32_f x) { return taylor::exp<fixed32_f>(M_PI*(x-1)); }),
-	normalizeFunction([](fixed32_f x) { return taylor::asin<fixed32_f>(x*2-1); }),
-	normalizeFunction([](fixed32_f x) { return taylor::cos<fixed32_f>((x - 1) * M_PI); }),
-	symFunction([](fixed32_f x) {return x*x; }),
-	symFunction([](fixed32_f x) {return taylor::sqrt<fixed32_f>(x); }),
-	normalizeFunction(symFunction([](fixed32_f x) { return taylor::exp<fixed32_f>(M_PI*(x-1)); }))
+MixedFunction::MixedFunction(ArithmeticFloatFunction fun) {
+	approximation.fit<float>(fun, 0, 1);
+	fmin = approximation(0);
+	fmax = approximation(1);
+	minff = std::min(fmin, fmax);
+	absfdiff = std::abs(fmax-fmin);
+}
+
+
+fixed64_f MixedFunction::operator()(fixed64_f x) const {
+	fixed64_f y = (approximation(x)-minff) / absfdiff;
+	return (y < 0) ? fixed64_f(0) : (y > 1) ? fixed64_f(1) : y;
+}
+
+
+ArithmeticFloatFunction normalizeFunction(ArithmeticFloatFunction fun, fixed64_f min_x=0, fixed64_f max_x=1) {
+	const fixed64_f fmin = fun(min_x);
+	const fixed64_f fmax = fun(max_x);
+	const fixed64_f x_diff = max_x-min_x;
+	const fixed64_f minff = std::min(fmin, fmax);
+	const fixed64_f absfdiff = std::abs(fmax-fmin);
+	return [=](fixed64_f x) { return (fun(x*x_diff+min_x)-minff) / absfdiff; };
+}
+
+
+ArithmeticFloatFunction symFunction(ArithmeticFloatFunction fun) {
+	return [=](fixed64_f x) { return 1-fun(1-x); };
+}
+
+
+constexpr const unsigned filterFunctionsCount = 9;
+const std::array<ArithmeticFloatFunction, filterFunctionsCount> filterFunctions = {
+	[](float x) {return x; },
+	[](float x) {return x*x; },
+	[](float x) {return sqrt(x); },
+	normalizeFunction([](float x) { return exp(M_PI*(x-1)); }),
+	normalizeFunction([](float x) { return asin(x*2-1); }),
+	normalizeFunction([](float x) { return cos((x - 1) * M_PI); }),
+	symFunction([](float x) {return x*x; }),
+	symFunction([](float x) {return sqrt(x); }),
+	normalizeFunction(symFunction([](float x) { return exp(M_PI*(x-1)); }))
 };
-const std::vector<ArithmeticFunction>* filterFunctionsPtr = &filterFunctions;
-const unsigned filterFunctionsCount = filterFunctions.size();
 
-ArithmeticFunction mixFilterFunctions(std::vector<fixed32_f> filters) {
-	while (filters.size() < filterFunctionsCount) filters.push_back(0);
-	return constrainFunction(normalizeFunction([=](fixed32_f x) { 
-		fixed32_f sum = 0;
-		for (int i=0;i<filterFunctionsCount;i++)
+
+MixedFunction mixFilterFunctions(const std::vector<float>& filters) {
+	return MixedFunction((ArithmeticFloatFunction)([&](float x) { 
+		fixed64_f sum = 0;
+		unsigned loopEnd = std::min(filterFunctionsCount, filters.size());
+		for (int i=0;i<loopEnd;i++)
 			if (filters[i] != 0)
-				sum += filters[i] * filterFunctionsPtr->at(i)(x);
+				sum += filters[i] * filterFunctions[i](x);
 		return sum;
 	}));
 }
 
-ArithmeticFunction createInverseFunction(ArithmeticFunction originalFunction, fixed32_f epsilon) {
-	fixed32_f of_zero = originalFunction(0);
-	fixed32_f of_one = originalFunction(1);
-	const bool minus = of_zero > of_one;    
-	return [=](fixed32_f y) {
-		if (of_zero == y) return (fixed32_f)0;
-		if (of_one == y) return (fixed32_f)1;
-		fixed32_f left = 0;
-		fixed32_f right = 1;
-		fixed32_f prev_mid = -1;
-		if (minus) y = -y;
-		while (right - left >= epsilon) {
-			const fixed32_f mid = (left + right) / 2;
-			if (mid == prev_mid) break;
-			prev_mid = mid;
-			fixed32_f value = originalFunction(mid);
-			if (minus) value = -value;
-			if (value < y)
-				left = mid;
-			else
-				right = mid;
-		}
-		return left; 
-	};
+fixed64_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed64_f y, fixed64_f epsilon) {
+	fixed64_f of_zero = originalFunction(0);
+	fixed64_f of_one = originalFunction(1);
+	const bool minus = of_zero > of_one;  
+	if (of_zero == y) return (fixed64_f)0;
+	if (of_one == y) return (fixed64_f)1;
+	fixed64_f left = 0;
+	fixed64_f right = 1;
+	fixed64_f prev_mid = -1;
+	unsigned it = 0;
+	if (minus) y = -y;
+	while (right - left >= epsilon && it++ < 64) {
+		const fixed64_f mid = (left + right) / 2;
+		if (mid == prev_mid) break;
+		prev_mid = mid;
+		fixed64_f value = originalFunction(mid);
+		if (minus) value = -value;
+		if (value < y)
+			left = mid;
+		else
+			right = mid;
+	}
+	return left; 
 }
 
-ArithmeticFunction periodizeFunction(ArithmeticFunction originalFunction, unsigned count) {
-	fixed32_f frac = fixed32_f(1) / count;
-	return [=](fixed32_f x) {
-		unsigned i = std::floor(x * count);
-		fixed32_f ifrac = i * frac;
-		fixed32_f xf = (x - ifrac) * count;
-		fixed32_f rp = (i & 1) ? fixed32_f(1) - originalFunction(fixed32_f(1) - xf) : originalFunction(xf);
-		return rp * frac + ifrac;
-	};
-}

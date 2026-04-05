@@ -4,7 +4,7 @@
 #include <vector>
 #include <array>
 
-#include <ArduinoJson.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
 
 #include "common_types.h"
 #include "json_utils.h"
@@ -21,7 +21,7 @@ namespace hardware {
 		std::vector<int> hz_pins;
 		std::vector<int> low_pins;
 		std::vector<int> high_pins;
-		fixed32_c read() const;
+		fixed64 read() const;
 
 		int getPin(int disabledValue=31) const;
 	};

@@ -1,6 +1,7 @@
 # IOT RGB Led driver
 
-Project was designed for XIAO ESP32C3 and Waveshare ESP32C3-Zero.
+Project was designed for XIAO ESP32C3 and Waveshare ESP32C3-Zero.<br>
+Compilable with Arduino and ESP-IDF.
 
 ## Example hardware application
 
@@ -49,6 +50,8 @@ Each configuration might be modified by disconnecting potentiometers or removing
 The software matches pins automatically.
 
 ### Table with led driver pinout
+
+...and possible hardware configurations
 
 Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|No multiplexer|No multiplexer 2|Comment
 ---|----|----|---------|--------------|--------------|--------------|--------------|----------------|-------
@@ -107,9 +110,12 @@ Mult. Ch7||||Potentiometer 3|||||
 ### ESP32-C3 pinout - cheat sheet
 ![image](doc/esp32c3pinout.png)
 
-## How to use docker container
+
+## How to use a docker container
 ```
-docker build -t led_driver . && docker run -it -p 8000:8000 led_driver
+docker build -t led_driver_idf -f Idf.Dockerfile . && docker run -it -p 8000:8000 led_driver_idf
+# or
+# docker build -t led_driver_arduino -f Arduino.Dockerfile . && docker run -it -p 8000:8000 led_driver_arduino
 ```
 then open http://0.0.0.0:8000 in your browser and download a binary file.
 
@@ -118,13 +124,63 @@ You can aslo run a script which builds the image, runs the container, downloads 
 ./compile_with_docker.sh
 ```
 
-The file `main.ino.bin` can be uploaded on `Configuration` page in `Update` tab.
+The file `iot-led-driver.bin` can be uploaded on `Configuration` page in `Update` tab.
+
+## How to compile without a docker container
+
+#### For all compilations
+Before the compilation, it is required to compile resources to `.cpp` and `.h` files. It is also required after any modification of any file in the `resources` directory.
+To compile resources, execute in the project directory:
+~~~
+python3 ./compilation_utils/compile_resources.py
+~~~
+
+#### For idf:
+On the first usage of microcontroller you should run `idf.py erase_flash` to ensure that flash partitions will be initialized properly.<br>
+Run `idf.py build` in the project directory.
+
+#### For Arduino:
+Open the file `main/main.ino` in Arduino. Set the following parameters:
+* board: ESP32C3 - Dev module (requires additional installation)
+* CPU Frequency: 160MHz (default)
+* Flash size: 4MB
+* Partition scheme: Minimal SPIFFS (1.9MB APP with OTA / 190kB SPIFFS)
+
+## Runtime statistics
+The runtime statistics are available on `/statistics.txt` endpoint.<br>
+The last system statistics:
+~~~
+=== Tasks info ===
+Name             |        Ticks | CPU % | Free stack |  Stack ptr
+-----------------+--------------+-------+------------+------------
+IDLE             |    390961538 |   85% |       1240 | 0x3fca6ef8
+loopTask         |     34119316 |    7% |       3992 | 0x3fca87a8
+knobs            |     20251982 |    4% |       1488 | 0x3fcb55d0
+wifi             |      2405020 |    0% |       2128 | 0x3fcaedb0
+tiT              |      1366588 |    0% |       2744 | 0x3fcaad80
+animations       |       790686 |    0% |       1568 | 0x3fcb68a0
+esp_timer        |       786223 |    0% |       3672 | 0x3fca4be8
+shutdown         |       472535 |    0% |       1720 | 0x3fcb5f38
+sys_evt          |         8169 |    0% |       2152 | 0x3fcac204
+mdns             |         5225 |    0% |       3116 | 0x3fcb0fe4
+arduino_events   |         4456 |    0% |       2836 | 0x3fcad03c
+Tmr Svc          |            8 |    0% |       1792 | 0x3fca7660
 
 
-## How to connect first time
+=== Heap info ===
+Total size:             247524
+Minimum free heap:      111860  ( 45% )
+Total free bytes:       155624  ( 62% )
+Total allocated bytes:   91900  ( 37% )
+Largest free block:     114688  ( 46% )
+Blocks free:                10
+Blocks allocated:          405
+~~~
+
+## How to connect for the first time
 
 * Scan networks and find network with SSID `LedDriver` and connect to them with `ledDriver` password. Then type in browser `http://192.168.1.1`.
-* If you do not see any network with SSID `LedDriver`, create it (as a Hotspot) on your phone with password `ledDriver` and restart the driver.
+* If you do not see any network with SSID `LedDriver`, create it (as a Hotspot) on your phone with password `ledDriver` and restart the driver. The Hotspot must work with WiFi 5 or an older version.
 
 Unfortunately, there is no way to predetermine driver's IP address in a network other than its own AccessPoint. <br>
 The driver supports mDNS technology. After connecting to your network, try to enter the driver's hostname with suffix `.local` (f.e.: `http://led-driver.local`) in an address bar of a browser. Sometimes this technology requires a while to be detected by other devices in the network.<br>
