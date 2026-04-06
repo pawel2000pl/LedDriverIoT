@@ -52,8 +52,9 @@ namespace hardware {
 
 	void detectHardware();
 
+	extern inplace_vector<HardwareConfiguration*, 5> configurations;
+	extern HardwareConfiguration* configuration;
 
 }
 
 
-extern hardware::HardwareConfiguration* hardware_configuration;

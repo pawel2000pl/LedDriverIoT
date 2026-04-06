@@ -1,4 +1,5 @@
-#include "multiplexer3.h"
+#include "../hardware_configuration.h"
+
 
 namespace hardware {
 

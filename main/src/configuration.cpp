@@ -53,7 +53,7 @@ namespace configuration {
         auto versionInfo = getResourceJson(resource_version_json, 1024);
         versionInfo["date"] = __DATE__;
         versionInfo["time"] = __TIME__;
-        versionInfo["hardware"] = hardware_configuration->getCode();
+        versionInfo["hardware"] = hardware::configuration->getCode();
         versionInfo["resources_sha"] = RESOURCES_SHA1;
         return versionInfo;
     }

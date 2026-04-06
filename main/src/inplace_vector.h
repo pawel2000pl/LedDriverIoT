@@ -1,3 +1,4 @@
+#pragma once
 
 #include <cstddef>
 #include <new>
@@ -12,7 +13,7 @@ template <typename T, std::size_t Capacity>
 class inplace_vector {
 public:
     inplace_vector() noexcept : size_(0) {}
-    inplace_vector(std::initializer_list<T> l) : inplace_vector() {
+    inplace_vector(const std::initializer_list<T>& l) : inplace_vector() {
         for (auto& x: l)
             push_back(x);
     }

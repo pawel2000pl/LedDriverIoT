@@ -2,22 +2,8 @@
 #include "logs.h"
 #include <cstdint>
 
-#include "hardware_configurations/multiplexer1.h"
-#include "hardware_configurations/multiplexer2.h"
-#include "hardware_configurations/multiplexer3.h"
-#include "hardware_configurations/simple1.h"
-#include "hardware_configurations/simple2.h"
-
 namespace hardware {
 			
-	HardwareConfiguration* configurations[] = {
-		&simple1,
-		&simple2,
-		&multiplexer1,
-		&multiplexer2,
-		&multiplexer3
-	};
-
 
 	fixed64 avgAnalog(int pin, unsigned count) {
 		std::uint64_t sum = 0;
@@ -194,6 +180,8 @@ namespace hardware {
 	}
 
 	
+	HardwareConfiguration* configuration;
+	
 	void detectHardware() {
 		analogReadResolution(12);
 
@@ -218,10 +206,8 @@ namespace hardware {
 		logs::logger.println(configurations[available]->name);
 
 		configurations[available]->setup();
-		hardware_configuration = configurations[available];
+		configuration = configurations[available];
 	}
 
 }
-
-hardware::HardwareConfiguration* hardware_configuration;
 
