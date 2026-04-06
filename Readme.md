@@ -53,7 +53,7 @@ The software matches pins automatically.
 
 ...and possible hardware configurations
 
-Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|Simple #1|simple1 #2|Comment
+Pin|Name|XIAO|Waveshare|Multiplexer #1|Multiplexer #2|Multiplexer #3|Simple #1|Simple1 #2|Comment
 ---|----|----|---------|--------------|--------------|--------------|--------------|----------------|-------
 1|LNA_IN|ANT|ANT|ANT|ANT|ANT|ANT|ANT|
 2|VDD3P3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|VCC 3,3|
