@@ -5,6 +5,13 @@
 namespace hardware {
 			
 
+	void pullUpDelay() {
+		// auto wakeup = micros() + RELAXATION_PULL_DELAY;
+		// do vTaskDelay(5); while (micros() < wakeup);
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+	}
+
+
 	fixed64 avgAnalog(int pin, unsigned count) {
 		std::uint64_t sum = 0;
 		for (unsigned i=0;i<count;i++)
@@ -27,7 +34,7 @@ namespace hardware {
 			}
 			pinMode(read_pin, INPUT);
 			auto wakeup = micros() + RELAXATION_DELAY;
-			do vTaskDelay(0); while (micros() < wakeup);
+			do vTaskDelay(5); while (micros() < wakeup);
 			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
 	}
 
@@ -45,10 +52,10 @@ namespace hardware {
 	// it just checks if a pin is not h/z
 	bool analogHasPotentiometer(int pin) {
 		pinMode(pin, INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v1 = analogRead(pin);
 		pinMode(pin, INPUT_PULLUP);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v2 = analogRead(pin);
 		return (v1 > ANALOG_READ_MAX * 0.3f) || (v2 < ANALOG_READ_MAX * 0.7f);
 	}
@@ -57,10 +64,10 @@ namespace hardware {
 	bool hasHz(int pin) {
 		bool analogPin = pin >= 2 && pin <= 4;
 		pinMode(pin, INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		pinMode(pin, INPUT_PULLUP);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		return (v1 < ANALOG_READ_MAX * 0.1f) || (v2 > ANALOG_READ_MAX * 0.9f);
 	}
@@ -69,10 +76,10 @@ namespace hardware {
 	bool hasLow(int pin) {
 		bool analogPin = pin >= 2 && pin <= 4;
 		pinMode(pin, INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		pinMode(pin, INPUT_PULLUP);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		return (v1 < ANALOG_READ_MAX * 0.1f) || (v2 < ANALOG_READ_MAX * 0.1f);
 	}
@@ -81,10 +88,10 @@ namespace hardware {
 	bool hasHigh(int pin) {
 		bool analogPin = pin >= 2 && pin <= 4;
 		pinMode(pin, INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		pinMode(pin, INPUT_PULLUP);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		return (v1 > ANALOG_READ_MAX * 0.9f) || (v2 > ANALOG_READ_MAX * 0.9f);
 	}
@@ -95,13 +102,13 @@ namespace hardware {
 
 		pinMode(a, INPUT_PULLUP);
 		pinMode(b, INPUT_PULLUP);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		bool v1a = !digitalRead(a);
 		bool v1b = !digitalRead(b);
 
 		pinMode(a, INPUT_PULLDOWN);
 		pinMode(b, INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		pullUpDelay();
 		bool v2a = digitalRead(a);
 		bool v2b = digitalRead(b);
 
@@ -110,12 +117,12 @@ namespace hardware {
 		if (v1a && v2a) { // if pin a has HZ
 			pinMode(a, OUTPUT);
 			digitalWrite(a, LOW);
-			delayMicroseconds(RELAXATION_PULL_DELAY);
+			pullUpDelay();
 			result = digitalRead(b);
 		} else if (v1b && v2b) { // if pin b has HZ
 			pinMode(b, OUTPUT);
 			digitalWrite(b, LOW);
-			delayMicroseconds(RELAXATION_PULL_DELAY);
+			pullUpDelay();
 			result = digitalRead(a);
 		}
 
@@ -136,19 +143,15 @@ namespace hardware {
 		for (auto pin : requires_hi)
 			if (!hasHigh(pin)) return false;
 		int shorted_size = requires_shorted.size();
-		for (int i=0;i<shorted_size;i++)
-			pinMode(requires_shorted[i], INPUT);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		for (int i=1;i<shorted_size;i++) 
-			if (!pinsAreConnected(requires_shorted[i-1], requires_shorted[i])) 
-				return false;
+		for (int i=0;i<shorted_size;i++) 
+			for (int j=i+1;j<shorted_size;j++) 
+				if (!pinsAreConnected(requires_shorted[i], requires_shorted[j])) 
+					return false;
 		int not_shorted_size = requires_not_shorted.size();
-		for (int i=0;i<not_shorted_size;i++)
-			pinMode(requires_not_shorted[i], INPUT);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		for (int i=1;i<not_shorted_size;i++) 
-			if (pinsAreConnected(requires_not_shorted[i-1], requires_not_shorted[i])) 
-				return false;
+		for (int i=0;i<not_shorted_size;i++) 
+			for (int j=i+1;j<not_shorted_size;j++) 
+				if (pinsAreConnected(requires_not_shorted[i], requires_not_shorted[j])) 
+					return false;
 		return true;
 	}
 
@@ -189,6 +192,7 @@ namespace hardware {
 
 		int available = -1;
 		for (int i=0;i<size;i++) {
+			vTaskDelay(20 / portTICK_PERIOD_MS);
 			if (configurations[i]->available()) {
 				if (available < 0) available = i;
 				else {

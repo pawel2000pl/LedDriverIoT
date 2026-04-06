@@ -1,4 +1,5 @@
 #include "logs.h"
+#include <driver/uart.h>
 
 namespace logs {
 
@@ -6,13 +7,12 @@ namespace logs {
     unsigned bufPos = 0;
 
     Logger logger;
+    bool serialInitialized = false;
 
-    bool initSerial() {
+    void initSerial() {
         Serial.begin(115200);
-        return true;
+        serialInitialized = true;
     }
-
-    bool serialInitialized = initSerial();
 
 
     Logger::Logger() {

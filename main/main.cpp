@@ -40,6 +40,7 @@ void checkReset() {
 
 void setup() {
 	delay(50); // await for stable voltage
+	logs::initSerial();
 	logs::logger.println("Initialization");
 	hardware::detectHardware();
 	temperature::init();
