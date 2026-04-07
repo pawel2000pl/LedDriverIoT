@@ -105,7 +105,7 @@ async function saveJson(data, path) {
 
 
 async function assertJson(data, schemaName, defaultData=null) {
-    if (defaultData instanceof String) {
+    if (defaultData instanceof String || typeof 'aaa' == 'string') {
         const response = await fetch(defaultData);
         defaultData = await response.json();
     }
