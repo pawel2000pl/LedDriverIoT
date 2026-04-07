@@ -1,6 +1,7 @@
 #include "hardware_configuration.h"
 #include "logs.h"
 #include <cstdint>
+#include <utility>
 
 namespace hardware {
 			
@@ -47,51 +48,40 @@ namespace hardware {
 	}
 
 
-	// it just checks if a pin is not h/z
-	bool analogHasPotentiometer(int pin) {
+	std::pair<unsigned, unsigned> checkPin(int pin) {
+		bool analogPin = pin >= 2 && pin <= 4;
 		pinMode(pin, INPUT_PULLDOWN);
 		pullUpDelay();
-		unsigned v1 = analogRead(pin);
+		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
 		pinMode(pin, INPUT_PULLUP);
 		pullUpDelay();
-		unsigned v2 = analogRead(pin);
-		return (v1 > ANALOG_READ_MAX * 0.3f) || (v2 < ANALOG_READ_MAX * 0.7f);
+		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
+		return {v1, v2};
+	}
+
+
+	// it just checks if a pin is not h/z
+	bool analogHasPotentiometer(int pin) {
+		auto v = checkPin(pin);
+		return (v.first > ANALOG_READ_MAX * 0.3f) || (v.second < ANALOG_READ_MAX * 0.7f);
 	}
 
 
 	bool hasHz(int pin) {
-		bool analogPin = pin >= 2 && pin <= 4;
-		pinMode(pin, INPUT_PULLDOWN);
-		pullUpDelay();
-		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		pinMode(pin, INPUT_PULLUP);
-		pullUpDelay();
-		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		return (v1 < ANALOG_READ_MAX * 0.1f) && (v2 > ANALOG_READ_MAX * 0.9f);
+		auto v = checkPin(pin);
+		return (v.first < ANALOG_READ_MAX * 0.1f) && (v.second > ANALOG_READ_MAX * 0.9f);
 	}
 
 
 	bool hasLow(int pin) {
-		bool analogPin = pin >= 2 && pin <= 4;
-		pinMode(pin, INPUT_PULLDOWN);
-		pullUpDelay();
-		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		pinMode(pin, INPUT_PULLUP);
-		pullUpDelay();
-		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		return (v1 < ANALOG_READ_MAX * 0.1f) && (v2 < ANALOG_READ_MAX * 0.1f);
+		auto v = checkPin(pin);
+		return (v.first < ANALOG_READ_MAX * 0.1f) && (v.second < ANALOG_READ_MAX * 0.1f);
 	}
 
 
 	bool hasHigh(int pin) {
-		bool analogPin = pin >= 2 && pin <= 4;
-		pinMode(pin, INPUT_PULLDOWN);
-		pullUpDelay();
-		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		pinMode(pin, INPUT_PULLUP);
-		pullUpDelay();
-		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		return (v1 > ANALOG_READ_MAX * 0.9f) && (v2 > ANALOG_READ_MAX * 0.9f);
+		auto v = checkPin(pin);
+		return (v.first > ANALOG_READ_MAX * 0.9f) && (v.second > ANALOG_READ_MAX * 0.9f);
 	}
 
 
