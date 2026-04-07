@@ -44,7 +44,9 @@ Select one of four possible configurations:
 * Multiplexer #1
 * Multiplexer #2
 * Multiplexer #3
-* No multiplexer
+* simple #1
+* simple #2
+* unconnected
 
 Each configuration might be modified by disconnecting potentiometers or removing thermistors.
 The software matches pins automatically.

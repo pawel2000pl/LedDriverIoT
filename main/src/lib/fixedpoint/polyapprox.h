@@ -135,25 +135,25 @@ class PolyApprox {
 
 
         template<typename T>
-        T abs(T x) {
+        static T abs(T x) {
             return x < 0 ? -x : x;
         }
 
 
         template<typename T>
-        T max(T a, T b) {
+        static T max(T a, T b) {
             return a > b ? a : b;
         }
 
                 
         template<typename T>
-        T absmax(T a, T b) {
+        static T absmax(T a, T b) {
             return max<T>(abs<T>(a), abs<T>(b));
         }
 
 
         template<typename T>
-        int sign(T x) {
+        static int sign(T x) {
             if (x < 0) return -1;
             if (x > 0) return 1;
             return 0;

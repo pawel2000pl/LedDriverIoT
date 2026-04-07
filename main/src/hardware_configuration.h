@@ -16,7 +16,7 @@
 namespace hardware {
 
 	struct InputHardwareAction {
-		bool enabled;
+		bool enabled = false;
 		char read_pin;
 		inplace_vector<char, 4> hz_pins;
 		inplace_vector<char, 4> low_pins;
@@ -36,13 +36,12 @@ namespace hardware {
 		std::array<InputHardwareAction, 4> thermistors;
 		std::array<char, 4> outputs;
 		
-		// if pin 21 is required, IT MUST BE THE LAST ON THE LIST
-		inplace_vector<char, 4> requires_potentiometers = {};
-		inplace_vector<char, 4> requires_hz = {};
-		inplace_vector<char, 4> requires_lo = {};
-		inplace_vector<char, 4> requires_hi = {};
-		inplace_vector<char, 4> requires_shorted = {};
-		inplace_vector<char, 4> requires_not_shorted = {};
+		inplace_vector<char, 24> requires_potentiometers = {};
+		inplace_vector<char, 24> requires_hz = {};
+		inplace_vector<char, 24> requires_lo = {};
+		inplace_vector<char, 24> requires_hi = {};
+		inplace_vector<char, 24> requires_shorted = {};
+		inplace_vector<char, 24> requires_not_shorted = {};
 
 		bool available() const;
 		void setup() const;
@@ -51,7 +50,7 @@ namespace hardware {
 
 	void detectHardware();
 
-	extern inplace_vector<HardwareConfiguration*, 5> configurations;
+	extern inplace_vector<HardwareConfiguration*, 6> configurations;
 	extern HardwareConfiguration* configuration;
 
 }

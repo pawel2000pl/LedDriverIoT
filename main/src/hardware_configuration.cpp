@@ -6,9 +6,12 @@ namespace hardware {
 			
 
 	void pullUpDelay() {
-		// auto wakeup = micros() + RELAXATION_PULL_DELAY;
-		// do vTaskDelay(5); while (micros() < wakeup);
 		delayMicroseconds(RELAXATION_PULL_DELAY);
+	}
+
+
+	void tacticalDelay(bool force = false) {
+		vTaskDelay(5 / portTICK_PERIOD_MS);
 	}
 
 
@@ -99,6 +102,7 @@ namespace hardware {
 
 	bool pinsAreConnected(int a, int b) {
 		if (a == b) return true;
+		tacticalDelay();
 
 		pinMode(a, INPUT_PULLUP);
 		pinMode(b, INPUT_PULLUP);
@@ -192,7 +196,7 @@ namespace hardware {
 
 		int available = -1;
 		for (int i=0;i<size;i++) {
-			vTaskDelay(20 / portTICK_PERIOD_MS);
+			tacticalDelay(true);
 			if (configurations[i]->available()) {
 				if (available < 0) available = i;
 				else {

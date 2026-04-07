@@ -1,5 +1,4 @@
 #include "logs.h"
-#include <driver/uart.h>
 
 namespace logs {
 
