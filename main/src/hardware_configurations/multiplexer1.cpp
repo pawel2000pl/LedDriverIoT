@@ -70,8 +70,9 @@ namespace hardware {
 		},
 		.outputs = {20, 8, 9, 10},
 
-		.requires_hz = {2, 6, 7, 21},
-		.requires_not_shorted = {6, 7, 16, 21}
+		.requires_potentiometers = {2},
+		.requires_hz = {3, 6, 7, 21},
+		.requires_not_shorted = {6, 7, 10, 21}
 	};
 
 }

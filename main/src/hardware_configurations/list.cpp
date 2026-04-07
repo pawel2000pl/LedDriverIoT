@@ -11,9 +11,8 @@ namespace hardware {
     extern HardwareConfiguration simple2;
     extern HardwareConfiguration unconnected;
 
-
-    // update also related extern declaration in ../hardware_configuration.h
-    inplace_vector<HardwareConfiguration*, 6> configurations = {
+    
+    inplace_vector<HardwareConfiguration*, 16> configurations = {
         &simple1,
         &simple2,
         &multiplexer1,

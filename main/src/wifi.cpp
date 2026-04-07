@@ -168,7 +168,7 @@ namespace wifi {
         logs::logger.println(wl_status_to_string(WiFi.status()));
         if (isAP() || WiFi.status() != WL_CONNECTED) disconnect();
         WiFi.mode(WIFI_STA);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        delay(100);
         logs::logger.println("Scanning networks");
         int n = WiFi.scanNetworks(false, false, false, 1499);
         logs::logger.print("Scan completed, found networks: ");
@@ -207,23 +207,23 @@ namespace wifi {
         } else if (WiFi.getMode() == WIFI_AP) {
             beforeDisconnection(WIFI_AP);
             while (!WiFi.softAPdisconnect(true))
-                vTaskDelay(10 / portTICK_PERIOD_MS);
+                delay(10);
         }
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        delay(100);
     }
 
 
     bool connectToNetwork(const WiFiConfigEntry& entry) {
         disconnect();
         WiFi.mode(WIFI_STA);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        delay(100);
         logs::logger.print("Connecting to ");
         logs::logger.println(entry.ssid);
         std::uint64_t timeout_time = millis() + CONNECTION_TIMEOUT;
         WiFi.setHostname(hostname.c_str());
         WiFi.begin(entry.ssid, entry.password);
         while (WiFi.status() != WL_CONNECTED && WiFi.status() != WL_CONNECT_FAILED && millis() <= timeout_time)
-            vTaskDelay(10 / portTICK_PERIOD_MS);
+            delay(10);
         bool result = WiFi.status() == WL_CONNECTED;
         if (result) {
             activity();
@@ -244,7 +244,7 @@ namespace wifi {
         currentConnectionPeriodicTimeout = apPeriodicScan;
         do {
             WiFi.mode(WIFI_AP);
-            vTaskDelay(200 / portTICK_PERIOD_MS);
+            delay(200);
             WiFi.softAPsetHostname(hostname.c_str());
             WiFi.softAPConfig(apAddress, apGateway, apSubnet);
         } while (!WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4));        

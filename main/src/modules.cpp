@@ -42,7 +42,7 @@ namespace modules {
 
     void execTaskQueue() {
         if (!taskQueue.size()) return;
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        delay(50);
         for (auto fun: taskQueue) 
             fun();
         taskQueue.clear();

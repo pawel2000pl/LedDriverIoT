@@ -10,11 +10,6 @@ namespace hardware {
 	}
 
 
-	void tacticalDelay(bool force = false) {
-		vTaskDelay(5 / portTICK_PERIOD_MS);
-	}
-
-
 	fixed64 avgAnalog(int pin, unsigned count) {
 		std::uint64_t sum = 0;
 		for (unsigned i=0;i<count;i++)
@@ -72,7 +67,7 @@ namespace hardware {
 		pinMode(pin, INPUT_PULLUP);
 		pullUpDelay();
 		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		return (v1 < ANALOG_READ_MAX * 0.1f) || (v2 > ANALOG_READ_MAX * 0.9f);
+		return (v1 < ANALOG_READ_MAX * 0.1f) && (v2 > ANALOG_READ_MAX * 0.9f);
 	}
 
 
@@ -84,7 +79,7 @@ namespace hardware {
 		pinMode(pin, INPUT_PULLUP);
 		pullUpDelay();
 		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		return (v1 < ANALOG_READ_MAX * 0.1f) || (v2 < ANALOG_READ_MAX * 0.1f);
+		return (v1 < ANALOG_READ_MAX * 0.1f) && (v2 < ANALOG_READ_MAX * 0.1f);
 	}
 
 
@@ -96,13 +91,12 @@ namespace hardware {
 		pinMode(pin, INPUT_PULLUP);
 		pullUpDelay();
 		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
-		return (v1 > ANALOG_READ_MAX * 0.9f) || (v2 > ANALOG_READ_MAX * 0.9f);
+		return (v1 > ANALOG_READ_MAX * 0.9f) && (v2 > ANALOG_READ_MAX * 0.9f);
 	}
 
 
 	bool pinsAreConnected(int a, int b) {
 		if (a == b) return true;
-		tacticalDelay();
 
 		pinMode(a, INPUT_PULLUP);
 		pinMode(b, INPUT_PULLUP);
@@ -147,11 +141,13 @@ namespace hardware {
 		for (auto pin : requires_hi)
 			if (!hasHigh(pin)) return false;
 		int shorted_size = requires_shorted.size();
+		delay(15 * shorted_size * shorted_size);
 		for (int i=0;i<shorted_size;i++) 
 			for (int j=i+1;j<shorted_size;j++) 
 				if (!pinsAreConnected(requires_shorted[i], requires_shorted[j])) 
 					return false;
 		int not_shorted_size = requires_not_shorted.size();
+		delay(15 * not_shorted_size * not_shorted_size);
 		for (int i=0;i<not_shorted_size;i++) 
 			for (int j=i+1;j<not_shorted_size;j++) 
 				if (pinsAreConnected(requires_not_shorted[i], requires_not_shorted[j])) 
@@ -191,12 +187,12 @@ namespace hardware {
 	
 	void detectHardware() {
 		analogReadResolution(12);
-
+		
 		unsigned size = std::end(configurations) - std::begin(configurations);
-
+		
 		int available = -1;
+
 		for (int i=0;i<size;i++) {
-			tacticalDelay(true);
 			if (configurations[i]->available()) {
 				if (available < 0) available = i;
 				else {

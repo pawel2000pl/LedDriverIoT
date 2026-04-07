@@ -75,6 +75,6 @@ void loop() {
 		rareChecksTime = millis();
 	}
 
-	vTaskDelay(20 / portTICK_PERIOD_MS);
+	delay(20);
 }
 

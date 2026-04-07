@@ -54,7 +54,7 @@ namespace threads_mgr {
             void execute() {
                 if (!settingsInLock)
                     runner();                
-                vTaskDelay(std::max<long int>(period_ms - (millis() % period_ms), (period_ms >> 1) + 1) / portTICK_PERIOD_MS);
+                delay(std::max<long int>(period_ms - (millis() % period_ms), (period_ms >> 1) + 1));
             }
 
             static void loop(void* instance) {
