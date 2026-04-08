@@ -12,7 +12,7 @@ namespace hardware {
 
 		.outputs = {5, 6, 7, 8},
 
-		.requires_hz = {2, 3, 4, 5, 6, 7, 8, 10, 20, 21},
+		.requires_hz = {2, 3, 4},
 		.requires_not_shorted = {6, 7, 10, 21}
 	};
 

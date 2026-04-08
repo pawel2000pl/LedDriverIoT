@@ -23,7 +23,8 @@ namespace hardware {
 		inplace_vector<char, 4> high_pins;
 		fixed64 read() const;
 
-		int getPin(int disabledValue=31) const;
+		bool isAvailable() const;
+		int getPin(int disabledValue=0) const;
 		void setInput() const;
 	};
 
@@ -44,7 +45,7 @@ namespace hardware {
 		inplace_vector<char, 24> requires_not_shorted = {};
 
 		bool available() const;
-		void setup() const;
+		void setup();
 		String getCode() const;
 	};
 

@@ -5617,7 +5617,7 @@
 		)
 		(uuid "a4ba2781-b7ca-489d-adf8-15424d92edec")
 	)
-	(text "Output modes:\nAll power transistors should be the same.\nChoose (Q1, Q5, Q9, Q13), (Q2, Q6, Q10, Q14) or (Q3, Q7, Q11, Q15)\nIf the power transistor is saturated for the projected current \nwhen V_gs = 3.3V use the inversion. To use the inversion:\n* open JP1, JP5, JP6, JP8;\n* insert R1, Q4, R6, Q8, R11, Q12, R13, Q16.\nFor non-inverting mode, close the jumpers \nand do not insert elements listed above.\nFor three-channel output, just skip any output section.\n\nPower modes:\nPossible configurations:\n* Pulse regulator and no linear regulator - close JP2, skip U1.\n* Pulse regulator and linear regulator - close JP3, skip R5 and R6.\n* No pulse regulator and linear regulator - close JP4, skip \n  all parts of \"Pulse regulator\"."
+	(text "Output modes:\nAll power transistors should be the same.\nChoose (Q1, Q5, Q9, Q13), (Q2, Q6, Q10, Q14) or (Q3, Q7, Q11, Q15)\nIf the power transistor is saturated for the projected current \nwhen V_gs = 3.3V use the inversion. To use the inversion:\n* open JP1, JP5, JP6, JP8;\n* insert R1, Q4, R6, Q8, R11, Q12, R13, Q16.\nFor non-inverting mode, close the jumpers \nand do not insert elements listed above.\nFor three-channel output, just skip any output section.\n\nPower modes:\nPossible configurations:\n* Pulse regulator and no linear regulator - close JP2, skip U1.\n* Pulse regulator and linear regulator - close JP3, skip R5 and R6.\n* No pulse regulator and linear regulator - close JP4, skip \n  all parts of \"Pulse regulator\".\n\nResistors:\nAll resistors without given values should be the same \nand have a value between 1kOhm and 4.7kOhm"
 		(exclude_from_sim no)
 		(at 111.506 168.402 0)
 		(effects

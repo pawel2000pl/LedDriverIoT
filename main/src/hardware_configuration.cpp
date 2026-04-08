@@ -11,40 +11,9 @@ namespace hardware {
 	}
 
 
-	fixed64 avgAnalog(int pin, unsigned count) {
-		std::uint64_t sum = 0;
-		for (unsigned i=0;i<count;i++)
-			sum += analogRead(pin);
-		return fixed64::fraction(sum, count);
-	}
-
-
-	fixed64 InputHardwareAction::read() const {
-			if (!enabled) return 0;
-			for (auto& pin : hz_pins)
-					pinMode(pin, INPUT);
-			for (auto& pin : high_pins) {
-					pinMode(pin, OUTPUT);
-					digitalWrite(pin, HIGH);
-			}
-			for (auto& pin : low_pins) {
-					pinMode(pin, OUTPUT);
-					digitalWrite(pin, LOW);
-			}
-			pinMode(read_pin, INPUT);
-			auto wakeup = micros() + RELAXATION_DELAY;
-			do vTaskDelay(5); while (micros() < wakeup);
-			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
-	}
-
-
-	void InputHardwareAction::setInput() const {
-		if (enabled) pinMode(read_pin, INPUT);
-	}
-
-
-	int InputHardwareAction::getPin(int disabledValue) const {
-		return enabled ? read_pin : disabledValue;
+	void relaxationDelay() {
+		auto wakeup = micros() + RELAXATION_DELAY;
+		do vTaskDelay(5); while (micros() < wakeup);
 	}
 
 
@@ -63,7 +32,7 @@ namespace hardware {
 	// it just checks if a pin is not h/z
 	bool analogHasPotentiometer(int pin) {
 		auto v = checkPin(pin);
-		return (v.first > ANALOG_READ_MAX * 0.3f) || (v.second < ANALOG_READ_MAX * 0.7f);
+		return (v.first > ANALOG_READ_MAX * 0.1f) || (v.second < ANALOG_READ_MAX * 0.9f);
 	}
 
 
@@ -121,6 +90,51 @@ namespace hardware {
 	}
 
 
+	fixed64 avgAnalog(int pin, unsigned count) {
+		std::uint64_t sum = 0;
+		for (unsigned i=0;i<count;i++)
+			sum += analogRead(pin);
+		return fixed64::fraction(sum, count);
+	}
+
+
+	fixed64 InputHardwareAction::read() const {
+			if (!enabled) return 0;
+			relaxationDelay();
+			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
+	}
+
+
+	void InputHardwareAction::setInput() const {
+		if (!enabled) return;
+		pinMode(read_pin, INPUT);
+		for (auto& pin : hz_pins)
+			pinMode(pin, INPUT);
+		for (auto& pin : high_pins) {
+			pinMode(pin, OUTPUT);
+			digitalWrite(pin, HIGH);
+		}
+		for (auto& pin : low_pins) {
+			pinMode(pin, OUTPUT);
+			digitalWrite(pin, LOW);
+		}
+		pinMode(read_pin, INPUT);
+	}
+
+
+	int InputHardwareAction::getPin(int disabledValue) const {
+		return enabled ? read_pin : disabledValue;
+	}
+
+
+	bool InputHardwareAction::isAvailable() const {
+		if (!enabled) return false;
+		setInput();
+		relaxationDelay();
+		return analogHasPotentiometer(read_pin);
+	}
+
+
 	bool HardwareConfiguration::available() const {
 		for (auto pin : requires_potentiometers)
 			if (!analogHasPotentiometer(pin)) return false;
@@ -145,31 +159,26 @@ namespace hardware {
 		return true;
 	}
 
-	void HardwareConfiguration::setup() const {
+	void HardwareConfiguration::setup() {
 		pinMode(fanPin, OUTPUT);
 		pinMode(resetPin, INPUT_PULLUP);
-		for (const auto& pin: potentiometers)
-			pin.setInput();
-		for (const auto& pin: thermistors)
-			pin.setInput();
+		for (auto& inputAction: potentiometers)
+			inputAction.enabled = inputAction.isAvailable();
+		for (auto& inputAction: thermistors)
+			inputAction.enabled = inputAction.isAvailable();
 	}
 
 
 	String HardwareConfiguration::getCode() const {
-		const char charset[] = "0123456789abcdefghijklmnopqrstu#";
-		int numbers[] = {
-			fanPin, resetPin,
+		char buffer[128] = {0};
+		unsigned size = sprintf(buffer, "%s@f%02dr%02dp%02d%02d%02d%02dt%02d%02d%02d%02do%02d%02d%02d%02d",
+			name, fanPin, resetPin,
 			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(), 
 			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(), 
-			outputs[0], outputs[1], outputs[2], outputs[3],
-			-1
-		};
-		char buf[64];
-		int i = -1;
-		while (numbers[++i] >= 0)
-			buf[i] = charset[numbers[i] & 31];
-		buf[i] = 0;
-		return String(buf);
+			outputs[0], outputs[1], outputs[2], outputs[3]
+		);
+		buffer[size] = 0;
+		return String(buffer);
 	}
 
 	
@@ -199,8 +208,8 @@ namespace hardware {
 		logs::logger.print("Chosen configuration: ");
 		logs::logger.println(configurations[available]->name);
 
-		configurations[available]->setup();
 		configuration = configurations[available];
+		configuration->setup();
 	}
 
 }
