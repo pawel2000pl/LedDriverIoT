@@ -47,6 +47,17 @@ filterselector {
     flex-wrap: wrap;
 }
 
+.p-like {
+    margin-top: 16px;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.p-like:first-child {
+    margin-top: 0px;
+}
+
+
 .prevent-select {
     -webkit-user-select: none;
     -ms-user-select: none;

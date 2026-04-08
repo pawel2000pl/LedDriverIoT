@@ -12,11 +12,11 @@
     
     <body>
         <h1 class="name-header">Animations</h1>
-        <p class="upper-menu main-menu"></p>
-        <p>
+        <div class="upper-menu main-menu p-like"></div>
+        <div class="p-like">
             <span>Animation lightness</span>
             <input id="animation-lightness" type="range" min="0" max="1" step="0.0001" onchange="setAnimationLightness()"/>
-        </p>
+        </div>
         <div id="animations-div"></div>
         <button onclick="addAnimation()">Add animation</button>
         <button onclick="saveAnimations()">Save</button>
@@ -85,22 +85,22 @@
                 <button onclick="generateColorRandomSample(event.target)">Generate another samples</button>
                 <button onclick="switchRandomInputs(event)">Switch sliders / text</button>
                 <div class="color-random-sample"></div>
-                <p>
+                <div class="p-like">
                     <h3>Next stage</h3>
                     <div class="info-div">
                         <span>If no stage is selected, the current stage will be looped forever.</span>
                     </div>
                     <div class="next-stage-div">
                     </div>
-                </p>
+                </div>
                 <h3>Options</h3>
-                <p class="options-panel">
+                <div class="options-panel p-like">
                     <button class="copy-btn">Copy</button>
                     <button class="paste-btn">Paste</button>
                     <button class="export-btn">Export</button>
                     <button class="import-btn">Import</button>
                     <button class="delete-btn">Delete</button>
-                </p>
+                </div>
                 <div class="info-div">
                     <span><i>Paste</i> and <i>Import</i> overwrites current settings. </span>
                     <span>To add a new stage based on clipboard content or a file, add the new stage first.</span>
@@ -120,14 +120,14 @@
                 </div>
                 <div class="animation-sequence-list"></div>
                 <div class="animation-sequence-options">
-                    <p>
+                    <div class="p-like">
                         <button onclick="addStage(event.target)">Add stage</button>
                         <span class="stages-count-span">Stages 0 / 16</span>
-                    </p>
-                    <p>
+                    </div>
+                    <div class="p-like">
                         <button class="delete-btn">Delete animation</button>
                         <button class="export-btn">Export animation</button>
-                    </p>
+                    </div>
                 </div>
             </details>
         </template>
