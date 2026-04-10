@@ -26,7 +26,7 @@ void resetConfiguration() {
 
 
 void checkReset() {
-	if (digitalRead(hardware_configuration.resetPin) == 0) {
+	if (digitalRead(hardware::configuration->resetPin) == 0) {
 		if (reset_timer == 0)
 			reset_timer = millis();
 		else if (millis() - reset_timer >= RESET_CONF_TIME) {
@@ -40,6 +40,7 @@ void checkReset() {
 
 void setup() {
 	delay(50); // await for stable voltage
+	logs::initSerial();
 	logs::logger.println("Initialization");
 	hardware::detectHardware();
 	temperature::init();
@@ -74,6 +75,6 @@ void loop() {
 		rareChecksTime = millis();
 	}
 
-	vTaskDelay(20 / portTICK_PERIOD_MS);
+	delay(20);
 }
 

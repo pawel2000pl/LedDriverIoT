@@ -90,7 +90,7 @@ namespace knobs {
     void check(bool force) {
         std::array<fixed64, 4> readed;
         for (int i=0;i<4;i++)
-            readed[i] = hardware_configuration.potentiometers[i].read();
+            readed[i] = hardware::configuration->potentiometers[i].read();
         fixed64 md = maxAbsDifference<fixed64, fixed32_c>(readed, knobsAmortisation);
         fixed64 cReduction = force ? (fixed32_c)1 : reduction;
         fixed64 opReduction = 1 - cReduction;

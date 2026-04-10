@@ -5,6 +5,7 @@ FILE(GLOB CppSources
     src/endpoints/*.cpp 
     src/lib/esp32_https_server/*.cpp
     src/lib/fixedpoint/*.cpp
+    src/hardware_configurations/*.cpp
 )
 
 idf_component_register(

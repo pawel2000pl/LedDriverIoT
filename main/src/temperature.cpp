@@ -54,7 +54,7 @@ namespace temperature {
         temperature_sensor_disable(temp_handle);
 
         for (unsigned i=0;i<4;i++) {
-            const auto& actions = hardware_configuration.thermistors[i];
+            const auto& actions = hardware::configuration->thermistors[i];
             if (!actions.enabled) continue;
             result.external[i] = readTemperature(actions.read()/2);
         }
@@ -67,7 +67,7 @@ namespace temperature {
         TemperatureResults temps = readTemperatures();
         float temp_max = temps.max();
         fanStatus = ((fanStatus) && (temp_max > FAN_TURN_OFF_TEMP)) || ((!fanStatus) && (temp_max > FAN_TURN_ON_TEMP));
-        digitalWrite(hardware_configuration.fanPin, fanStatus ? HIGH : LOW);
+        digitalWrite(hardware::configuration->fanPin, fanStatus ? HIGH : LOW);
         return temps;
     }
 

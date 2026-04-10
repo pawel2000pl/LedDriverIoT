@@ -175,9 +175,9 @@ namespace server {
     void start() {
         if (serverStarted) return;
         insecureServer.start();
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        delay(10);
         secureServer.start();
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        delay(10);
         serverStarted = true;
         logs::logger.println(insecureServer.isRunning() ? "inssecure server ok" : "inssecure server err");
         logs::logger.println(secureServer.isRunning() ? "secure server ok" : "secure server err");

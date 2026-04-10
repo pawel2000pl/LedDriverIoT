@@ -18,6 +18,7 @@ namespace logs {
             unsigned buf_pos = 0;
     };
 
+    void initSerial();
     extern Logger logger;
     extern bool serialInitialized;
 

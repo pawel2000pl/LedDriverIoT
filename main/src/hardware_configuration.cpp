@@ -1,26 +1,93 @@
 #include "hardware_configuration.h"
-
+#include "logs.h"
 #include <cstdint>
+#include <utility>
 
 namespace hardware {
-	const int CLOCK_32_PINS[] = {0, 1};
-	DetectedHardware detectedHardware;
-}
+			
 
-const hardware::DetectedHardware& hardware_configuration = hardware::detectedHardware;
+	void pullUpDelay() {
+		delayMicroseconds(RELAXATION_PULL_DELAY);
+	}
 
 
-namespace hardware {
-	const PinSets availableConfiguration = {
-		.analogReadMain = 2,
-		.thermistorChecker = 3,
-		.analogReadSecondary = {2, 3, 4},
-		.analogSelect = {6, 7, 21},
-		.fanPinMain = 4,
-		.fanPinAlt = 6,
-		.outputs = {20, 8, 9, 10},
-		.resetPin = 5
-	};
+	void relaxationDelay() {
+		auto wakeup = micros() + RELAXATION_DELAY;
+		do vTaskDelay(5); while (micros() < wakeup);
+	}
+
+
+	std::pair<unsigned, unsigned> checkPin(int pin) {
+		bool analogPin = pin >= 2 && pin <= 4;
+		pinMode(pin, INPUT_PULLDOWN);
+		pullUpDelay();
+		unsigned v1 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
+		pinMode(pin, INPUT_PULLUP);
+		pullUpDelay();
+		unsigned v2 = analogPin ? analogRead(pin) : (ANALOG_READ_MAX * digitalRead(pin));
+		return {v1, v2};
+	}
+
+
+	// it just checks if a pin is not h/z
+	bool analogHasPotentiometer(int pin) {
+		auto v = checkPin(pin);
+		return (v.first > ANALOG_READ_MAX * 0.1f) || (v.second < ANALOG_READ_MAX * 0.9f);
+	}
+
+
+	bool hasHz(int pin) {
+		auto v = checkPin(pin);
+		return (v.first < ANALOG_READ_MAX * 0.1f) && (v.second > ANALOG_READ_MAX * 0.9f);
+	}
+
+
+	bool hasLow(int pin) {
+		auto v = checkPin(pin);
+		return (v.first < ANALOG_READ_MAX * 0.1f) && (v.second < ANALOG_READ_MAX * 0.1f);
+	}
+
+
+	bool hasHigh(int pin) {
+		auto v = checkPin(pin);
+		return (v.first > ANALOG_READ_MAX * 0.9f) && (v.second > ANALOG_READ_MAX * 0.9f);
+	}
+
+
+	bool pinsAreConnected(int a, int b) {
+		if (a == b) return true;
+
+		pinMode(a, INPUT_PULLUP);
+		pinMode(b, INPUT_PULLUP);
+		pullUpDelay();
+		bool v1a = !digitalRead(a);
+		bool v1b = !digitalRead(b);
+
+		pinMode(a, INPUT_PULLDOWN);
+		pinMode(b, INPUT_PULLDOWN);
+		pullUpDelay();
+		bool v2a = digitalRead(a);
+		bool v2b = digitalRead(b);
+
+		bool result = false;
+
+		if (v1a && v2a) { // if pin a has HZ
+			pinMode(a, OUTPUT);
+			digitalWrite(a, LOW);
+			pullUpDelay();
+			result = digitalRead(b);
+		} else if (v1b && v2b) { // if pin b has HZ
+			pinMode(b, OUTPUT);
+			digitalWrite(b, LOW);
+			pullUpDelay();
+			result = digitalRead(a);
+		}
+
+		pinMode(a, INPUT);
+		pinMode(b, INPUT);
+
+		return result;
+	}
 
 
 	fixed64 avgAnalog(int pin, unsigned count) {
@@ -33,31 +100,25 @@ namespace hardware {
 
 	fixed64 InputHardwareAction::read() const {
 			if (!enabled) return 0;
-			for (auto& pin : hz_pins)
-					pinMode(pin, INPUT);
-			for (auto& pin : high_pins) {
-					pinMode(pin, OUTPUT);
-					digitalWrite(pin, HIGH);
-			}
-			for (auto& pin : low_pins) {
-					pinMode(pin, OUTPUT);
-					digitalWrite(pin, LOW);
-			}
-			pinMode(read_pin, INPUT);
-			auto wakeup = micros() + RELAXATION_DELAY;
-			do vTaskDelay(0); while (micros() < wakeup);
+			relaxationDelay();
 			return avgAnalog(read_pin, 5) * fixed64::fraction(1, ANALOG_READ_MAX);
 	}
 
 
-	bool analogHasPotentiometer(int pin) {
-		pinMode(pin, INPUT_PULLDOWN);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		unsigned v1 = analogRead(pin);
-		pinMode(pin, INPUT_PULLUP);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		unsigned v2 = analogRead(pin);
-		return (v1 > ANALOG_READ_MAX * 0.3f) || (v2 < ANALOG_READ_MAX * 0.7f);
+	void InputHardwareAction::setInput() const {
+		if (!enabled) return;
+		pinMode(read_pin, INPUT);
+		for (auto& pin : hz_pins)
+			pinMode(pin, INPUT);
+		for (auto& pin : high_pins) {
+			pinMode(pin, OUTPUT);
+			digitalWrite(pin, HIGH);
+		}
+		for (auto& pin : low_pins) {
+			pinMode(pin, OUTPUT);
+			digitalWrite(pin, LOW);
+		}
+		pinMode(read_pin, INPUT);
 	}
 
 
@@ -66,139 +127,90 @@ namespace hardware {
 	}
 
 
-	String DetectedHardware::getCode() const {
-		const char charset[] = "0123456789abcdefghijklmnopqrstu#";
-		int numbers[] = {
-			fanPin, resetPin,
+	bool InputHardwareAction::isAvailable() const {
+		if (!enabled) return false;
+		setInput();
+		relaxationDelay();
+		return analogHasPotentiometer(read_pin);
+	}
+
+
+	bool HardwareConfiguration::available() const {
+		for (auto pin : requires_potentiometers)
+			if (!analogHasPotentiometer(pin)) return false;
+		for (auto pin : requires_hz)
+			if (!hasHz(pin)) return false;
+		for (auto pin : requires_lo)
+			if (!hasLow(pin)) return false;
+		for (auto pin : requires_hi)
+			if (!hasHigh(pin)) return false;
+		int shorted_size = requires_shorted.size();
+		delay(15 * shorted_size * shorted_size);
+		for (int i=0;i<shorted_size;i++) 
+			for (int j=i+1;j<shorted_size;j++) 
+				if (!pinsAreConnected(requires_shorted[i], requires_shorted[j])) 
+					return false;
+		int not_shorted_size = requires_not_shorted.size();
+		delay(15 * not_shorted_size * not_shorted_size);
+		for (int i=0;i<not_shorted_size;i++) 
+			for (int j=i+1;j<not_shorted_size;j++) 
+				if (pinsAreConnected(requires_not_shorted[i], requires_not_shorted[j])) 
+					return false;
+		return true;
+	}
+
+	void HardwareConfiguration::setup() {
+		pinMode(fanPin, OUTPUT);
+		pinMode(resetPin, INPUT_PULLUP);
+		for (auto& inputAction: potentiometers)
+			inputAction.enabled = inputAction.isAvailable();
+		for (auto& inputAction: thermistors)
+			inputAction.enabled = inputAction.isAvailable();
+	}
+
+
+	String HardwareConfiguration::getCode() const {
+		char buffer[128] = {0};
+		unsigned size = sprintf(buffer, "%s@f%02dr%02dp%02d%02d%02d%02dt%02d%02d%02d%02do%02d%02d%02d%02d",
+			name, fanPin, resetPin,
 			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(), 
 			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(), 
-			outputs[0], outputs[1], outputs[2], outputs[3],
-			-1
-		};
-		char buf[64];
-		int i = -1;
-		while (numbers[++i] >= 0)
-			buf[i] = charset[numbers[i] & 31];
-		buf[i] = 0;
-		return String(buf);
+			outputs[0], outputs[1], outputs[2], outputs[3]
+		);
+		buffer[size] = 0;
+		return String(buffer);
 	}
 
-
-	bool PinSets::multiplexerAvailable() const {
-		pinMode(analogSelect[0], INPUT_PULLUP);
-		pinMode(analogSelect[1], INPUT_PULLDOWN);
-		pinMode(analogSelect[2], OUTPUT);
-		digitalWrite(analogSelect[2], HIGH);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		int v1 = digitalRead(analogSelect[0]);
-		int v2 = digitalRead(analogSelect[1]);
-		digitalWrite(analogSelect[2], LOW);
-		delayMicroseconds(RELAXATION_PULL_DELAY);
-		int v3 = !digitalRead(analogSelect[0]);
-		int v4 = !digitalRead(analogSelect[1]);
-		return !(v1 && v2 && v3 && v4);
-	}
-
-
-	void PinSets::setAnalog(int x) const {
-		for (unsigned i=0;i<3;i++) {
-			pinMode(analogSelect[i], OUTPUT);
-			digitalWrite(analogSelect[i], (x & (1 << i)) ? HIGH : LOW);
-		}
-		delayMicroseconds(RELAXATION_DELAY);
-	}
-
-
-	std::vector<int> PinSets::getAnalogSelectPins(int x, bool value) const {
-		std::vector<int> result;
-		result.reserve(4);
-		for (unsigned i=0;i<3;i++) 
-			if (value == !!(x & (1 << i)))
-				result.push_back(analogSelect[i]);
-		return result;
-	}
-
-
-	DetectedHardware PinSets::detect() const {
-		DetectedHardware result;
-
-		if (multiplexerAvailable()) {
-			unsigned x = 0;
-			result.fanPin = fanPinMain;
-			pinMode(thermistorChecker, INPUT_PULLUP);
-			delayMicroseconds(RELAXATION_PULL_DELAY);
-			bool thermistorsAvailable = digitalRead(thermistorChecker) == HIGH;
-
-			for (unsigned i=0;i<4;i++) {
-				setAnalog(x);
-				result.thermistors[i] = (InputHardwareAction){
-					.enabled = analogHasPotentiometer(analogReadMain),
-					.read_pin = analogReadMain,
-					.hz_pins = {},
-					.low_pins = getAnalogSelectPins(x, false),
-					.high_pins = getAnalogSelectPins(x, true)
-				};
-				if(thermistorsAvailable) x++;
-			}
-
-			pinMode(thermistorChecker, INPUT_PULLDOWN);
-			delayMicroseconds(RELAXATION_PULL_DELAY);
-			bool potentiometersAvailable = digitalRead(thermistorChecker) == LOW;
-
-			for (unsigned i=0;i<4;i++) {
-				setAnalog(x);
-				result.potentiometers[i] = (InputHardwareAction){
-					.enabled = potentiometersAvailable && analogHasPotentiometer(analogReadMain),
-					.read_pin = analogReadMain,
-					.hz_pins = {},
-					.low_pins = getAnalogSelectPins(x, false),
-					.high_pins = getAnalogSelectPins(x, true)
-				};
-				if (potentiometersAvailable) x++;
-			}
-
-			pinMode(thermistorChecker, INPUT);
-			setAnalog(0);
-
-		} else {
-			result.fanPin = fanPinAlt;
-
-			unsigned analogReadSecondarySize = analogReadSecondary.size();
-			if (analogReadSecondarySize > 4) analogReadSecondarySize = 4;
-			for (unsigned i=0;i<analogReadSecondarySize;i++) {
-				result.potentiometers[i] = (InputHardwareAction){
-					.enabled = analogHasPotentiometer(analogReadMain),
-					.read_pin = analogReadSecondary[i],
-					.hz_pins = {},
-					.low_pins = {},
-					.high_pins = {}
-				};    
-			}
-
-			for (unsigned i=analogReadSecondarySize;i<4;i++)
-				result.potentiometers[i].enabled = false;
-			for (unsigned i=0;i<4;i++)
-				result.thermistors[i].enabled = false;
-			for (unsigned i=0;i<3;i++)
-				pinMode(analogSelect[i], INPUT);
-		}
-
-		result.resetPin = resetPin;
-		pinMode(result.resetPin, INPUT_PULLUP);
-		pinMode(result.fanPin, OUTPUT);
-		digitalWrite(result.fanPin, LOW);
-		delayMicroseconds(RELAXATION_DELAY);
-
-		for (unsigned i=0;i<4;i++)
-			result.outputs[i] = outputs[i];
-
-		return result;
-	}
-
-
+	
+	HardwareConfiguration* configuration;
+	
 	void detectHardware() {
 		analogReadResolution(12);
-		detectedHardware = availableConfiguration.detect();
+		
+		unsigned size = std::end(configurations) - std::begin(configurations);
+		
+		int available = -1;
+
+		for (int i=0;i<size;i++) {
+			if (configurations[i]->available()) {
+				if (available < 0) available = i;
+				else {
+					logs::logger.print("Error: detected at least two possible configurations: ");
+					logs::logger.print(configurations[available]->name);
+					logs::logger.print(" and ");
+					logs::logger.println(configurations[i]->name);
+				}
+			}
+		}
+
+		if (available < 0) available = 0;
+
+		logs::logger.print("Chosen configuration: ");
+		logs::logger.println(configurations[available]->name);
+
+		configuration = configurations[available];
+		configuration->setup();
 	}
 
 }
+

@@ -142,7 +142,7 @@ namespace outputs {
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
             ledc::setChannel(
-                hardware_configuration.outputs[i], 
+                hardware::configuration->outputs[i], 
                 i, 
                 periods[i], 
                 phases[i],
