@@ -4,6 +4,7 @@ FILE(GLOB CppSources
     src/*.cpp 
     src/endpoints/*.cpp 
     src/lib/esp32_https_server/*.cpp
+    src/lib/littlefs/*.cpp
     src/lib/fixedpoint/*.cpp
     src/hardware_configurations/*.cpp
 )
