@@ -124,29 +124,3 @@ function exportConfigToJSON(new_config=null) {
 function importConfigFromFile() {
     return uploadJsonData('main', '/default_config.json');
 }
-
-
-(async () => {
-    let arr = new Array();
-    for (let i=0;i<63;i++) {
-        const option = $new('option');
-        option.value = i;
-        option.assigned = false;
-        option.textContent = '[[ Loading options... ]]';
-        $id('default-animation').appendChild(option);
-        arr.push(option);
-    }
-    await configPromise;
-    let response = await fetch('/animations.json');
-    if (response.status !== 200)
-        response = await fetch('/default_animations.json');
-    const data = await response.json();
-    data.forEach((element, i) => {
-        arr[i].textContent = element.name;
-        arr[i].assigned = true;
-    });
-    arr.forEach(element => {
-        if (!element.assigned) element.remove();
-    });
-})();
-
