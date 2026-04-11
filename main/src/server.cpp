@@ -25,7 +25,7 @@ namespace server {
     uint8_t cert_pub_data[max_cert_size] = {0};
     uint8_t cert_key_data[max_cert_size] = {0};
     httpsserver::SSLCert cert;
-    httpsserver::HTTPSServer secureServer(&cert, 443, 1);
+    httpsserver::HTTPSServer secureServer(&cert, 443, 2);
     httpsserver::HTTPServer insecureServer(80, 2);
     inplace_vector<ResourceNode, 48> resourceNodes;
     bool captivePortalEnabled = false;
