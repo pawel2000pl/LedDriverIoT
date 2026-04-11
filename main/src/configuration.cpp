@@ -248,16 +248,16 @@ namespace configuration {
                 success_read = true;
                 break;
             }
-            logs::logger.print("Attemption to open file system as LittleFS failed (");
+            logs::logger.print("LittleFS failed (");
             logs::logger.print(i+1);
             logs::logger.println("/16)");
             many_trials = true;
             delay(100);
         }
         if (!success_read && SPIFFS.begin(false)) {
-            logs::logger.print("Attemption to open file system as SPIFFS succeeded.");
+            logs::logger.println("SPIFFS succeeded.");
             rewriteFilesystem(true);
-            logs::logger.print("Rewritted filesystem to LittleFS.");
+            logs::logger.println("Rewritted filesystem to LittleFS.");
         } else if (!success_read) {
             LittleFS.begin(true);
         } else if (many_trials) {
