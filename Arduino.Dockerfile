@@ -10,8 +10,6 @@ RUN arduino-cli config add board_manager.additional_urls https://raw.githubuserc
 RUN arduino-cli core update-index
 RUN arduino-cli board listall
 RUN arduino-cli core install esp32:esp32
-RUN arduino-cli lib install ArduinoJson
-RUN git clone https://github.com/meshtastic/esp32_https_server /root/Arduino/libraries/esp32_https_server
 
 RUN mkdir -p /app
 COPY compilation_utils /app/compilation_utils

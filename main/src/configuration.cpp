@@ -236,7 +236,7 @@ namespace configuration {
         if (cert_key.size()) saveFile(CERT_KEY_FILE_NAME, cert_key.data(), cert_key.size());
         delay(20);
         if (cert_pub.size()) saveFile(CERT_PUB_FILE_NAME, cert_pub.data(), cert_pub.size());        
-        delay(20);
+        delay(20);     
     }
 
 
