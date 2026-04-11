@@ -203,8 +203,7 @@ namespace configuration {
         if (favorites.size()) saveFile(FAVORITES_FILENAME, favorites.data(), favorites.size());
         if (animations.size()) saveFile(ANIMATIONS_FILENAME, animations.data(), animations.size());
         if (cert_key.size()) saveFile(CERT_KEY_FILE_NAME, cert_key.data(), cert_key.size());
-        if (cert_pub.size()) saveFile(CERT_PUB_FILE_NAME, cert_pub.data(), cert_pub.size());
-        
+        if (cert_pub.size()) saveFile(CERT_PUB_FILE_NAME, cert_pub.data(), cert_pub.size());        
     }
 
 
