@@ -283,10 +283,12 @@ void HTTPConnection::raiseError(uint16_t code, std::string reason) {
 }
 
 void HTTPConnection::readLine(int lengthLimit) {
+  if (lengthLimit == 0)
+  _parserLine.text.reserve(lengthLimit);
   while(_bufferProcessed < _bufferUnusedIdx) {
     char newChar = _receiveBuffer[_bufferProcessed];
 
-    if ( newChar == '\r') {
+    if ( newChar == '\r' ) {
       // Look ahead for \n (if not possible, wait for next round
       if (_bufferProcessed+1 < _bufferUnusedIdx) {
         if (_receiveBuffer[_bufferProcessed+1] == '\n') {
@@ -299,7 +301,19 @@ void HTTPConnection::readLine(int lengthLimit) {
           raiseError(400, "Bad Request");
           return;
         }
+      } else { // meh, but still ok
+        _bufferProcessed += 1;
+        _parserLine.parsingFinished = true;
+        return;
       }
+    } else if (newChar == '\n') {
+      HTTPS_LOGW("Line without \\r\\n (got only \\n). FID=%d", _socket);
+      raiseError(400, "Bad Request");
+      return;
+    } else if (newChar < 32) {
+      HTTPS_LOGW("Recieved invalid character (%d) in headedrs FID=%d", (int)newChar, _socket);
+      raiseError(400, "Bad Request");
+      return;
     } else {
       _parserLine.text += newChar;
       _bufferProcessed += 1;
@@ -389,9 +403,10 @@ void HTTPConnection::loop() {
       break;
     case STATE_REQUEST_FINISHED: // Read headers
 
-      while (_bufferProcessed < _bufferUnusedIdx && !isClosed()) {
+      while (_bufferProcessed < _bufferUnusedIdx && !isClosed() && !isTimeoutExceeded()) {
         readLine(HTTPS_REQUEST_MAX_HEADER_LENGTH);
-        if (_parserLine.parsingFinished && _connectionState != STATE_ERROR) {
+        if (_connectionState == STATE_ERROR) break;
+        if (_parserLine.parsingFinished) {
 
           if (_parserLine.text.empty()) {
             HTTPS_LOGD("Headers finished, FID=%d", _socket);

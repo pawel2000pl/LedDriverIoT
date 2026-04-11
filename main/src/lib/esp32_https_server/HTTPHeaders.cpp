@@ -4,7 +4,7 @@ namespace httpsserver {
 
 HTTPHeaders::HTTPHeaders() {
   _headers = new std::vector<HTTPHeader *>();
-
+  _headers->reserve(HTTPS_REQUEST_MAX_HEADERS);
 }
 
 HTTPHeaders::~HTTPHeaders() {
@@ -41,7 +41,10 @@ void HTTPHeaders::set(HTTPHeader * header) {
       return;
     }
   }
-  _headers->push_back(header);
+  if (_headers->size() < HTTPS_REQUEST_MAX_HEADERS)
+    _headers->push_back(header);
+  else
+    delete header;
 }
 
 std::vector<HTTPHeader *> * HTTPHeaders::getAll() {
@@ -56,6 +59,7 @@ void HTTPHeaders::clearAll() {
     delete (*header);
   }
   _headers->clear();
+  _headers->reserve(HTTPS_REQUEST_MAX_HEADERS);
 }
 
 } /* namespace httpsserver */

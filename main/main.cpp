@@ -60,9 +60,11 @@ unsigned long long int rareChecksTime = 0;
 void loop() {
 
 	if (wifi::connected()) {
-		for (int i=0;i<100;i++) {
+		unsigned t_limit = millis() + 2000;
+		for (int i=0;i<64 && millis()<t_limit;i++) {
 			server::loop();
 			if (!server::resetQueryFlag()) break;
+			delay(5);
 		}
 	}
 
