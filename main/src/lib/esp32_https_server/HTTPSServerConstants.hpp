@@ -72,7 +72,7 @@
 
 // Timeout for an HTTPS connection without any transmission
 #ifndef HTTPS_CONNECTION_TIMEOUT
-#define HTTPS_CONNECTION_TIMEOUT               20000
+#define HTTPS_CONNECTION_TIMEOUT               2000
 #endif
 
 // Timeout used to wait for shutdown of SSL connection (ms)

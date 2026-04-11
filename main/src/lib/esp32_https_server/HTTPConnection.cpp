@@ -283,35 +283,33 @@ void HTTPConnection::raiseError(uint16_t code, std::string reason) {
 }
 
 void HTTPConnection::readLine(int lengthLimit) {
-  if (lengthLimit == 0)
-  _parserLine.text.reserve(lengthLimit);
+  // Limit + CR size
+  _parserLine.text.reserve(lengthLimit+1);
   while(_bufferProcessed < _bufferUnusedIdx) {
     char newChar = _receiveBuffer[_bufferProcessed];
 
-    if ( newChar == '\r' ) {
-      // Look ahead for \n (if not possible, wait for next round
-      if (_bufferProcessed+1 < _bufferUnusedIdx) {
-        if (_receiveBuffer[_bufferProcessed+1] == '\n') {
-          _bufferProcessed += 2;
-          _parserLine.parsingFinished = true;
-          return;
-        } else {
-          // Line has not been terminated by \r\n
-          HTTPS_LOGW("Line without \\r\\n (got only \\r). FID=%d", _socket);
-          raiseError(400, "Bad Request");
-          return;
-        }
-      } else { // meh, but still ok
-        _bufferProcessed += 1;
-        _parserLine.parsingFinished = true;
+    if (_parserLine.text.length() && _parserLine.text.back() == '\r') {
+      if (newChar != '\n') {
+        // Line has not been terminated by \r\n
+        HTTPS_LOGW("Line without \\r\\n (got only \\r). FID=%d", _socket);
+        raiseError(400, "Bad Request");
         return;
       }
-    } else if (newChar == '\n') {
-      HTTPS_LOGW("Line without \\r\\n (got only \\n). FID=%d", _socket);
-      raiseError(400, "Bad Request");
+      _bufferProcessed += 1;
+      _parserLine.text.resize(_parserLine.text.length()-1);
+      _parserLine.parsingFinished = true;
       return;
+    }
+
+    if ( newChar == '\r') {
+      _parserLine.text += newChar;
+      _bufferProcessed += 1;
     } else if (newChar < 32) {
-      HTTPS_LOGW("Recieved invalid character (%d) in headedrs FID=%d", (int)newChar, _socket);
+      if (newChar == '\n') {
+        HTTPS_LOGW("Line without \\r\\n (got only \\n). FID=%d", _socket);
+      } else {
+        HTTPS_LOGW("Recieved invalid character (%d) in headedrs FID=%d", (int)newChar, _socket);
+      }
       raiseError(400, "Bad Request");
       return;
     } else {
