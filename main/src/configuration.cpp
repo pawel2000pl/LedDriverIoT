@@ -200,42 +200,42 @@ namespace configuration {
 
     void rewriteFilesystem(bool fromSPIFFS=false) {
         logs::logger.println("Rewritting filesystem.");
-        const auto convertFunction = fromSPIFFS ? getFileBinSPIFFS : getFileBinLITTLEFS;
-        std::vector<unsigned char> configuration;
-        std::vector<unsigned char> favorites;
-        std::vector<unsigned char> animations;
-        std::vector<unsigned char> cert_key;
-        std::vector<unsigned char> cert_pub;
+
+        std::vector<String> filenames = {
+            CONFIGURATION_FILENAME,
+            FAVORITES_FILENAME,
+            ANIMATIONS_FILENAME,
+            CERT_KEY_FILE_NAME,
+            CERT_PUB_FILE_NAME
+        };
+
+        const auto readFunction = fromSPIFFS ? getFileBinSPIFFS : getFileBinLITTLEFS;
+
+        unsigned fileCount = filenames.size();
+        std::vector<std::vector<unsigned char>> buffers;
+        buffers.resize(fileCount);
+
+        for (unsigned i=0;i<fileCount;i++) {
+            delay(20);
+            readFunction(filenames[i], buffers[i]);
+        }
+
         delay(20);
-        convertFunction(CONFIGURATION_FILENAME, configuration);
-        delay(20);
-        convertFunction(FAVORITES_FILENAME, favorites);
-        delay(20);
-        convertFunction(ANIMATIONS_FILENAME, animations);
-        delay(20);
-        convertFunction(CERT_KEY_FILE_NAME, cert_key);
-        delay(20);
-        convertFunction(CERT_PUB_FILE_NAME, cert_pub);
-        delay(20);
-        
         if (fromSPIFFS) {
             SPIFFS.end();
         } else {
             LittleFS.end();
         }
+        delay(20);
         LittleFS.begin(true);
+        delay(20);
         LittleFS.format();
 
-        delay(20);
-        if (configuration.size()) saveFile(CONFIGURATION_FILENAME, configuration.data(), configuration.size());
-        delay(20);
-        if (favorites.size()) saveFile(FAVORITES_FILENAME, favorites.data(), favorites.size());
-        delay(20);
-        if (animations.size()) saveFile(ANIMATIONS_FILENAME, animations.data(), animations.size());
-        delay(20);
-        if (cert_key.size()) saveFile(CERT_KEY_FILE_NAME, cert_key.data(), cert_key.size());
-        delay(20);
-        if (cert_pub.size()) saveFile(CERT_PUB_FILE_NAME, cert_pub.data(), cert_pub.size());        
+        for (unsigned i=0;i<fileCount;i++) {
+            delay(20);
+            if (buffers[i].size()) 
+                saveFile(filenames[i], buffers[i].data(), buffers[i].size());
+        }
         delay(20);     
     }
 
