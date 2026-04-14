@@ -112,28 +112,92 @@ namespace configuration {
 
 
     void serializeToFile(const String filename, const JsonDocument& data) {        
-        File file = LittleFS.open(filename, FILE_WRITE);
-        serializeJson(data, file);
-        file.close();
+        std::size_t size = measureJson(data);
+        std::vector<unsigned char> buf(size * 1.2f + 3);
+        size = serializeJson(data, buf.data(), buf.size());
+        saveFile(filename, buf.data(), size);
     }
 
 
-    void saveFile(const String& filename, const unsigned char* content, unsigned length) {
-        File file = LittleFS.open(filename, FILE_WRITE);
-        file.write(content, length);
-        file.close();
+    bool saveFile(const String& filename, const unsigned char* content, unsigned length) {
+        const size_t CHUNK_SIZE = 256;
+        const size_t TRIALS = 256;
+        uint8_t verifyBuf[CHUNK_SIZE];
+        
+        logs::logger.printf("Saving file %s\n", filename.c_str());
+        for (int attempt = 1; attempt <= TRIALS; ++attempt) {
+            bool success = true;
+
+            File file = LittleFS.open(filename, FILE_WRITE);
+            if (!file) {
+                logs::logger.printf("Attempt %d: open for write failed\n", attempt);
+                success = false;
+            } else {
+                size_t writtenTotal = 0;
+                while (writtenTotal < length) {
+                    size_t toWrite = min(CHUNK_SIZE, length - writtenTotal);
+                    size_t written = file.write(content + writtenTotal, toWrite);
+                    if (written != toWrite) {
+                        logs::logger.printf("Attempt %d: write error at offset %u\n", attempt, writtenTotal);
+                        success = false;
+                        break;
+                    }
+                    writtenTotal += written;
+                }
+                file.close();
+            }
+
+            if (success) {
+                File file = LittleFS.open(filename, FILE_READ);
+                if (!file) {
+                    logs::logger.printf("Attempt %d: open for read failed\n", attempt);
+                    success = false;
+                } else {
+                    size_t readTotal = 0;
+                    while (readTotal < length) {
+                        size_t toRead = min(CHUNK_SIZE, length - readTotal);
+                        size_t readBytes = file.read(verifyBuf, toRead);
+                        if (readBytes != toRead) {
+                            logs::logger.printf("Attempt %d: read error at offset %u\n", attempt, readTotal);
+                            success = false;
+                            break;
+                        }
+                        if (memcmp(content + readTotal, verifyBuf, toRead) != 0) {
+                            logs::logger.printf("Attempt %d: verify mismatch at offset %u\n", attempt, readTotal);
+                            success = false;
+                            break;
+                        }
+                        readTotal += readBytes;
+                    }
+                    file.close();
+                }
+            }
+
+            if (success) {
+                logs::logger.println("success");
+                return true;
+            }
+
+            if (attempt < 16) {
+                delay(5);
+            } else {
+                logs::logger.printf("Final failure after %d attempts: %s\n", attempt, filename.c_str());
+                return false;
+            }
+        }
+        return false;
     }
 
 
-    void saveFile(const String& filename, const char* content) {
+    bool saveFile(const String& filename, const char* content) {
         unsigned length = -1;
         while (content[++length]);
-        saveFile(filename, (const unsigned char*)content, length);
+        return saveFile(filename, (const unsigned char*)content, length);
     }
 
 
-    void saveFile(const String& filename, const String& content) {
-        saveFile(filename, (const unsigned char*)content.c_str(), content.length());
+    bool saveFile(const String& filename, const String& content) {
+        return saveFile(filename, (const unsigned char*)content.c_str(), content.length());
     }
 
     
@@ -248,9 +312,7 @@ namespace configuration {
                 success_read = true;
                 break;
             }
-            logs::logger.print("LittleFS failed (");
-            logs::logger.print(i+1);
-            logs::logger.println("/16)");
+            logs::logger.printf("LittleFS failed (%d/16)\n",i+1);
             many_trials = true;
             delay(100);
         }

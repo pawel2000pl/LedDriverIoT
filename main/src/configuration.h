@@ -20,9 +20,9 @@ namespace configuration {
     void removeFile(const String& filename);
     unsigned getFileBin(const String& filename, unsigned char* buf, unsigned max_size);
     unsigned checkSum(const unsigned char* ptr, unsigned size, unsigned d=1617849293);
-    void saveFile(const String& filename, const unsigned char* content, unsigned length);
-    void saveFile(const String& filename, const char* content);
-    void saveFile(const String& filename, const String& content);
+    bool saveFile(const String& filename, const unsigned char* content, unsigned length);
+    bool saveFile(const String& filename, const char* content);
+    bool saveFile(const String& filename, const String& content);
     JsonDocument getResourceJson(const struct Resource& resource, unsigned size=0);
     JsonDocument getDefautltConfiguration();
     JsonDocument getDefautltFavorites();
