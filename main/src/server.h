@@ -1,18 +1,17 @@
 #pragma once
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <string>
 #include <vector>
-#include <HTTPSServer.hpp>
-#include <HTTPServer.hpp>
-#include <SSLCert.hpp>
-#include <HTTPRequest.hpp>
-#include <HTTPResponse.hpp>
+#include "lib/esp32_https_server/HTTPSServer.hpp"
+#include "lib/esp32_https_server/HTTPServer.hpp"
+#include "lib/esp32_https_server/SSLCert.hpp"
+#include "lib/esp32_https_server/HTTPRequest.hpp"
+#include "lib/esp32_https_server/HTTPResponse.hpp"
 
+#include "lib/ArduinoJson/ArduinoJson.h"
 #include "resources.h"
-
-#define MAX_POST_SIZE (16*1024-1)
+#include "json_utils.h"
 
 using HTTPResponse = httpsserver::HTTPResponse;
 using HTTPRequest = httpsserver::HTTPRequest;
@@ -22,7 +21,9 @@ namespace server {
 
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
     
-    void updateConfiguration(const JsonVariantConst& configuration);
+    void updateConfiguration(const JsonVariantConst configuration);
+    unsigned getQueryId();
+    bool resetQueryFlag();
     
     void addCallback(const char* address, const char* method, const CallbackFunction* callback);
     void configure();
@@ -31,11 +32,11 @@ namespace server {
     void stop();
     void restart();
 
-    void sendJson(HTTPResponse* res, const JsonVariantConst& data, unsigned bufSize = 1024, int costatusCode = 200);
+    void sendJson(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize = 4096, int statusCode = 200);
     void sendError(HTTPResponse* res, String message, int code);
     void sendOk(HTTPResponse* res);
     void sendCacheControlHeader(HTTPResponse* res);    
-    int sendDecompressedData(HTTPResponse* res, const Resource& resource, int statusCode=200);
+    int sendResourceData(HTTPResponse* res, const Resource& resource, int statusCode=200);
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err);
     void sendResource(HTTPRequest* req, HTTPResponse* res);
     std::vector<char>* readBuffer(HTTPRequest* req, bool addZero=true);

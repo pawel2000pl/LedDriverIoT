@@ -5,7 +5,10 @@
 #include "server.h"
 #include "inputs.h"
 #include "outputs.h"
+#include "threads_mgr.h"
 #include "configuration.h"
+#include "default_color.h"
+#include "timer_shutdown.h"
 
 namespace modules {
 
@@ -16,16 +19,18 @@ namespace modules {
 
 
     void updateModules(JsonVariant configuration) {
-        knobs::setLock(true);
+        threads_mgr::setLock(true);
         knobs::updateConfiguration(configuration);
+        default_color::updateConfiguration(configuration);
         inputs::updateConfiguration(configuration);
         outputs::updateConfiguration(configuration);
         wifi::updateConfiguration(configuration);
         server::updateConfiguration(configuration);
+        timer_shutdown::updateConfiguration(configuration);
         webColorSpace = configuration["channels"]["webMode"].as<String>();
         colorKnobEnabled = configuration["hardware"]["enableColorKnob"].as<bool>();
         whiteKnobEnabled = configuration["hardware"]["enableWhiteKnob"].as<bool>();
-        knobs::setLock(false);
+        threads_mgr::setLock(false);
     }
 
 
@@ -36,6 +41,8 @@ namespace modules {
 
 
     void execTaskQueue() {
+        if (!taskQueue.size()) return;
+        delay(50);
         for (auto fun: taskQueue) 
             fun();
         taskQueue.clear();

@@ -1,6 +1,28 @@
 "use strict";
 
 
+function time2sec(time_str) {
+    const parts = time_str.split(':');
+    return Number(parts[2]) + Number(parts[1]) * 60 + Number(parts[0]) * 3600;
+}
+
+
+function to_digits(num, digits=2) {
+    let s = num.toString();
+    while (s.length < digits)
+        s = '0' + s;
+    return s;
+}
+
+
+function sec2time(time_as_seconds) {
+    const hours = Math.floor(time_as_seconds / 3600);
+    const minutes = Math.floor(time_as_seconds % 3600 / 60);
+    const seconds = Math.floor(time_as_seconds % 60);
+    return to_digits(hours) + ':' + to_digits(minutes) + ':' + to_digits(seconds);
+}
+
+
 function dumpConfig() {
     return {
         "wifi": {
@@ -15,18 +37,22 @@ function dumpConfig() {
                 "channel": Number($id('ap-channel').value),
                 "address": $id('ap-address').value,
                 "gateway": $id('ap-gateway').value,
-                "subnet": $id('ap-subnet').value
+                "subnet": $id('ap-subnet').value,
+                "periodic_scan": $id('ap-periodic-scan').checked
             },
+            "periodic_scan_time": time2sec($id('periodic-scan-time').value)
         },
         "channels": {
             "webMode": $id('web-mode-colorspace').value,
             "knobMode": $id('knobs-mode-colorspace').value,
             "defaultColorEnabled": $id('enable-default-color').checked,
-            "defaultColor": {
-                "hue": Number($id('default-color-hue').value),
-                "saturation": Number($id('default-color-saturation').value),
-                "value": Number($id('default-color-value').value),
-                "white": Number($id('default-color-white').value)
+            "defaultColor": $id('default-color-picker').color,
+            "defaultAnimation": Number($id('default-animation').value),
+            "defaultAnimationLightness": Number($id('default-animation-lightness').value),
+            "autoShutdown": {
+                "enabled": $id('enable-shutdown-timeout').checked,
+                "timeout": time2sec($id('shutdown-timeout').value),
+                "fadeOutTime": time2sec($id('fadeout-time').value)
             }
         },
         "filters": {
@@ -87,14 +113,18 @@ function fillConfig(config) {
     $id('ap-address').value = config.wifi.access_point.address;
     $id('ap-gateway').value = config.wifi.access_point.gateway;
     $id('ap-subnet').value = config.wifi.access_point.subnet;
+    $id('ap-periodic-scan').checked = config.wifi.access_point.periodic_scan;
+    $id('periodic-scan-time').value = sec2time(config.wifi.periodic_scan_time);
 
     $id('web-mode-colorspace').value = config.channels.webMode;
     $id('knobs-mode-colorspace').value = config.channels.knobMode;
     $id('enable-default-color').checked = config.channels.defaultColorEnabled;
-    $id('default-color-hue').value = config.channels.defaultColor.hue;
-    $id('default-color-saturation').value = config.channels.defaultColor.saturation;
-    $id('default-color-value').value = config.channels.defaultColor.value;
-    $id('default-color-white').value = config.channels.defaultColor.white;
+    $id('default-color-picker').color = config.channels.defaultColor;
+    $id('default-animation').value = config.channels.defaultAnimation;
+    $id('default-animation-lightness').value = config.channels.defaultAnimationLightness;
+    $id('enable-shutdown-timeout').checked = config.channels.autoShutdown.enabled;
+    $id('shutdown-timeout').value = sec2time(config.channels.autoShutdown.timeout);
+    $id('fadeout-time').value = sec2time(config.channels.autoShutdown.fadeOutTime);
 
     $id('input-hue').setValues(config.filters.inputFilters.hue);
     $id('input-saturation').setValues(config.filters.inputFilters.saturation);
@@ -133,15 +163,15 @@ function fillConfig(config) {
 }
 
 
-$id('save-settings-btn').addEventListener('click', ()=>{config = dumpConfig(); saveConfig();});
-$id('revert-settings-btn').addEventListener('click', ()=>{configPromise = refreshConfig().then(()=>fillConfig(config));});
+$id('save-settings-btn').addEventListener('click', async ()=>{ await configPromise; config = dumpConfig(); saveConfig(); });
+$id('revert-settings-btn').addEventListener('click', async ()=>{ configPromise = refreshConfig(); await configPromise; fillConfig(config); });
 $id('default-settings-btn').addEventListener('click', async ()=>{
     if (confirm("All settings "+"(wifi credentials, filters, etc)"+" will be reverted to default values."+" "+"Are you sure you want to continue?")) {
         await refreshConfig(true);
         await saveConfig();
     }
 });
-$id('export-settings-btn').addEventListener('click', exportConfigToJSON);
+$id('export-settings-btn').addEventListener('click', ()=>exportConfigToJSON(dumpConfig()));
 $id('import-settings-btn').addEventListener('click', async ()=>{
     try {
         const newConfig = await importConfigFromFile();
@@ -191,30 +221,37 @@ async function getTailoredScalling() {
 }
 
 
-function setDefaultsBlack() {
-    $id('default-color-hue').value = 0;
-    $id('default-color-saturation').value = 0;
-    $id('default-color-value').value = 0;
-    $id('default-color-white').value = 0;
-}
+updateClientApp().then(()=>{
+    window.onbeforeunload = (event)=>{
+        if (config !== null && !deepEqual(dumpConfig(), config)) {
+            event.preventDefault();
+            event.returnValue = true;
+        }
+    };
+});
 
 
-function setDefaultsWhite() {
-    $id('default-color-hue').value = 0;
-    $id('default-color-saturation').value = 0;
-    $id('default-color-value').value = 1;
-    $id('default-color-white').value = 1;
-}
-
-
-async function setDefaultsCurrent() {
-    const response = await fetch('/color.json?colorspace=hsv');
+(async () => {
+    let arr = new Array();
+    for (let i=0;i<63;i++) {
+        const option = $new('option');
+        option.value = i;
+        option.assigned = false;
+        option.textContent = '[[ Loading options... ]]';
+        $id('default-animation').appendChild(option);
+        arr.push(option);
+    }
+    await configPromise;
+    let response = await fetch('/animations.json');
+    if (response.status !== 200)
+        response = await fetch('/default_animations.json');
     const data = await response.json();
-    $id('default-color-hue').value = data[0];
-    $id('default-color-saturation').value = data[1];
-    $id('default-color-value').value = data[2];
-    $id('default-color-white').value = data[3];
-}
+    data.forEach((element, i) => {
+        arr[i].textContent = element.name;
+        arr[i].assigned = true;
+    });
+    arr.forEach(element => {
+        if (!element.assigned) element.remove();
+    });
+})();
 
-
-updateClientApp();

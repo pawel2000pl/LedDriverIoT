@@ -6,35 +6,79 @@
 
 namespace inputs {
 
-    namespace filters {
-        FloatFunction inputSaturation;
-        FloatFunction inputHue;
-        FloatFunction inputValue;
-        FloatFunction inputLightness;
-        FloatFunction inputRed;
-        FloatFunction inputGreen;
-        FloatFunction inputBlue;
-        FloatFunction inputWhite;
-        FloatFunction globalInput;
+    SourceControl source_control = scKnobs;
 
-        FloatFunction invertedInputHue;
-        FloatFunction invertedInputSaturation;
-        FloatFunction invertedInputValue;
-        FloatFunction invertedInputLightness;
-        FloatFunction invertedInputRed;
-        FloatFunction invertedInputGreen;
-        FloatFunction invertedInputBlue;
-        FloatFunction invertedInputWhite;
-        FloatFunction invertedGlobalInput;
+    namespace filters {
+        MixedFunction inputSaturation;
+        MixedFunction inputHueBasic;
+        MixedFunction inputValue;
+        MixedFunction inputLightness;
+        MixedFunction inputRed;
+        MixedFunction inputGreen;
+        MixedFunction inputBlue;
+        MixedFunction inputWhite;
+        MixedFunction globalInput;
+
+        fixed64_f inputHue(fixed64_f x) {
+            constexpr const unsigned count = 6;
+            constexpr const fixed64_f frac = fixed64_f(1) / count;
+            unsigned i = std::floor(x * count);
+            fixed64_f ifrac = i * frac;
+            fixed64_f xf = (x - ifrac) * count;
+            fixed64_f rp = (i & 1) ? fixed64_f(1) - inputHueBasic(fixed64_f(1) - xf) : inputHueBasic(xf);
+            return rp * frac + ifrac;
+        }
+
+        fixed64_f invertedInputHue(fixed64_f y) {
+            return calulcateInversedValue(inputHue, y);
+        }
+
+        fixed64_f invertedInputSaturation(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputSaturation(y);}, y);
+        }
+
+        fixed64_f invertedInputValue(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputValue(y);}, y);
+        }
+
+        fixed64_f invertedInputLightness(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputLightness(y);}, y);
+        }
+
+        fixed64_f invertedInputRed(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputRed(y);}, y);
+        }
+
+        fixed64_f invertedInputGreen(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputGreen(y);}, y);
+        }
+
+        fixed64_f invertedInputBlue(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputBlue(y);}, y);
+        }
+
+        fixed64_f invertedInputWhite(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return inputWhite(y);}, y);
+        }
+
+        fixed64_f invertedGlobalInput(fixed64_f y) {
+            return calulcateInversedValue([&](fixed64_f y){return globalInput(y);}, y);
+        }
+
     }
 
 
-    void updateConfiguration(const JsonVariantConst& configuration) {
-        const auto& filters = configuration["filters"];
-        const auto& inputFilters = filters["inputFilters"];
-                
+    fixed64_f filter_value(fixed64_f value) {
+        return filters::globalInput(filters::inputValue(value));
+    }
+
+
+    void updateConfiguration(const JsonVariantConst configuration) {
+        const auto filters = configuration["filters"];
+        const auto inputFilters = filters["inputFilters"];
+        
         filters::inputSaturation = mixFilterFunctions(toFloatVector(inputFilters["saturation"]));
-        filters::inputHue = periodizeFunction(mixFilterFunctions(toFloatVector(inputFilters["hue"])), 6);
+        filters::inputHueBasic = mixFilterFunctions(toFloatVector(inputFilters["hue"]));
         filters::inputValue = mixFilterFunctions(toFloatVector(inputFilters["value"]));
         filters::inputLightness = mixFilterFunctions(toFloatVector(inputFilters["lightness"]));
         filters::inputRed = mixFilterFunctions(toFloatVector(inputFilters["red"]));
@@ -42,25 +86,15 @@ namespace inputs {
         filters::inputBlue = mixFilterFunctions(toFloatVector(inputFilters["blue"]));
         filters::inputWhite = mixFilterFunctions(toFloatVector(inputFilters["white"]));
         filters::globalInput = mixFilterFunctions(toFloatVector(filters["globalInputFilters"]));  
-
-        filters::invertedInputHue = createInverseFunction(filters::inputHue);
-        filters::invertedInputSaturation = createInverseFunction(filters::inputSaturation);
-        filters::invertedInputValue = createInverseFunction(filters::inputValue);
-        filters::invertedInputLightness = createInverseFunction(filters::inputLightness);
-        filters::invertedInputRed = createInverseFunction(filters::inputRed);
-        filters::invertedInputGreen = createInverseFunction(filters::inputGreen);
-        filters::invertedInputBlue = createInverseFunction(filters::inputBlue);
-        filters::invertedInputWhite = createInverseFunction(filters::inputWhite);
-        filters::invertedGlobalInput = createInverseFunction(filters::globalInput);
     }
 
 
-    void setRGBW(float r, float g, float b, float w) {
+    ColorChannels prepareRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w) {
         r = filters::globalInput(filters::inputRed(r));
         g = filters::globalInput(filters::inputGreen(g));
         b = filters::globalInput(filters::inputBlue(b));
         w = filters::globalInput(filters::inputWhite(w));
-        float h, s, v;
+        fixed32_c h, s, v;
         rgbToHsv(r, g, b, h, s, v);
         ColorChannels raw = outputs::getColor();
         raw[3] = w;
@@ -70,33 +104,56 @@ namespace inputs {
             if (s != 0)
                 raw[0] = h;
         }
-        outputs::setColor(raw);
+        return raw;
     }
 
 
-    void setHSVW(float h, float s, float v, float w) {
+    void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w) {
+        outputs::setColor(prepareRGBW(r, g, b, w));
+    }
+
+
+    ColorChannels prepareHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         v = filters::globalInput(filters::inputValue(v));
         w = filters::globalInput(filters::inputWhite(w));
-        outputs::setColor(h, s, v, w);
+        return {h, s, v, w};
     }
 
 
-    void setHSLW(float h, float s, float l, float w) {
+    void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
+        outputs::setColor(prepareHSVW(h, s, v, w));
+    }
+
+
+    ColorChannels prepareHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
         h = filters::globalInput(filters::inputHue(h));
         s = filters::globalInput(filters::inputSaturation(s));
         l = filters::globalInput(filters::inputLightness(l));
         w = filters::globalInput(filters::inputWhite(w));
-        float hr, sr, vr;
+        fixed32_c hr, sr, vr;
         hslToHsv(h, s, l, hr, sr, vr);
         ColorChannels raw = outputs::getColor();
         raw[3] = w;
         raw[2] = vr;
         raw[0] = hr;
-        if (l != 1.f && l != 0.f) 
+        if (l != 1 && l != 0) 
             raw[1] = sr;
-        outputs::setColor(raw);
+        return raw;
+    }
+
+
+    void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
+        outputs::setColor(prepareHSLW(h, s, l, w));
+    }
+
+
+    ColorChannels prepareAuto(const String& colorspace, const ColorChannels& color) {
+        if (colorspace == "rgb") return prepareRGBW(color[0], color[1], color[2], color[3]);
+        if (colorspace == "hsv") return prepareHSVW(color[0], color[1], color[2], color[3]);
+        if (colorspace == "hsl") return prepareHSLW(color[0], color[1], color[2], color[3]);
+        return color;
     }
 
 
@@ -110,7 +167,7 @@ namespace inputs {
 
     ColorChannels getRGBW() {
         ColorChannels raw = outputs::getColor();
-        float r, g, b, w;
+        fixed32_c r, g, b, w;
         hsvToRgb(raw[0], raw[1], raw[2], r, g, b);
         r = filters::invertedInputRed(filters::invertedGlobalInput(r));
         g = filters::invertedInputGreen(filters::invertedGlobalInput(g));
@@ -122,7 +179,7 @@ namespace inputs {
 
     ColorChannels getHSVW() {
         ColorChannels raw = outputs::getColor();
-        float h, s, v, w;
+        fixed32_c h, s, v, w;
         h = filters::invertedInputHue(filters::invertedGlobalInput(raw[0]));
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(raw[1]));
         v = filters::invertedInputValue(filters::invertedGlobalInput(raw[2]));
@@ -133,7 +190,7 @@ namespace inputs {
 
     ColorChannels getHSLW() {
         ColorChannels raw = outputs::getColor();
-        float h, s, l, w;
+        fixed32_c h, s, l, w;
         hsvToHsl(raw[0], raw[1], raw[2], h, s, l);
         h = filters::invertedInputHue(filters::invertedGlobalInput(h));
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(s));
@@ -164,10 +221,10 @@ namespace inputs {
         ColorChannels raw = outputs::getColor();
         char buf[16];
         buf[0] = useWhite ? '1' : '0';
-        byteToHex((int)round(255*raw[0]), buf+1);
-        byteToHex((int)round(255*raw[1]), buf+3);
-        byteToHex((int)round(255*raw[2]), buf+5);
-        byteToHex((int)round(255*raw[3]), buf+7);
+        byteToHex((int)std::round(255*raw[0]), buf+1);
+        byteToHex((int)std::round(255*raw[1]), buf+3);
+        byteToHex((int)std::round(255*raw[2]), buf+5);
+        byteToHex((int)std::round(255*raw[3]), buf+7);
         buf[9] = 0;
         return String(buf);
     }
@@ -188,7 +245,7 @@ namespace inputs {
         unsigned v = (charToDigit(buf[5]) << 4) | charToDigit(buf[6]);
         unsigned w = (charToDigit(buf[7]) << 4) | charToDigit(buf[8]);
         if (useWhitePtr) *useWhitePtr = useWhite;
-        return {(float)h / 255.f, (float)s / 255.f, (float)v / 255.f,  (float)w / 255.f};
+        return {(fixed32_c)h / 255, (fixed32_c)s / 255, (fixed32_c)v / 255,  (fixed32_c)w / 255};
     }
 
 

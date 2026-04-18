@@ -3,7 +3,6 @@
 #include <Arduino.h>
 #include <array>
 
-using ColorChannels = std::array<float, 4>;
 
 // DMA max size is 384kB
 #define MAX_ADDRESSED_BUF_SIZE (65536)

@@ -21,11 +21,19 @@ namespace temperature {
     }
 
 
+    bool TemperatureResults::tooHot() {
+        return internal > RESTART_TEMP;
+    }
+
+
     void init() {
         temperature_sensor_config_t temp_sensor = {
                 .range_min = 20,
                 .range_max = 100,
-                .clk_src = TEMPERATURE_SENSOR_CLK_SRC_DEFAULT
+                .clk_src   = TEMPERATURE_SENSOR_CLK_SRC_DEFAULT,
+		        #ifdef NEW_FLAGS
+                .flags     = { .allow_pd = false }
+                #endif
         };
         temperature_sensor_install(&temp_sensor, &temp_handle);
     }
@@ -46,7 +54,7 @@ namespace temperature {
         temperature_sensor_disable(temp_handle);
 
         for (unsigned i=0;i<4;i++) {
-            const auto& actions = hardware_configuration.thermistors[i];
+            const auto& actions = hardware::configuration->thermistors[i];
             if (!actions.enabled) continue;
             result.external[i] = readTemperature(actions.read()/2);
         }
@@ -55,12 +63,23 @@ namespace temperature {
     }
 
 
-    void check() {
+    TemperatureResults check() {
         TemperatureResults temps = readTemperatures();
         float temp_max = temps.max();
         fanStatus = ((fanStatus) && (temp_max > FAN_TURN_OFF_TEMP)) || ((!fanStatus) && (temp_max > FAN_TURN_ON_TEMP));
-        digitalWrite(hardware_configuration.fanPin, fanStatus ? HIGH : LOW);
+        digitalWrite(hardware::configuration->fanPin, fanStatus ? HIGH : LOW);
+        return temps;
     }
 
+
+    void block_until_is_ok() {
+        TemperatureResults temps;
+        while (true) {
+            temps = check();
+            if (temps.internal <= ALLOW_ON_MAX_TEMP && temps.internal >= ALLOW_ON_MIN_TEMP)
+                break;
+            delay(100);
+        }
+    }
 
 }

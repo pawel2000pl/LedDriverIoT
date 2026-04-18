@@ -1,10 +1,13 @@
 #pragma once
 
 #include <Arduino.h>
-#include <vector>
 #include <array>
 
-#include <ArduinoJson.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
+
+#include "inplace_vector.h"
+#include "common_types.h"
+#include "json_utils.h"
 
 #define ANALOG_READ_MAX 4095
 #define RELAXATION_DELAY 30
@@ -13,48 +16,44 @@
 namespace hardware {
 
 	struct InputHardwareAction {
-		bool enabled;
-		int read_pin;
-		std::vector<int> hz_pins;
-		std::vector<int> low_pins;
-		std::vector<int> high_pins;
-		float read() const;
+		bool enabled = false;
+		char read_pin;
+		inplace_vector<char, 4> hz_pins;
+		inplace_vector<char, 4> low_pins;
+		inplace_vector<char, 4> high_pins;
+		fixed64 read() const;
 
-		int getPin(int disabledValue=31) const;
+		bool isAvailable() const;
+		int getPin(int disabledValue=0) const;
+		void setInput() const;
 	};
 
 
-	struct DetectedHardware {
-		int fanPin;
-		int resetPin;
+	struct HardwareConfiguration {
+		const char* name;
+		char fanPin;
+		char resetPin;
 		std::array<InputHardwareAction, 4> potentiometers;
 		std::array<InputHardwareAction, 4> thermistors;
-		std::array<int, 4> outputs;
+		std::array<char, 4> outputs;
+		
+		inplace_vector<char, 24> requires_potentiometers = {};
+		inplace_vector<char, 24> requires_hz = {};
+		inplace_vector<char, 24> requires_lo = {};
+		inplace_vector<char, 24> requires_hi = {};
+		inplace_vector<char, 24> requires_shorted = {};
+		inplace_vector<char, 24> requires_not_shorted = {};
 
+		bool available() const;
+		void setup();
 		String getCode() const;
 	};
 
-
-	struct PinSets {
-		int analogReadMain;
-		int thermistorChecker;
-		std::vector<int> analogReadSecondary;
-		std::vector<int> analogSelect;
-		int fanPinMain;
-		int fanPinAlt;
-		std::vector<int> outputs;
-		int resetPin;
-		
-		bool multiplexerAvailable() const;
-		void setAnalog(int x) const;
-		std::vector<int> getAnalogSelectPins(int x, bool value) const;
-		DetectedHardware detect() const;
-	};
-
-
 	void detectHardware();
+
+	extern inplace_vector<HardwareConfiguration*, 16> configurations;
+	extern HardwareConfiguration* configuration;
 
 }
 
 
-const extern hardware::DetectedHardware& hardware_configuration;

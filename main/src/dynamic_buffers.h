@@ -1,7 +1,7 @@
 #pragma once
 
-#include <HTTPRequest.hpp>
-#include <HTTPResponse.hpp>
+#include "lib/esp32_https_server/HTTPRequest.hpp"
+#include "lib/esp32_https_server/HTTPResponse.hpp"
 
 using HTTPResponse = httpsserver::HTTPResponse;
 using HTTPRequest = httpsserver::HTTPRequest;
@@ -16,7 +16,7 @@ namespace server {
         size_t readBytes(char* buffer, size_t length);
 
     private:
-        static const int bufferSize = 1024;
+        static const int bufferSize = 512;
 
         HTTPRequest* request;
         int bufPos;
@@ -36,7 +36,7 @@ namespace server {
             size_t write(uint8_t c);
             size_t write(const uint8_t *buffer, size_t length);
         private:
-            static const int bufferSize = 1024;
+            static const int bufferSize = 512;
 
             HTTPResponse* response;
             int bufPos;

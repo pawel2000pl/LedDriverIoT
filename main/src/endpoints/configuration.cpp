@@ -1,7 +1,8 @@
 #include "configuration.h"
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+
+#include "../lib/ArduinoJson/ArduinoJson.h"
 
 #include "../wifi.h"
 #include "../server.h"
@@ -13,14 +14,18 @@
 namespace endpoints {
 
     void sendConfiguration(HTTPRequest* req, HTTPResponse* res) {
-        String buf = configuration::getConfigurationStr();
+        auto stream = configuration::getConfigStream();
         char size_str[24];
-        int size = buf.length();
+        int size = stream->available();
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
         res->setHeader("Content-Length", itoa(size, size_str, 10));
         res->setStatusCode(200);
-        res->write((uint8_t*)buf.c_str(), size);
+        uint8_t buf[256];
+        while (stream->available()) {
+            unsigned readed = stream->readBytes(buf, 256);
+            res->write(buf, readed);
+        }
     }
 
 
@@ -28,15 +33,17 @@ namespace endpoints {
         JsonDocument testJson;
         if (!server::readJson(req, res, testJson)) return;
         const auto configSchema = configuration::getConfigSchema();
-        const String assertMessage = 
-            testJson["type"].is<JsonString>() ? 
-            validateJson(testJson["data"], configSchema, configSchema[testJson["type"].as<String>()]) : 
-            validateJson(testJson["data"], testJson["schema"], testJson["schema"]["main"]);
+        const String schemaName = testJson["type"].as<String>();
+        auto data = testJson["data"];
+        const String assertMessage = validateJson(data, configSchema, configSchema[schemaName], ".", testJson["default"]);
         if (assertMessage != "") {
             server::sendError(res, assertMessage, 422);
             return;
         }
-        server::sendOk(res);
+        JsonDocument resultData;
+        resultData["status"] = "ok";
+        resultData["data"] = data;
+        server::sendJson(res, resultData);
     }
 
 
@@ -65,7 +72,7 @@ namespace endpoints {
             "    }\n"
             "}\n"
             "</style>\n"
-            "<p>Please wait, upgrading client app...</p>\n"
+            "<p>Please wait, upgrading the client app...</p>\n"
             "<progress id=\"upgrade_progress\" value=\"0\" max=\"100\"/>\n"
             "<script defer>\n"
             "   async function upgrade() {\n"
@@ -102,11 +109,19 @@ namespace endpoints {
     void sendNetworks(HTTPRequest* req, HTTPResponse* res) {
         unsigned lengthSum = 0;
         const auto& scannedNetworks = wifi::getScannedNetworks();
-        for (auto s : scannedNetworks) lengthSum += s.length();
-        unsigned bufSize = lengthSum + 64 * scannedNetworks.size() + 32;
-        JsonDocument networkList;
-        for (auto s : scannedNetworks) networkList.add(s);
-        server::sendJson(res, networkList, bufSize);
+        if (scannedNetworks.size()) {
+            for (auto s : scannedNetworks) lengthSum += s.length();
+            unsigned bufSize = lengthSum + 64 * scannedNetworks.size() + 32;
+            JsonDocument networkList;
+            for (auto s : scannedNetworks) networkList.add(s);
+            server::sendJson(res, networkList, bufSize);
+        } else{
+            res->setHeader("Cache-Control", "no-cache");
+            res->setHeader("Content-Type", "application/json");
+            res->setHeader("Content-Length", "2");
+            res->setStatusCode(200);
+            res->print("[]");
+        }
     }
 
 }

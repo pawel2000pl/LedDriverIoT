@@ -1,16 +1,26 @@
 #pragma once
-#include <ArduinoJson.h>
-#include <array>
+#include <Arduino.h>
+#include "lib/ArduinoJson/ArduinoJson.h"
 
-using ColorChannels = std::array<float, 4>;
+#include "common_types.h"
+#include "json_utils.h"
+
 
 namespace inputs {
 
-    void updateConfiguration(const JsonVariantConst& configuration);
-    void setRGBW(float r, float g, float b, float w);
-    void setHSVW(float h, float s, float v, float w);
-    void setHSLW(float h, float s, float l, float w);
+    enum SourceControl {scNone, scKnobs, scWeb, scFadingOut, scAnimation};
+    extern SourceControl source_control;
+
+    void updateConfiguration(const JsonVariantConst configuration);
+    void setRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w);
+    void setHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w);
+    void setHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w);
     void setAuto(const String& colorspace, const ColorChannels& color);
+
+    ColorChannels prepareRGBW(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c w);
+    ColorChannels prepareHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w);
+    ColorChannels prepareHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w);
+    ColorChannels prepareAuto(const String& colorspace, const ColorChannels& color);
 
     ColorChannels getRGBW();
     ColorChannels getHSVW();
@@ -21,5 +31,6 @@ namespace inputs {
     ColorChannels decodeFavoriteColor(const String& formattedColor, bool* useWhitePtr);
     ColorChannels favoriteColorPreview(const String& colorspace, const String& formattedColor);
     void applyFavoriteColor(const String& formattedColor);
+    fixed64_f filter_value(fixed64_f value);
 
 }

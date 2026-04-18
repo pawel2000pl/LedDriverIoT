@@ -1,0 +1,2 @@
+https://github.com/bblanchon/ArduinoJson
+https://arduinojson.org/v7/how-to/install-arduinojson/#method-4-single-header

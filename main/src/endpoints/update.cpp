@@ -6,6 +6,7 @@
 
 #include "configuration.h"
 
+#include "../logs.h"
 #include "../server.h"
 #include "../modules.h"
 
@@ -13,7 +14,7 @@ namespace endpoints {
 
     void update(HTTPRequest* req, HTTPResponse* res) {
         if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
-            Update.printError(Serial);
+            Update.printError(logs::logger);
             Update.abort();
             server::sendError(res, "Cannot begin the update", 500);
             return;
@@ -29,7 +30,7 @@ namespace endpoints {
             for (int i = 0; i < 32 && max_buf_size > size; i++)
                 size += req->readBytes(bufPtr+size, max_buf_size-size);
             if (Update.write(bufPtr, size) != size) {
-                Update.printError(Serial);
+                Update.printError(logs::logger);
                 Update.abort();
                 server::sendError(res, "Update error (network error or update file is too large)", 400);
                 return;
@@ -42,7 +43,7 @@ namespace endpoints {
             modules::taskQueue.push_back([](){ESP.restart();});
             server::sendOk(res);
         }
-        Update.printError(Serial);   
+        Update.printError(logs::logger);   
     }
 
 
