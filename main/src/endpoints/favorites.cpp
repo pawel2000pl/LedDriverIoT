@@ -68,7 +68,7 @@ namespace endpoints {
 
     void saveFavorites(HTTPRequest* req, HTTPResponse* res) {
         JsonDocument data;
-        if (!server::readJson(req, res, data, "favorites-list")) return;
+        if (!server::readJson(req, res, data, "favorites-list", configuration::getDefautltFavorites())) return;
         configuration::setFavorites(data);
         server::sendOk(res);
     }

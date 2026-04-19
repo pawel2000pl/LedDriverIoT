@@ -7,7 +7,7 @@ namespace hardware {
 			
 
 	void pullUpDelay() {
-		delayMicroseconds(RELAXATION_PULL_DELAY);
+		delayMicroseconds(RELAXATION_PULL_DELAY);		
 	}
 
 
@@ -60,27 +60,29 @@ namespace hardware {
 		pinMode(a, INPUT_PULLUP);
 		pinMode(b, INPUT_PULLUP);
 		pullUpDelay();
-		bool v1a = !digitalRead(a);
-		bool v1b = !digitalRead(b);
+		bool v1a = digitalRead(a);
+		bool v1b = digitalRead(b);
 
 		pinMode(a, INPUT_PULLDOWN);
 		pinMode(b, INPUT_PULLDOWN);
 		pullUpDelay();
-		bool v2a = digitalRead(a);
-		bool v2b = digitalRead(b);
+		bool v2a = !digitalRead(a);
+		bool v2b = !digitalRead(b);
 
 		bool result = false;
 
 		if (v1a && v2a) { // if pin a has HZ
 			pinMode(a, OUTPUT);
-			digitalWrite(a, LOW);
+			digitalWrite(a, HIGH);
 			pullUpDelay();
 			result = digitalRead(b);
 		} else if (v1b && v2b) { // if pin b has HZ
 			pinMode(b, OUTPUT);
-			digitalWrite(b, LOW);
+			digitalWrite(b, HIGH);
 			pullUpDelay();
 			result = digitalRead(a);
+		} else {
+			result = v1a == v1b && v2a == v2b && v1a == v2a;
 		}
 
 		pinMode(a, INPUT);
@@ -145,13 +147,17 @@ namespace hardware {
 		for (auto pin : requires_hi)
 			if (!hasHigh(pin)) return false;
 		int shorted_size = requires_shorted.size();
-		delay(15 * shorted_size * shorted_size);
+		delay(5);
+		for (int i=0;i<shorted_size;i++) 
+			pinMode(requires_shorted[i], INPUT);
 		for (int i=0;i<shorted_size;i++) 
 			for (int j=i+1;j<shorted_size;j++) 
-				if (!pinsAreConnected(requires_shorted[i], requires_shorted[j])) 
+				if (!pinsAreConnected(requires_shorted[i], requires_shorted[j]))
 					return false;
 		int not_shorted_size = requires_not_shorted.size();
-		delay(15 * not_shorted_size * not_shorted_size);
+		delay(5);
+		for (int i=0;i<not_shorted_size;i++) 
+			pinMode(requires_not_shorted[i], INPUT);
 		for (int i=0;i<not_shorted_size;i++) 
 			for (int j=i+1;j<not_shorted_size;j++) 
 				if (pinsAreConnected(requires_not_shorted[i], requires_not_shorted[j])) 
@@ -203,7 +209,10 @@ namespace hardware {
 			}
 		}
 
-		if (available < 0) available = 0;
+		if (available < 0) {
+			available = 0;
+			logs::logger.println("Cannot detect hardware properly");
+		}
 
 		logs::logger.print("Chosen configuration: ");
 		logs::logger.println(configurations[available]->name);

@@ -12,6 +12,7 @@
 #include "lib/ArduinoJson/ArduinoJson.h"
 #include "resources.h"
 #include "json_utils.h"
+#include "validate_json.h"
 
 using HTTPResponse = httpsserver::HTTPResponse;
 using HTTPRequest = httpsserver::HTTPRequest;
@@ -40,6 +41,6 @@ namespace server {
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err);
     void sendResource(HTTPRequest* req, HTTPResponse* res);
     std::vector<char>* readBuffer(HTTPRequest* req, bool addZero=true);
-    bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName="");
+    bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName="", const JsonVariantConst defaults=JsonNull);
 
 }

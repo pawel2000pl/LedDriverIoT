@@ -5,6 +5,7 @@
 #include "lib/ArduinoJson/ArduinoJson.h"
 #include "resources.h"
 #include "json_utils.h"
+#include "validate_json.h"
 #include "memory"
 
 #define CONFIGURATION_FILENAME "/configuration.json"
@@ -28,7 +29,7 @@ namespace configuration {
     JsonDocument getDefautltFavorites();
     JsonDocument getDefautltAnimations();
     JsonDocument getConfigSchema();
-    String assertJson(JsonVariant configuration, String name);
+    String assertJson(JsonVariant configuration, String name, const JsonVariantConst defaults=JsonNull);
     String assertConfiguration(JsonVariant configuration);
     JsonDocument getVersionInfo();
 

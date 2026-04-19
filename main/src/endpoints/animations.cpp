@@ -47,7 +47,7 @@ namespace endpoints {
 
     void saveAnimations(HTTPRequest* req, HTTPResponse* res) {
         JsonDocument data;
-        if (!server::readJson(req, res, data, "animations-list")) return;
+        if (!server::readJson(req, res, data, "animations-list", configuration::getDefautltAnimations())) return;
         configuration::setAnimations(data);
         server::sendOk(res);
     }

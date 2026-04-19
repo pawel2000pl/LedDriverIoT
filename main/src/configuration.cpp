@@ -39,14 +39,14 @@ namespace configuration {
     }
 
 
-    String assertJson(JsonVariant configuration, String name) {
+    String assertJson(JsonVariant configuration, String name, const JsonVariantConst defaults) {
         const auto configSchema = getConfigSchema();
-        return validateJson(configuration, configSchema, configSchema[name], ".", getDefautltConfiguration()); 
+        return validateJson(configuration, configSchema, configSchema[name], ".", defaults); 
     }
 
 
     String assertConfiguration(JsonVariant configuration) {
-        return assertJson(configuration, "main");
+        return assertJson(configuration, "main", getDefautltConfiguration());
     }
 
 
@@ -121,36 +121,38 @@ namespace configuration {
 
     bool saveFile(const String& filename, const unsigned char* content, unsigned length) {
         const size_t CHUNK_SIZE = 256;
-        const size_t TRIALS = 256;
+        const size_t TRIALS = 16;
         uint8_t verifyBuf[CHUNK_SIZE];
         
         logs::logger.printf("Saving file %s\n", filename.c_str());
-        for (int attempt = 1; attempt <= TRIALS; ++attempt) {
+        for (size_t attempt = 1; attempt <= TRIALS; ++attempt) {
             bool success = true;
 
-            File file = LittleFS.open(filename, FILE_WRITE);
-            if (!file) {
-                logs::logger.printf("Attempt %d: open for write failed\n", attempt);
-                success = false;
-            } else {
-                size_t writtenTotal = 0;
-                while (writtenTotal < length) {
-                    size_t toWrite = min(CHUNK_SIZE, length - writtenTotal);
-                    size_t written = file.write(content + writtenTotal, toWrite);
-                    if (written != toWrite) {
-                        logs::logger.printf("Attempt %d: write error at offset %u\n", attempt, writtenTotal);
-                        success = false;
-                        break;
+            {
+                File file = LittleFS.open(filename, FILE_WRITE);
+                if (!file) {
+                    logs::logger.printf("Attempt %u: open for write failed\n", attempt);
+                    success = false;
+                } else {
+                    size_t writtenTotal = 0;
+                    while (writtenTotal < length) {
+                        size_t toWrite = min(CHUNK_SIZE, length - writtenTotal);
+                        size_t written = file.write(content + writtenTotal, toWrite);
+                        if (written != toWrite) {
+                            logs::logger.printf("Attempt %u: write error at offset %u\n", attempt, writtenTotal);
+                            success = false;
+                            break;
+                        }
+                        writtenTotal += written;
                     }
-                    writtenTotal += written;
+                    file.close();
                 }
-                file.close();
             }
 
             if (success) {
                 File file = LittleFS.open(filename, FILE_READ);
                 if (!file) {
-                    logs::logger.printf("Attempt %d: open for read failed\n", attempt);
+                    logs::logger.printf("Attempt %u: open for read failed\n", attempt);
                     success = false;
                 } else {
                     size_t readTotal = 0;
@@ -158,12 +160,12 @@ namespace configuration {
                         size_t toRead = min(CHUNK_SIZE, length - readTotal);
                         size_t readBytes = file.read(verifyBuf, toRead);
                         if (readBytes != toRead) {
-                            logs::logger.printf("Attempt %d: read error at offset %u\n", attempt, readTotal);
+                            logs::logger.printf("Attempt %u: read error at offset %u\n", attempt, readTotal);
                             success = false;
                             break;
                         }
                         if (memcmp(content + readTotal, verifyBuf, toRead) != 0) {
-                            logs::logger.printf("Attempt %d: verify mismatch at offset %u\n", attempt, readTotal);
+                            logs::logger.printf("Attempt %u: verify mismatch at offset %u\n", attempt, readTotal);
                             success = false;
                             break;
                         }
@@ -178,13 +180,9 @@ namespace configuration {
                 return true;
             }
 
-            if (attempt < 16) {
-                delay(5);
-            } else {
-                logs::logger.printf("Final failure after %d attempts: %s\n", attempt, filename.c_str());
-                return false;
-            }
-        }
+            delay(5);
+        }                
+        logs::logger.printf("Final failure after %u attempts: %s\n", TRIALS, filename.c_str());
         return false;
     }
 
@@ -328,18 +326,40 @@ namespace configuration {
     }
 
 
-    void loadConfiguration() {
-        JsonDocument config = getConfiguration();
-        if (assertConfiguration(config).length())
+    void prepareConfiguration() {
+        if (!LittleFS.exists(CONFIGURATION_FILENAME)) {
+            // if no configuration - save default
             setConfiguration(getDefautltConfiguration());
-        else
-            setConfiguration(config);
+            return;
+        }
+
+        JsonDocument configuration;
+        if (deserializeJson(configuration, *getConfigStream()) != DeserializationError::Ok) {
+            // if cannot read configuration as json - save default
+            setConfiguration(getDefautltConfiguration());
+            return;
+        }
+
+        const auto configSchema = getConfigSchema();
+        if (validateJson(configuration, configSchema, configSchema["main"], ".") == 0) {
+            // configuration ok
+            return;
+        }
+
+        if (validateJson(configuration, configSchema, configSchema["main"], ".", getDefautltConfiguration()).length() == 0) {
+            // configuration ok after upgrading - save the new one
+            setConfiguration(configuration);
+            return;
+        }            
+        
+        // inavlid configuration and cannot be upgraded - save default
+        setConfiguration(getDefautltConfiguration());
     }
 
 
     void init() {
         mountFileSystem();
-        loadConfiguration();
+        prepareConfiguration();
     }
 
 

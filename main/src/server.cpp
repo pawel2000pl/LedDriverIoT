@@ -366,7 +366,7 @@ namespace server {
     }
 
 
-    bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName) {
+    bool readJson(HTTPRequest* req, HTTPResponse* res, JsonDocument& json, const String& assertEntryName, const JsonVariantConst defaults) {
         unsigned freeHeap = esp_get_free_heap_size() - (assertEntryName.length() ? resource_config_schema_json.size * 2 : 0);
         unsigned maximumContentLength = min(freeHeap / 2, (unsigned)MAX_POST_SIZE);
         unsigned contentLength = getContentLength(req, maximumContentLength);
@@ -386,7 +386,7 @@ namespace server {
         if (sendDeserializationError(res, err)) 
             return false;
         if (assertEntryName.length()) {
-            const String assertMessage = configuration::assertJson(json, assertEntryName);
+            const String assertMessage = configuration::assertJson(json, assertEntryName, defaults);
             if (assertMessage.length()) {
                 sendError(res, assertMessage, 422);
                 return false;

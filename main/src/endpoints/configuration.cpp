@@ -49,7 +49,7 @@ namespace endpoints {
 
     void recvConfiguration(HTTPRequest* req, HTTPResponse* res) {
         JsonDocument configuration;
-        if (!server::readJson(req, res, configuration, "main")) return;
+        if (!server::readJson(req, res, configuration, "main", configuration::getDefautltConfiguration())) return;
         configuration::setConfiguration(configuration);
         modules::updateModules(configuration);
         server::sendOk(res);
