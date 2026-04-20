@@ -347,6 +347,25 @@ async function saveAnimations() {
 }
 
 
+function moveAnimations(event, direction) {
+    const div = event.target.parentElement.parentElement.parentElement;
+    const parent = div.parentElement;
+    if (direction < 0) {
+        const prev = div.previousSibling;
+        if (prev) {
+            div.remove();
+            prev.before(div);
+        }
+    } else if (direction > 0) {
+        const next = div.nextSibling;
+        if (next) {
+            div.remove();
+            next.after(div);
+        }
+    }
+}
+
+
 Promise.all([configPromise, animationsPromise]).then(([_, animations])=>{
     loadAnimations(animations);
 });

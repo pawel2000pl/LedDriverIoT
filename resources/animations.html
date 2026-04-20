@@ -112,11 +112,13 @@
             <details class="animation-sequence">
                 <summary class="menu-summary">
                     <span class="sequence-name"></span>
-                    <button class="play-btn">Play</button>
+                    <button class="play-btn float-right-btn">Play</button>
                 </summary>
                 <div class="animation-sequence-options">
                     <span>Animation name: </span>
                     <input class="sequence-name-input" maxlength="64" onchange="updateAnimationName(event.target)" oninput="updateAnimationName(event.target)" type="text"/>
+                    <button class="float-right-btn" onclick="moveAnimations(event, -1)">Up</button>
+                    <button class="float-right-btn" onclick="moveAnimations(event, 1)">Down</button>
                 </div>
                 <div class="animation-sequence-list"></div>
                 <div class="animation-sequence-options">

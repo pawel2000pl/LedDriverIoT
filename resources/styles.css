@@ -325,9 +325,10 @@ raw-color-picker input[type="range"][class="white_input"] {
     display: none;
 }
 
-.play-btn {
-  float: right;
-  margin: -1px;
+.float-right-btn {
+    float: right;
+    margin: -1px;  
+    margin-left: 5px;
 }
 
 #animation-lightness {
