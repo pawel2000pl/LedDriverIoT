@@ -58,7 +58,40 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        [
+          "clearance|127221607|101616487|d7ff58ac-1ac9-4ddc-bdef-f727d05c2067|4fbecff0-8ff3-465f-963b-c9a114d58ff7",
+          ""
+        ],
+        [
+          "clearance|131975000|78504700|146ddb54-85e9-4808-8b16-dc125007b53f|de4cba33-5524-4508-bffd-34a0e4f0510c",
+          ""
+        ],
+        [
+          "clearance|133682500|84635000|7c66d51a-76f3-4696-8e4e-66fb2183fde2|45ea22c6-3dc9-4a3d-a3c7-291f1c3d1a48",
+          ""
+        ],
+        [
+          "clearance|137682500|83135000|aa005a9d-e954-43d2-9e8c-a33f38384947|a97cf3ef-6c69-4eeb-a726-808382cfdb8d",
+          ""
+        ],
+        [
+          "clearance|140315207|101616487|b198f34c-2333-4095-9163-3cd49d093286|98423c07-9058-44a9-90fd-992d1986d9c9",
+          ""
+        ],
+        [
+          "clearance|148682500|87635000|6c19678e-6a26-4d26-a538-af873acf4024|5e8a3e74-9a56-4ce2-a6fa-4c57cf797bc8",
+          ""
+        ],
+        [
+          "clearance|154596001|101585591|638cb9cd-f765-468b-9097-035497bf8338|653103d4-0578-4bc1-8f08-37b688722f27",
+          ""
+        ],
+        [
+          "clearance|167782500|101605000|d7386082-a727-4ee3-8004-c9e2bf2775f8|d946d612-c953-4028-8cfd-7bbaee381950",
+          ""
+        ]
+      ],
       "meta": {
         "version": 2
       },
@@ -80,8 +113,8 @@
         "footprint_symbol_mismatch": "warning",
         "footprint_type_mismatch": "ignore",
         "hole_clearance": "error",
-        "hole_to_hole": "warning",
-        "holes_co_located": "warning",
+        "hole_to_hole": "error",
+        "holes_co_located": "error",
         "invalid_outline": "error",
         "isolated_copper": "warning",
         "item_on_disabled_layer": "error",
@@ -112,18 +145,18 @@
         "through_hole_pad_without_hole": "error",
         "too_many_vias": "error",
         "track_angle": "error",
-        "track_dangling": "warning",
+        "track_dangling": "error",
         "track_segment_length": "error",
         "track_width": "error",
         "tracks_crossing": "error",
         "unconnected_items": "error",
         "unresolved_variable": "error",
-        "via_dangling": "warning",
+        "via_dangling": "error",
         "zones_intersect": "error"
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.17,
+        "min_clearance": 0.16,
         "min_connection": 0.0,
         "min_copper_edge_clearance": 0.5,
         "min_groove_width": 0.0,
