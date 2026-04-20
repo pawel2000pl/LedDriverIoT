@@ -325,7 +325,7 @@ raw-color-picker input[type="range"][class="white_input"] {
     display: none;
 }
 
-.float-right-btn {
+.float-right {
     float: right;
     margin: -1px;  
     margin-left: 5px;

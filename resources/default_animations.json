@@ -118,13 +118,13 @@
                 "period_randomness": 300,
                 "use_white": false,
                 "base_color": [
-                    0.3,
+                    0.27,
                     0.95,
                     0.8,
                     0
                 ],
                 "color_randomness": [
-                    0.26,
+                    0.13,
                     0.06,
                     0.41,
                     0
