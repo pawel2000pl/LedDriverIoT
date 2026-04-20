@@ -348,8 +348,9 @@ async function saveAnimations() {
 
 
 function moveAnimations(event, direction) {
-    const div = event.target.parentElement.parentElement.parentElement;
-    const parent = div.parentElement;
+    let div = event.target;
+    while (div.parentElement.id != 'animations-div')
+        div = div.parentElement;
     if (direction < 0) {
         const prev = div.previousSibling;
         if (prev) {
