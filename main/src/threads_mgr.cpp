@@ -10,7 +10,7 @@
 #define TASK_NAME_SIZE 16
 
 namespace threads_mgr {
-    
+
     volatile bool settingsInLock = false;
 
     void setLock(bool lockState) {
@@ -53,7 +53,7 @@ namespace threads_mgr {
 
             void execute() {
                 if (!settingsInLock)
-                    runner();                
+                    runner();
                 delay(std::max<long int>(period_ms - (millis() % period_ms), (period_ms >> 1) + 1));
             }
 

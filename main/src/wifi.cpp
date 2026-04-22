@@ -97,8 +97,8 @@ namespace wifi {
 
 
     void afterConnection(int mode) {
-        if (eventConnectionStatus) 
-            beforeDisconnection(eventConnectionMode); 
+        if (eventConnectionStatus)
+            beforeDisconnection(eventConnectionMode);
         if (mode == WIFI_AP) {
             dnsServer.start();
             logs::logger.println("Configured DNS Server");
@@ -181,7 +181,7 @@ namespace wifi {
             logs::logger.print(" Found network: ");
             logs::logger.println(WiFi.SSID(i));
             unsigned  channel = WiFi.channel(i);
-            if (channel <= MAX_WIFI_CHANNEL) 
+            if (channel <= MAX_WIFI_CHANNEL)
                 occupedChannels[channel] += 1.f / (1.f + exp(RSSI_AMP * (WiFi.RSSI(i) - RSSI_TRESHOLD)));
         }
         WiFi.scanDelete();
@@ -231,7 +231,7 @@ namespace wifi {
             logs::logger.print(" -> Connecting success, IP: ");
             logs::logger.println(getLocalIp());
             afterConnection(WIFI_STA);
-        } else 
+        } else
             logs::logger.println(" -> Connecting failed");
         return result;
     }
@@ -247,7 +247,7 @@ namespace wifi {
             delay(200);
             WiFi.softAPsetHostname(hostname.c_str());
             WiFi.softAPConfig(apAddress, apGateway, apSubnet);
-        } while (!WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4));        
+        } while (!WiFi.softAP(apConfig.ssid, apConfig.password, apChannel ? apChannel : bestApChannel(), apConfig.hidden, 4));
         activity();
         afterConnection(WIFI_AP);
     }
@@ -271,7 +271,7 @@ namespace wifi {
         WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
         WiFi.setHostname(hostname.c_str());
     }
-    
+
 
     bool autoSta() {
         currentConnectionPeriodicTimeout = false;
@@ -329,7 +329,7 @@ namespace wifi {
     void checkConnection() {
         if (!connected() || (currentConnectionPeriodicTimeout && millis() - lastActivity > periodicTimeout)) {
             activity();
-            autoConnectWifi(); 
+            autoConnectWifi();
         }
     }
 

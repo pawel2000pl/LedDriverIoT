@@ -37,7 +37,7 @@ namespace timer_shutdown {
             fading_out = true;
             std::int64_t diff = ctime - shutdown_time;
             if (diff < fade_out_time) {
-                fixed64 fade_part = fixed64::fraction(fade_out_time - diff, fade_out_time);                
+                fixed64 fade_part = fixed64::fraction(fade_out_time - diff, fade_out_time);
                 outputs::setFadeoutScalling(fade_part * fade_part);
                 outputs::writeOutput();
             } else if (diff < fade_out_time + 1000) {
@@ -48,7 +48,7 @@ namespace timer_shutdown {
         } else {
             fading_out = false;
             outputs::setFadeoutScalling(1);
-        } 
+        }
     }
 
 }

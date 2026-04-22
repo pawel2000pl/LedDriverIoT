@@ -13,11 +13,11 @@ function defaultResizeFunction(clientWidth, clientHeight) {
 
 
 function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradientParts=12, setEvent=()=>{}, defaults=[0, 0, 0], resizeFunction=defaultResizeFunction) {
-    
-    const mainDiv = document.createElement('div'); 
+
+    const mainDiv = document.createElement('div');
     mainDiv.className = 'knob-div';
     if (!visible) mainDiv.style.display = 'none';
-    
+
     const knobs = [null, null, null];
 
     const resize = ()=>{
@@ -25,7 +25,7 @@ function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradi
         for (let i=0;i<3;i++)
             knobs[i].setSize(ray, ray / 4, ray / 3);
     };
-    
+
     for (let i=0;i<3;i++) {
         const knob = new Knob();
         knob.minValue = 0;
@@ -35,7 +35,7 @@ function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradi
     }
     resize();
     window.addEventListener('resize', resize);
-    
+
     const setGradients = async function() {
         const channels = knobs.map((knob)=>knob.value);
         for (let i=0;i<3;i++) {
@@ -52,15 +52,15 @@ function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradi
         }
         setEvent(channels);
     };
-    
+
     setGradients();
-    
+
     for (let i=0;i<3;i++) {
         knobs[i].onChangeValue = setGradients;
         mainDiv.appendChild(knobs[i]);
     }
-    
-    parent.appendChild(mainDiv);  
+
+    parent.appendChild(mainDiv);
     const functions = {
         set: function(channels) {
             for (let i=0;i<3;i++)
@@ -73,7 +73,7 @@ function createTriColorPanel(parent, visible, converter, ranges=[1, 1, 1], gradi
 }
 
 
-function createWhiteKnob(parent, visible=true, changeEvent=()=>{}, resizeFunction=defaultResizeFunction) {     
+function createWhiteKnob(parent, visible=true, changeEvent=()=>{}, resizeFunction=defaultResizeFunction) {
     const wDiv = document.createElement('div');
     if (!visible) wDiv.style.display = 'none';
     wDiv.className = 'knob-div';
@@ -89,7 +89,7 @@ function createWhiteKnob(parent, visible=true, changeEvent=()=>{}, resizeFunctio
     whiteKnob.gradient = [[0,0,0], [255,255,255]];
     whiteKnob.value = 0;
     wDiv.appendChild(whiteKnob);
-    parent.appendChild(wDiv);     
+    parent.appendChild(wDiv);
 
     const functions = {
         set: (value)=>{

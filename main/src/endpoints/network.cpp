@@ -24,19 +24,19 @@ namespace endpoints {
 
 
     void autoScanWifiEndpoint(HTTPRequest* req, HTTPResponse* res) {
-        server::sendOk(res); 
+        server::sendOk(res);
         modules::taskQueue.push_back(wifi::scanNetworks);
     }
 
 
     void openAccessPointEndpoint(HTTPRequest* req, HTTPResponse* res) {
-        server::sendOk(res); 
+        server::sendOk(res);
         modules::taskQueue.push_back(wifi::openAccessPoint);
     }
 
 
     void reconnect(HTTPRequest* req, HTTPResponse* res) {
-        server::sendOk(res); 
+        server::sendOk(res);
         modules::taskQueue.push_back([](){
             wifi::disconnect();
             wifi::autoConnectWifi();

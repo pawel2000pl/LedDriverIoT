@@ -41,7 +41,7 @@ namespace configuration {
 
     String assertJson(JsonVariant configuration, String name, const JsonVariantConst defaults) {
         const auto configSchema = getConfigSchema();
-        return validateJson(configuration, configSchema, configSchema[name], ".", defaults); 
+        return validateJson(configuration, configSchema, configSchema[name], ".", defaults);
     }
 
 
@@ -111,7 +111,7 @@ namespace configuration {
     }
 
 
-    void serializeToFile(const String filename, const JsonDocument& data) {        
+    void serializeToFile(const String filename, const JsonDocument& data) {
         std::size_t size = measureJson(data);
         std::vector<unsigned char> buf(size * 1.2f + 3);
         size = serializeJson(data, buf.data(), buf.size());
@@ -123,7 +123,7 @@ namespace configuration {
         const size_t CHUNK_SIZE = 256;
         const size_t TRIALS = 16;
         uint8_t verifyBuf[CHUNK_SIZE];
-        
+
         logs::logger.printf("Saving file %s\n", filename.c_str());
         for (size_t attempt = 1; attempt <= TRIALS; ++attempt) {
             bool success = true;
@@ -181,7 +181,7 @@ namespace configuration {
             }
 
             delay(5);
-        }                
+        }
         logs::logger.printf("Final failure after %u attempts: %s\n", TRIALS, filename.c_str());
         return false;
     }
@@ -198,10 +198,10 @@ namespace configuration {
         return saveFile(filename, (const unsigned char*)content.c_str(), content.length());
     }
 
-    
+
     std::unique_ptr<Stream> getReadStream(const String& filename, const Resource* default_resource) {
         std::unique_ptr<Stream> file = std::make_unique<File>(LittleFS.open(filename, FILE_READ));
-        if (file->available()) 
+        if (file->available())
             return file;
         if (default_resource)
             return std::make_unique<MemoryStream>(default_resource->data, default_resource->size);
@@ -258,7 +258,7 @@ namespace configuration {
         removeFile(CERT_KEY_FILE_NAME);
         removeFile(CERT_PUB_FILE_NAME);
     }
-    
+
 
     void rewriteFilesystem(bool fromSPIFFS=false) {
         logs::logger.println("Rewritting filesystem.");
@@ -295,10 +295,10 @@ namespace configuration {
 
         for (unsigned i=0;i<fileCount;i++) {
             delay(20);
-            if (buffers[i].size()) 
+            if (buffers[i].size())
                 saveFile(filenames[i], buffers[i].data(), buffers[i].size());
         }
-        delay(20);     
+        delay(20);
     }
 
 
@@ -350,8 +350,8 @@ namespace configuration {
             // configuration ok after upgrading - save the new one
             setConfiguration(configuration);
             return;
-        }            
-        
+        }
+
         // inavlid configuration and cannot be upgraded - save default
         setConfiguration(getDefautltConfiguration());
     }

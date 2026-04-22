@@ -14,7 +14,7 @@ namespace ledc {
 			.speed_mode       = LEDC_MODE,
 			.duty_resolution  = LEDC_DUTY_RES,
 			.timer_num        = LEDC_TIMER,
-			.freq_hz          = current_pwm_frequency,  
+			.freq_hz          = current_pwm_frequency,
 			.clk_cfg          = LEDC_AUTO_CLK,
 			#ifdef NEW_FLAGS
 			.deconfigure	  = false

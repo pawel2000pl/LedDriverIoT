@@ -21,11 +21,11 @@ using ResourceNode = httpsserver::ResourceNode;
 namespace server {
 
     using CallbackFunction = httpsserver::HTTPSCallbackFunction;
-    
+
     void updateConfiguration(const JsonVariantConst configuration);
     unsigned getQueryId();
     bool resetQueryFlag();
-    
+
     void addCallback(const char* address, const char* method, const CallbackFunction* callback);
     void configure();
     void start();
@@ -36,7 +36,7 @@ namespace server {
     void sendJson(HTTPResponse* res, const JsonVariantConst data, unsigned bufSize = 4096, int statusCode = 200);
     void sendError(HTTPResponse* res, String message, int code);
     void sendOk(HTTPResponse* res);
-    void sendCacheControlHeader(HTTPResponse* res);    
+    void sendCacheControlHeader(HTTPResponse* res);
     int sendResourceData(HTTPResponse* res, const Resource& resource, int statusCode=200);
     bool sendDeserializationError(HTTPResponse* res, DeserializationError err);
     void sendResource(HTTPRequest* req, HTTPResponse* res);

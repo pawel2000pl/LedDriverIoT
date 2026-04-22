@@ -8,8 +8,8 @@ function favoriteColorFactory(paramColor=null, white=false) {
     const div = $new('div');
     div.textContent = 'Please wait...';
     div.getValue = ()=>{return getFunction();};
-    
-    const setColor = async (colorData)=>{        
+
+    const setColor = async (colorData)=>{
         const filteredColors = colorData.color;
         const filteredRGB = converters[config.channels.webMode](...filteredColors);
 

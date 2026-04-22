@@ -30,18 +30,18 @@ configPromise.then(()=>{
     var modified = false;
     var ready = true;
     const colors = createTriColorPanel(
-        colorKnob, 
+        colorKnob,
         config.hardware.enableColorKnob,
-        converters[config.channels.webMode], 
-        [1, 1, 1], 
-        12, 
-        ()=>{modified = true;}, 
+        converters[config.channels.webMode],
+        [1, 1, 1],
+        12,
+        ()=>{modified = true;},
         [0, 0, 0]
-    );            
+    );
 
     const white = createWhiteKnob(
-        colorKnob, 
-        config.hardware.enableWhiteKnob, 
+        colorKnob,
+        config.hardware.enableWhiteKnob,
         ()=>{modified = true;}
     );
 
@@ -85,7 +85,7 @@ configPromise.then(()=>{
     colorPromise.then(onColorResponse);
     window.addEventListener('pageshow', ()=>{getColors().then(onColorResponse);});
     document.addEventListener('visibilitychange', ()=>{
-        if (!document.hidden) 
+        if (!document.hidden)
             getColors().then(onColorResponse);
     });
 });

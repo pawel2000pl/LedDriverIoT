@@ -49,7 +49,7 @@ namespace animations {
     fixed32_c global_lightness = 1;
     fixed32_c global_lightness_front = 1;
 
-    
+
     void setGlobalLightness(fixed32_c value) {
         global_lightness_front = value;
         global_lightness = inputs::filter_value(global_lightness_front);
@@ -76,7 +76,7 @@ namespace animations {
         return true;
     }
 
-    
+
     void startAnimationFromJson(const JsonVariantConst animationSequence) {
         const JsonVariantConst stages = animationSequence["data"];
         unsigned stages_count = stages.size();

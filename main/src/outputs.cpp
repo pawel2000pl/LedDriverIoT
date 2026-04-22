@@ -47,8 +47,8 @@ namespace outputs {
         filters::outputRed = mixFilterFunctions(toFloatVector(outputFilters["red"]));
         filters::outputGreen = mixFilterFunctions(toFloatVector(outputFilters["green"]));
         filters::outputBlue = mixFilterFunctions(toFloatVector(outputFilters["blue"]));
-        filters::outputWhite = mixFilterFunctions(toFloatVector(outputFilters["white"]));   
-        filters::globalOutput = mixFilterFunctions(toFloatVector(filters["globalOutputFilters"])); 
+        filters::outputWhite = mixFilterFunctions(toFloatVector(outputFilters["white"]));
+        filters::globalOutput = mixFilterFunctions(toFloatVector(filters["globalOutputFilters"]));
 
         const auto hardwareConfiguration = configuration["hardware"];
         phaseMode = hardwareConfiguration["phaseMode"].as<int>();
@@ -88,17 +88,17 @@ namespace outputs {
             periods[i] = ledc::addGateLoadingTime(values[i], gateLoadingTime);
         return periods;
     }
-    
+
 
     ColorChannels getPhases(const ColorChannels& values) {
         ColorChannels phases = {0, 0, 0, 0};
         fixed32_c k = 0;
         switch (phaseMode) {
-            case 1: 
+            case 1:
                 for (int i=0;i<4;i++)
                     phases[i] = (1 - values[i]) / 2;
                 break;
-            case 3: 
+            case 3:
                 k += values[3];
                 // fall through
             case 2:
@@ -107,7 +107,7 @@ namespace outputs {
                 if (k == 0) break;
                 k = 1 / k;
                 fixed32_c sum = 0;
-                for (int i=0;i<4;i++) 
+                for (int i=0;i<4;i++)
                     if (values[i] != 0) {
                         sum %= 1;
                         phases[i] = sum;
@@ -142,20 +142,12 @@ namespace outputs {
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
         for (int i=0;i<4;i++)
             ledc::setChannel(
-                hardware::configuration->outputs[i], 
-                i, 
-                periods[i], 
+                hardware::configuration->outputs[i],
+                i,
+                periods[i],
                 phases[i],
                 invertOutputs
             );
-    }
-
-
-    void setColor(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
-        hue = h;
-        saturation = s;
-        value = v;
-        white = w;
     }
 
 
@@ -174,7 +166,7 @@ namespace outputs {
 
     ColorChannels getTailoredScalling() {
         fixed32_c r, g, b;
-        hsvToRgb(hue, saturation, value, r, g, b); 
+        hsvToRgb(hue, saturation, value, r, g, b);
         fixed32_c scale0 = constrain<fixed32_c>((fixed32_c)filters::outputRed(filters::globalOutput(r)) * scalling[0] / max<fixed32_c>(filters::outputRed(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);
         fixed32_c scale1 = constrain<fixed32_c>((fixed32_c)filters::outputGreen(filters::globalOutput(g)) * scalling[1] / max<fixed32_c>(filters::outputGreen(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);
         fixed32_c scale2 = constrain<fixed32_c>((fixed32_c)filters::outputBlue(filters::globalOutput(b)) * scalling[2] / max<fixed32_c>(filters::outputBlue(filters::globalOutput(1)), std::numeric_limits<fixed32_c>::min()), 0, 1);

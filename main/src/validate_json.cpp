@@ -46,7 +46,7 @@ String validateJson(JsonVariant object, const JsonVariantConst schema, const Jso
 
 	if (objectTypeIsInline && !isSimpleJsonType(objectType.as<String>()))
 		return validateJson(object, schema, schema[objectType.as<String>()], path, defaults);
-	
+
 	const JsonVariantConst objectSchema = objectTypeIsInline ? JsonEmpty.as<JsonVariantConst>() : objectType;
 	String type = objectTypeIsInline ? objectType : objectSchema["type"].is<const char*>() ? objectSchema["type"] : String("object");
 
@@ -103,7 +103,7 @@ String validateJson(JsonVariant object, const JsonVariantConst schema, const Jso
 		if (objectSchema["regexp"].is<const char*>() || objectSchema["regex"].is<const char*>()) {
 			String pattern = objectSchema["regexp"].is<const char*>() ? objectSchema["regexp"].as<String>() : objectSchema["regex"].as<String>();
 			regex_t restrict;
-			regcomp(&restrict, pattern.c_str(), REG_EXTENDED | REG_NOSUB);      
+			regcomp(&restrict, pattern.c_str(), REG_EXTENDED | REG_NOSUB);
 			int result = regexec(&restrict, casted.c_str(), 0, NULL, 0);
 			if (result == REG_NOMATCH)
 					return "Text does not match the required pattern: " + path ;

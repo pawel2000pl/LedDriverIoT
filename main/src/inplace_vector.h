@@ -13,7 +13,7 @@ template <typename T, std::size_t Capacity>
 class inplace_vector {
 public:
     inplace_vector() noexcept : size_(0) {}
-    
+
     inplace_vector(const std::initializer_list<T> l) : inplace_vector() {
         for (auto& x: l)
             push_back(x);
@@ -119,7 +119,7 @@ public:
         for (const auto& x: another)
             push_back(x);
     }
-    
+
 
     void operator=(inplace_vector&& another) {
         clear();
@@ -128,7 +128,7 @@ public:
         another.clear();
     }
 
-    
+
 private:
 
     typename std::aligned_storage<sizeof(T), alignof(T)>::type buffer_[Capacity];

@@ -76,7 +76,7 @@ namespace inputs {
     void updateConfiguration(const JsonVariantConst configuration) {
         const auto filters = configuration["filters"];
         const auto inputFilters = filters["inputFilters"];
-        
+
         filters::inputSaturation = mixFilterFunctions(toFloatVector(inputFilters["saturation"]));
         filters::inputHueBasic = mixFilterFunctions(toFloatVector(inputFilters["hue"]));
         filters::inputValue = mixFilterFunctions(toFloatVector(inputFilters["value"]));
@@ -85,7 +85,7 @@ namespace inputs {
         filters::inputGreen = mixFilterFunctions(toFloatVector(inputFilters["green"]));
         filters::inputBlue = mixFilterFunctions(toFloatVector(inputFilters["blue"]));
         filters::inputWhite = mixFilterFunctions(toFloatVector(inputFilters["white"]));
-        filters::globalInput = mixFilterFunctions(toFloatVector(filters["globalInputFilters"]));  
+        filters::globalInput = mixFilterFunctions(toFloatVector(filters["globalInputFilters"]));
     }
 
 
@@ -138,7 +138,7 @@ namespace inputs {
         raw[3] = w;
         raw[2] = vr;
         raw[0] = hr;
-        if (l != 1 && l != 0) 
+        if (l != 1 && l != 0)
             raw[1] = sr;
         return raw;
     }
@@ -207,7 +207,7 @@ namespace inputs {
         if (colorspace == "raw") return outputs::getColor();
         return {0, 0, 0, 0};
     }
-    
+
 
     void byteToHex(unsigned char value, char* ptr) {
         unsigned char lo = value & 0xF;

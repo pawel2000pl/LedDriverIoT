@@ -28,7 +28,7 @@ $id('update-btn').addEventListener('click', async function(e) {
             successAlert();
         else
             probablySuccessAlert();
-        
+
     }).finally(()=>{
         $id('update-btn').disabled = false;
     });

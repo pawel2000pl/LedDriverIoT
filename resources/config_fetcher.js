@@ -50,7 +50,7 @@ function mixFilterFunctions(filters) {
     let values = [];
     for (let i=0;i<9;i++)
         values.push(filters[i]);
-    return constrainFunction(normalizeFunction((x)=>{ 
+    return constrainFunction(normalizeFunction((x)=>{
       let sum = 0;
       for (let i=0;i<9;i++)
         sum += values[i] * filterFunctions[i](x);
@@ -74,7 +74,7 @@ function createInverseFunction(originalFunction) {
                 right = mid;
             }
         }
-        return left; 
+        return left;
     }
     return minus ? (x)=>inverseFunction(1-x) : inverseFunction;
 }

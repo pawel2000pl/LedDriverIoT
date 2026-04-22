@@ -4,7 +4,7 @@
 #ifndef ARDUINO
   using String = std::string;
 #endif
- 
+
 extern JsonDocument JsonEmpty;
 extern JsonDocument JsonNull;
 

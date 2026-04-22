@@ -8,8 +8,8 @@ class IncludeRaw extends HTMLElement {
         super();
     }
 
-    attributeChangedCallback(name, oldValue, newValue) { 
-        if (name === 'src') {   
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'src') {
             fetch(newValue).then(async (response)=>{
                 this.innerHTML = await response.text();
             });

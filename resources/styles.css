@@ -1,8 +1,8 @@
 html, body {
-    max-width: 100%; 
+    max-width: 100%;
     font-family: Arial;
-    @media (prefers-color-scheme: dark) { 
-        color: white; 
+    @media (prefers-color-scheme: dark) {
+        color: white;
         background: black;
     }
 }
@@ -24,9 +24,9 @@ h3 {
 }
 
 select, button, input {
-    @media (prefers-color-scheme: dark) { 
-        color: white; 
-        background: #202324;      
+    @media (prefers-color-scheme: dark) {
+        color: white;
+        background: #202324;
         border-color: #747d82;
         border-radius: 5px;
         border-width: 1px;
@@ -35,15 +35,15 @@ select, button, input {
 }
 
 select:hover , button:hover {
-    @media (prefers-color-scheme: dark) { 
-        color: white; 
+    @media (prefers-color-scheme: dark) {
+        color: white;
         background: #333839;
     }
 }
 
 filterselector {
     display: flex;
-    flex-direction: row;  
+    flex-direction: row;
     flex-wrap: wrap;
 }
 
@@ -82,13 +82,13 @@ knob-input {
     flex-direction: column;
 }
 
-.details-div {  
+.details-div {
     padding: 12px;
 }
 
 .info-div {
-    color: gray;    
-    @media (prefers-color-scheme: dark) { 
+    color: gray;
+    @media (prefers-color-scheme: dark) {
         color: darkgray;
     }
 }
@@ -98,7 +98,7 @@ knob-input {
     margin: 4px;
 }
 
-.menu-summary {  
+.menu-summary {
     border: 1px solid gray;
     padding: 12px;
     font-size: larger;
@@ -108,7 +108,7 @@ knob-input {
 .menu-summary:hover {
     border: 1px solid gray;
     background-color: whitesmoke;
-    @media (prefers-color-scheme: dark) { 
+    @media (prefers-color-scheme: dark) {
         background-color: #333839;
     }
 }
@@ -118,7 +118,7 @@ knob-input {
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: left;
-    
+
     vertical-align: top;
     display: inline;
     margin: 8px 12px 1px 1px;
@@ -141,9 +141,9 @@ knob-input {
 simple-chart canvas {
     border-style: dashed dashed solid solid;
     border-color: lightgray lightgray black black;
-    border-width: 1px 1px 2px 2px;  
+    border-width: 1px 1px 2px 2px;
     padding: 0.5px;
-    @media (prefers-color-scheme: dark) { 
+    @media (prefers-color-scheme: dark) {
         border-color: gray gray white white;
     }
 }
@@ -167,7 +167,7 @@ simple-chart canvas {
 .hardware-table, .hardware-table tr, .hardware-table td {
     border-collapse: collapse;
     border: solid black 1px;
-    @media (prefers-color-scheme: dark) { 
+    @media (prefers-color-scheme: dark) {
         border-color:white;
     }
 }
@@ -189,8 +189,8 @@ simple-chart canvas {
 .action-buttons div, .small-action-buttons div, .button, .small-button, button {
     display: inline-block;
     text-align: center;
-    width: 20vw;  
-    padding: 5px;  
+    width: 20vw;
+    padding: 5px;
     margin: 4px;
     font-weight: bolder;
     cursor: pointer;
@@ -199,24 +199,24 @@ simple-chart canvas {
 }
 
 .small-action-buttons div, .small-button, button {
-    width: auto;  
-    padding: 2px;  
+    width: auto;
+    padding: 2px;
     margin: 2px;
 }
 
 .action-buttons div:hover, .small-action-buttons div:hover, button:hover {
     border: 1.5px solid gray;
     background-color: whitesmoke;
-    @media (prefers-color-scheme: dark) { 
+    @media (prefers-color-scheme: dark) {
         background-color: #333839;
     }
 }
 
 .color-bar {
-    display: inline-block; 
+    display: inline-block;
     width: 1.5em;
-    height: 1.5em;  
-    margin-bottom: -0.4em;  
+    height: 1.5em;
+    margin-bottom: -0.4em;
     border: 0.5px solid #a9a9a947;
 }
 
@@ -234,13 +234,13 @@ simple-chart canvas {
     text-align: center;
 }
 
-#favorites-div table {  
+#favorites-div table {
     margin-left: auto;
     margin-right: auto;
 }
 
 .upper-menu {
-    text-align: center;  
+    text-align: center;
     margin: 0px;
 }
 
@@ -269,7 +269,7 @@ raw-color-picker input[type="color"] {
 }
 
 raw-color-picker input[type="range"] {
-    appearance: none;  
+    appearance: none;
     height: min-content;
     border-radius: 10px;
 }
@@ -327,7 +327,7 @@ raw-color-picker input[type="range"][class="white_input"] {
 
 .float-right {
     float: right;
-    margin: -1px;  
+    margin: -1px;
     margin-left: 5px;
 }
 

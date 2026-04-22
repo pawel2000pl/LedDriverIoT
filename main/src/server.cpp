@@ -4,7 +4,7 @@
 #include <vector>
 #include <esp_system.h>
 #include <esp_random.h>
-	
+
 #include "logs.h"
 #include "wifi.h"
 #include "constrain.h"
@@ -55,7 +55,7 @@ namespace server {
         std::istringstream iss(dateStr);
         std::string monthStr;
         std::string dayStr;
-        
+
         iss >> monthStr >> dayStr >> year;
 
         if (monthStr == "Jan") month = 1;
@@ -161,7 +161,7 @@ namespace server {
 
         // test start
         secureServer.start();
-        if (secureServer.isRunning())             
+        if (secureServer.isRunning())
             secureServer.stop();
         else {
             configuration::removeFile(CERT_PUB_FILE_NAME);
@@ -244,7 +244,7 @@ namespace server {
         res->setHeader("Cache-Control", "no-cache");
         res->setHeader("Content-Type", "application/json");
         res->setStatusCode(statusCode);
-        if ((bufSize==0) || (4 * bufSize >= freeBlock) || !sendJsonStatic(res, data, bufSize)) 
+        if ((bufSize==0) || (4 * bufSize >= freeBlock) || !sendJsonStatic(res, data, bufSize))
             sendJsonDynamic(res, data);
     }
 
@@ -270,8 +270,8 @@ namespace server {
 
 
     void sendCacheControlHeader(HTTPResponse* res) {
-        int minAge = 432000; 
-        int maxAge = 604800; 
+        int minAge = 432000;
+        int maxAge = 604800;
         int randomAge = minAge + (esp_random() % (maxAge - minAge));
         String headerValue = "max-age=" + String(randomAge);
         res->setHeader("Cache-Control", headerValue.c_str());
@@ -279,7 +279,7 @@ namespace server {
 
 
     int sendResourceData(HTTPResponse* res, const Resource& resource, int statusCode) {
-		if (statusCode >= 200 && statusCode < 300) 
+		if (statusCode >= 200 && statusCode < 300)
             sendCacheControlHeader(res);
         char size_str[24];
         res->setHeader("Content-Type", resource.mime_type);
@@ -318,9 +318,9 @@ namespace server {
         std::string host = req->getHeader("Host");
         String ip = wifi::getLocalIp();
         String hostname = wifi::getHostname() + ".local";
-        return strContains(referer, ip) 
-            || strContains(referer, hostname) 
-            || strContains(host, ip) 
+        return strContains(referer, ip)
+            || strContains(referer, hostname)
+            || strContains(host, ip)
             || strContains(host, hostname);
     }
 
@@ -339,7 +339,7 @@ namespace server {
             res->setStatusCode(304);
             return;
         }
-        sendResourceData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200); 
+        sendResourceData(res, resource, notFound ? (useCaptive ? 302 : 404) : 200);
     }
 
 
@@ -360,7 +360,7 @@ namespace server {
         while (!req->requestComplete() && size < buf_size) {
             size += req->readChars(result_data + size, buf_size-size);
         }
-        if (addZero && (size == 0 || result_data[size-1] != 0)) 
+        if (addZero && (size == 0 || result_data[size-1] != 0))
             result_data[size++] = 0;
         result.resize(size);
     }
@@ -383,7 +383,7 @@ namespace server {
             RequestReader reader = RequestReader(req);
             err = deserializeJson(json, reader);
         }
-        if (sendDeserializationError(res, err)) 
+        if (sendDeserializationError(res, err))
             return false;
         if (assertEntryName.length()) {
             const String assertMessage = configuration::assertJson(json, assertEntryName, defaults);

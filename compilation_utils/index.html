@@ -92,7 +92,7 @@
         fetch('/build/timestamp.txt').then(async (response)=>{
            document.getElementById('timestamp-span').textContent = (await response.text());
         });
-        
+
         function wrapInA(text, href) {
             const a = document.createElement('a');
             a.href = href;
@@ -124,9 +124,9 @@
         }
 
         [
-            'iot-led-driver.bin', 
-            'iot-led-driver.map', 
-            'iot-led-driver.elf', 
+            'iot-led-driver.bin',
+            'iot-led-driver.map',
+            'iot-led-driver.elf',
             'license.txt'
         ].forEach(addFile);
     </script>

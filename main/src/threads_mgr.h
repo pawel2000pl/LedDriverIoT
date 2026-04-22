@@ -6,5 +6,5 @@ namespace threads_mgr {
 
     void setLock(bool lockState);
     void attachTimer();
-    
+
 }

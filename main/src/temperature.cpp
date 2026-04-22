@@ -14,7 +14,7 @@ namespace temperature {
 
     float TemperatureResults::max() {
         float v = internal;
-        for (auto x : external) 
+        for (auto x : external)
             if (x > v)
                 v = x;
         return v;
@@ -41,7 +41,7 @@ namespace temperature {
 
     float readTemperature(float x) {
         float RT = x * THERMISTOR_IN_SERIES_RESISTOR / (1.f - x);
-        float Tk = 1.0/(log(RT/THERMISTOR_R0)/4050.0 + 1.0/THERMISTOR_T0);   
+        float Tk = 1.0/(log(RT/THERMISTOR_R0)/4050.0 + 1.0/THERMISTOR_T0);
         return Tk - 273.15;
     }
 

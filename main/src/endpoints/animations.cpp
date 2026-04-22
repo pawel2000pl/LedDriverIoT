@@ -25,7 +25,7 @@ namespace endpoints {
         if (!server::readJson(req, res, data)) return;
         animations::setGlobalLightness(data.as<fixed32_c>());
         timer_shutdown::resetTimer();
-        server::sendOk(res);   
+        server::sendOk(res);
     }
 
 

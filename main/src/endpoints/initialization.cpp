@@ -38,7 +38,7 @@ namespace endpoints {
 
 
     void configureServer() {
-        server::configure();	
+        server::configure();
         server::addCallback("/", "GET", handleIndex);
         server::addCallback("/logs.txt", "GET", sendLogs);
         server::addCallback("/statistics.txt", "GET", sendStatistics);

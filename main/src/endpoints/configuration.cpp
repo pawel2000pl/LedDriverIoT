@@ -101,7 +101,7 @@ namespace endpoints {
 
 
     void deleteCert(HTTPRequest* req, HTTPResponse* res) {
-        server::sendOk(res); 
+        server::sendOk(res);
         configuration::deleteCert();
     }
 

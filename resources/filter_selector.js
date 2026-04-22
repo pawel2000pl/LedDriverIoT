@@ -34,7 +34,7 @@ Array.from(document.getElementsByTagName('filterselector')).forEach((element)=>{
         sliderChange();
         i++;
         return {
-            value: ()=>slider.value*k, 
+            value: ()=>slider.value*k,
             set: (x)=>{ slider.value = x/k; sliderChange(); },
             addEvent: (handler)=>{
                 slider.addEventListener('change', handler);

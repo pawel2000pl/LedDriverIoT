@@ -8,7 +8,7 @@
 #include "statistics.h"
 
 namespace endpoints {
-    
+
     void sendStatistics(HTTPRequest* req, HTTPResponse* res) {
         static const unsigned max_size = 2*1024;
         static const unsigned max_tasks = 24;

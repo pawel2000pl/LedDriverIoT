@@ -43,7 +43,7 @@ namespace modules {
     void execTaskQueue() {
         if (!taskQueue.size()) return;
         delay(50);
-        for (auto fun: taskQueue) 
+        for (auto fun: taskQueue)
             fun();
         taskQueue.clear();
     }

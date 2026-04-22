@@ -18,8 +18,8 @@
 
 namespace endpoints {
 
-    int fixedpointFilter15(fixed32_c x) { 
-        return (int)std::round(x * 15); 
+    int fixedpointFilter15(fixed32_c x) {
+        return (int)std::round(x * 15);
     };
 
     void getColors(HTTPRequest* req, HTTPResponse* res) {
@@ -53,12 +53,12 @@ namespace endpoints {
         inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
         outputs::writeOutput();
-        server::sendOk(res);   
+        server::sendOk(res);
     }
 
 
     void simpleMode(HTTPRequest* req, HTTPResponse* res) {
-        if (req->getMethod() == "POST") {            
+        if (req->getMethod() == "POST") {
             ColorChannels channels = {0, 0, 0, 0};
             httpsserver::HTTPURLEncodedBodyParser parser(req);
             while(parser.nextField()) {
@@ -89,7 +89,7 @@ namespace endpoints {
         ColorChannels filteredChannels = inputs::getAuto(modules::webColorSpace);
         char* render_buffer = new char[simple_template_html_size+256];
         int size = sprintf(
-            render_buffer, templateStr, 
+            render_buffer, templateStr,
             modules::colorKnobEnabled ? "" : "display: none;",
             channelsInCurrentColorspace[0],
             fixedpointFilter15(filteredChannels[0]),

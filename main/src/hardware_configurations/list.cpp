@@ -11,7 +11,7 @@ namespace hardware {
     extern HardwareConfiguration simple2;
     extern HardwareConfiguration unconnected;
 
-    
+
     inplace_vector<HardwareConfiguration*, 16> configurations = {
         &simple1,
         &simple2,

@@ -12,7 +12,7 @@ void rgbToHsl(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& h, fixed32_c& s,
     h = 0; s = 0; l = (maxVal + minVal) / 2;
 
     if (maxVal == minVal) {
-        h = 0; 
+        h = 0;
         s = 0;
     } else {
         fixed32_c d = maxVal - minVal;
@@ -36,7 +36,7 @@ fixed32_c hue2rgb(fixed32_c p, fixed32_c q, fixed32_c t) {
 
 void hslToRgb(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c& r, fixed32_c& g, fixed32_c& b) {
     if (s == 0) {
-        r = g = b = l; 
+        r = g = b = l;
     } else {
         fixed32_c q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         fixed32_c p = 2 * l - q;
@@ -54,7 +54,7 @@ void rgbToHsv(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& h, fixed32_c& s,
     s = maxVal == 0 ? (fixed32_c)0 : d / maxVal;
 
     if (maxVal == minVal) {
-        h = 0; 
+        h = 0;
     } else {
         if (maxVal == r) h = (g - b) / d + (g < b ? 6 : 0);
         else if (maxVal == g) h = (b - r) / d + 2;

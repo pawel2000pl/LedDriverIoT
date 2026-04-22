@@ -19,7 +19,7 @@ namespace knobs {
     fixed32_c epsilon = 0;
     fixed32_c reduction = 0.1;
     ColorChannels knobsAmortisation = {0,0,0,0};
-    
+
     const fixed32_c analogResolution = 1.44f / ANALOG_READ_MAX;
     const char* colorspaces[] = {"hsv", "hsl", "rgb"};
     const char* channels[][4] = {{"hue", "saturation", "value", "white"}, {"hue", "saturation", "lightness", "white"}, {"red", "green", "blue", "white"}};
@@ -49,7 +49,7 @@ namespace knobs {
         const fixed32_c fixedValues[6] = {applyBias(values[0]), applyBias(values[1]), applyBias(values[2]), applyBias(values[3]), 0, 1};
         ColorChannels outputChannels;
         for (int i=0;i<4;i++)
-            outputChannels[i] = potentionemterMapping[i] < 6 ? fixedValues[potentionemterMapping[i]] : (fixed32_c)0;        
+            outputChannels[i] = potentionemterMapping[i] < 6 ? fixedValues[potentionemterMapping[i]] : (fixed32_c)0;
         inputs::setAuto(knobColorspace, outputChannels);
         outputs::writeOutput();
     }
@@ -66,7 +66,7 @@ namespace knobs {
         return result;
     }
 
-    
+
     template<typename T>
     T sqr(T x) {
         return x * x;

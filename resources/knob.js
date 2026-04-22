@@ -19,15 +19,15 @@ const array2color = function(c) {
 
 
 class Knob extends HTMLElement {
-        
+
     constructor(radius=128, knobRadius=20, width=32, angle=5) {
         super();
-        this.__canvas = document.createElement('canvas');        
-        this.__canvas.addEventListener('pointerdown', (event)=>this.__onMouseDown(event));   
-        this.__canvas.addEventListener('pointerleave', (event)=>this.__onMouseUp(event));           
-        this.__canvas.addEventListener('pointerup', (event)=>this.__onMouseUp(event));           
+        this.__canvas = document.createElement('canvas');
+        this.__canvas.addEventListener('pointerdown', (event)=>this.__onMouseDown(event));
+        this.__canvas.addEventListener('pointerleave', (event)=>this.__onMouseUp(event));
+        this.__canvas.addEventListener('pointerup', (event)=>this.__onMouseUp(event));
         this.__canvas.addEventListener('pointermove', (event)=>this.__onMouseMove(event));
-        this.appendChild(this.__canvas);    
+        this.appendChild(this.__canvas);
         this.__minValue = 0;
         this.__maxValue = 100;
         this.__value = 33;
@@ -37,13 +37,13 @@ class Knob extends HTMLElement {
         this.__backgroundMap = [];
         this.__queues = {createMap: false, drawBackground: false, render: false};
         this.setSize(radius, knobRadius, width, angle);
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__queue(false, true, true);});    
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{this.__queue(false, true, true);});
         this.onChangeValue = undefined;
         this.__queue(true, true, true);
     }
 
     __queue(createMap, drawBackground, render) {
-        if (! (createMap || drawBackground || render)) 
+        if (! (createMap || drawBackground || render))
             return;
         if (! (this.__queues.createMap || this.__queues.drawBackground || this.__queues.render))
             queueMicrotask(()=>this.__execQueue());
@@ -70,68 +70,68 @@ class Knob extends HTMLElement {
         const canvasWidth = 2*(radius+max(knobRadius, width/2));
         const canvasHeight = 2*(radius+max(knobRadius, width/2));
         this.__canvas.width = canvasWidth;
-        this.__canvas.height = canvasHeight;   
+        this.__canvas.height = canvasHeight;
         this.__backgroundData = new ImageData(canvasWidth, canvasHeight);
         this.__queue(true, true, true);
     }
-    
+
     __doChangeValue() {
         if (this.onChangeValue !== undefined)
             this.onChangeValue(this.__value);
     }
-    
+
     __fracFromPosition(x, y) {
         const restAngle = 2*PI - this.__angle;
         const angleOffset = restAngle / 2;
         return (PI + atan2(x, -y)-angleOffset) / this.__angle;
     }
-    
+
     __valueFromPosition(x, y) {
         const frac = this.__fracFromPosition(x, y);
         const cfrac = min(1, max(0, frac));
         return cfrac * (this.__maxValue - this.__minValue) + this.__minValue;
     }
-    
-    
+
+
     __getEventCoord(event) {
         const rect = event.target.getBoundingClientRect();
         const x = event.clientX - rect.left - this.__canvas.width / 2;
         const y = event.clientY - rect.top - this.__canvas.height / 2;
         return [x, y];
     }
-    
+
     __eventChangeSetting(event) {
         const [x, y] = this.__getEventCoord(event);
         const range = max(this.__width, this.__knobRadius) / 2;
         const r = hypot(x, y);
         return r >= this.__radius - range  && r <= this.__radius + range;
     }
-    
+
     __onMouseDown(event) {
         this.__isMouseDown = true;
         this.__isChangingValue = this.__eventChangeSetting(event);
         this.__onMouseMove(event);
     }
-    
+
     __onMouseUp(event) {
         this.__onMouseMove(event);
-        this.__isMouseDown = false;  
+        this.__isMouseDown = false;
         this.__isChangingValue = false;
         this.__queue(false, false, true);
     }
-    
+
     __onMouseMove(event) {
-        if (!this.__isMouseDown) 
-            return;        
+        if (!this.__isMouseDown)
+            return;
         const [x, y] = this.__getEventCoord(event);
         if (this.__isChangingValue) {
-            this.__value = this.__valueFromPosition(x, y);       
+            this.__value = this.__valueFromPosition(x, y);
             this.__doChangeValue();
             this.__queue(false, false, true);
         }
     }
-    
-    
+
+
     __createBackgroundMap() {
         let map = [];
         const rs1 = this.__radius - this.__width / 2;
@@ -143,8 +143,8 @@ class Knob extends HTMLElement {
                 if (cr >= rs1 && cr <= rs2) {
                     const frac = this.__fracFromPosition(x, y);
                     const toBorder = min(1, max(0, min(1 - frac, frac) * cr * this.__angle));
-                    const alpha = toBorder * ((cr - rs1 < 1) ? (cr - rs1) : (rs2 - cr < 1) ? (rs2 - cr) : 1);                    
-                    if (frac >= 0 && frac <= 1) 
+                    const alpha = toBorder * ((cr - rs1 < 1) ? (cr - rs1) : (rs2 - cr < 1) ? (rs2 - cr) : 1);
+                    if (frac >= 0 && frac <= 1)
                         map.push([4*i, alpha, frac]);
                 }
                 i++;
@@ -152,31 +152,31 @@ class Knob extends HTMLElement {
         }
         this.__backgroundMap = map;
     }
-    
-                
+
+
     __drawBackground() {
         const borderColor = window.matchMedia('(prefers-color-scheme: dark)').matches ? 255 : 0;
         const map = this.__backgroundMap;
         for (let i=0;i<map.length;i++) {
-            const color = this.getColor(map[i][2]);  
+            const color = this.getColor(map[i][2]);
             if (map[i][1] === 255) {
                 for (let c=0;c<3;c++)
-                    this.__backgroundData.data[map[i][0]+c] = color[c];            
+                    this.__backgroundData.data[map[i][0]+c] = color[c];
                 this.__backgroundData.data[map[i][0]+3] = 255
             } else {
                 for (let c=0;c<3;c++)
-                    this.__backgroundData.data[map[i][0]+c] = color[c] * map[i][1] + borderColor * (1 - map[i][1]);            
+                    this.__backgroundData.data[map[i][0]+c] = color[c] * map[i][1] + borderColor * (1 - map[i][1]);
                 this.__backgroundData.data[map[i][0]+3] = 255 * map[i][1];
             }
         }
     }
-    
-    
+
+
     __rgb2gray(r, g, b) {
-        return r * 0.2989 + 0.5870 * g + 0.1140 * b;        
+        return r * 0.2989 + 0.5870 * g + 0.1140 * b;
     }
-    
-    
+
+
     __renderKnob(ctx) {
         const angle = - PI / 2 - this.__angle / 2 + this.__angle * (this.__value - this.__minValue) / (this.__maxValue - this.__minValue);
         const x = this.__canvas.width / 2 + this.__radius * cos(angle);
@@ -184,17 +184,17 @@ class Knob extends HTMLElement {
         const arrayColor = this.getCurrentColor();
         const color = array2color(arrayColor);
         const textColor = (this.__rgb2gray(...arrayColor) > 127) ? 'black' : 'white';
-        
+
         ctx.beginPath();
         ctx.arc(x, y, this.__knobRadius, 0, 2 * Math.PI);
         ctx.fillStyle = this.__isMouseDown ? "gray" : "darkgray";
         ctx.fill();
-                            
+
         ctx.beginPath();
         ctx.arc(x, y, this.__knobRadius / 2, 0, 2 * Math.PI);
         ctx.fillStyle = color;
         ctx.fill();
-        
+
         const w = this.__radius;
         const h = this.__width;
         ctx.beginPath();
@@ -202,15 +202,15 @@ class Knob extends HTMLElement {
         ctx.fillStyle = color;
         ctx.arc(this.__canvas.width / 2, this.__canvas.height / 2, w - h, 0, 2 * Math.PI);
         ctx.fill();
-        
-        
-        ctx.textAlign = "center"; 
+
+
+        ctx.textAlign = "center";
         ctx.fillStyle = textColor;
         ctx.font = "bold " + 0.8*h + "px sans-serif";
         ctx.fillText(this.__value.toFixed(4),this.__canvas.width / 2, this.__canvas.height / 2 + 0.3 * h);
-    }     
-    
-    
+    }
+
+
     __constrainValues() {
         const a = min(this.__minValue, this.__maxValue);
         const b = max(this.__minValue, this.__maxValue);
@@ -219,8 +219,8 @@ class Knob extends HTMLElement {
         this.__maxValue = b;
         this.__value = max(a, min(b, this.__value));
     }
-    
-    
+
+
     getColor(frac) {
         if (! this.__gradient instanceof Array)
             this.__gradient = [this.__gradient];
@@ -233,21 +233,21 @@ class Knob extends HTMLElement {
         for (let i=0;i<3;i++)
             result[i] = this.__gradient[d][i] * nf + this.__gradient[d2][i] * f;
         return result;
-    }            
-    
-    
+    }
+
+
     render() {
         const ctx = this.__canvas.getContext('2d');
         ctx.putImageData(this.__backgroundData, 0, 0);
         this.__renderKnob(ctx);
     }
-    
-    
+
+
     getCurrentColor() {
         return this.getColor((this.__value - this.__minValue) / (this.__maxValue - this.__minValue));
     }
-    
-    
+
+
     set gradient(gradient) {
         if (this.__gradient.every((element, index) => element.every((subelement, subindex)=>subelement === gradient[index][subindex])))
             return;
@@ -259,13 +259,13 @@ class Knob extends HTMLElement {
     get gradient() {
         return this.__gradient;
     }
-    
-    
+
+
     get value() {
         return this.__value;
     }
-    
-    
+
+
     set value(value) {
         if (this.__value !== value) {
             this.__value = value;
@@ -274,26 +274,26 @@ class Knob extends HTMLElement {
             this.__doChangeValue();
         }
     }
-    
-    
+
+
     set minValue(value) {
         this.__minValue = value;
         this.__constrainValues();
         this.__queue(false, false, true);
     }
-    
+
 
     get minValue() {
         return this.__minValue;
     }
 
-    
+
     set maxValue(value) {
         this.__maxValue = value;
         this.__constrainValues();
         this.__queue(false, false, true);
     }
-    
+
 
     get maxValue() {
         return this.__maxValue;

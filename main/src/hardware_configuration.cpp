@@ -4,10 +4,10 @@
 #include <utility>
 
 namespace hardware {
-			
+
 
 	void pullUpDelay() {
-		delayMicroseconds(RELAXATION_PULL_DELAY);		
+		delayMicroseconds(RELAXATION_PULL_DELAY);
 	}
 
 
@@ -148,19 +148,19 @@ namespace hardware {
 			if (!hasHigh(pin)) return false;
 		int shorted_size = requires_shorted.size();
 		delay(5);
-		for (int i=0;i<shorted_size;i++) 
+		for (int i=0;i<shorted_size;i++)
 			pinMode(requires_shorted[i], INPUT);
-		for (int i=0;i<shorted_size;i++) 
-			for (int j=i+1;j<shorted_size;j++) 
+		for (int i=0;i<shorted_size;i++)
+			for (int j=i+1;j<shorted_size;j++)
 				if (!pinsAreConnected(requires_shorted[i], requires_shorted[j]))
 					return false;
 		int not_shorted_size = requires_not_shorted.size();
 		delay(5);
-		for (int i=0;i<not_shorted_size;i++) 
+		for (int i=0;i<not_shorted_size;i++)
 			pinMode(requires_not_shorted[i], INPUT);
-		for (int i=0;i<not_shorted_size;i++) 
-			for (int j=i+1;j<not_shorted_size;j++) 
-				if (pinsAreConnected(requires_not_shorted[i], requires_not_shorted[j])) 
+		for (int i=0;i<not_shorted_size;i++)
+			for (int j=i+1;j<not_shorted_size;j++)
+				if (pinsAreConnected(requires_not_shorted[i], requires_not_shorted[j]))
 					return false;
 		return true;
 	}
@@ -179,22 +179,22 @@ namespace hardware {
 		char buffer[128] = {0};
 		unsigned size = sprintf(buffer, "%s@f%02dr%02dp%02d%02d%02d%02dt%02d%02d%02d%02do%02d%02d%02d%02d",
 			name, fanPin, resetPin,
-			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(), 
-			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(), 
+			potentiometers[0].getPin(), potentiometers[1].getPin(), potentiometers[2].getPin(), potentiometers[3].getPin(),
+			thermistors[0].getPin(), thermistors[1].getPin(), thermistors[2].getPin(), thermistors[3].getPin(),
 			outputs[0], outputs[1], outputs[2], outputs[3]
 		);
 		buffer[size] = 0;
 		return String(buffer);
 	}
 
-	
+
 	HardwareConfiguration* configuration;
-	
+
 	void detectHardware() {
 		analogReadResolution(12);
-		
+
 		unsigned size = std::end(configurations) - std::begin(configurations);
-		
+
 		int available = -1;
 
 		for (int i=0;i<size;i++) {

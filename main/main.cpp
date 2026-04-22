@@ -33,7 +33,7 @@ void checkReset() {
 			configuration::resetConfiguration();
 			ESP.restart();
 		}
-	} else 
+	} else
 		reset_timer = 0;
 }
 
@@ -70,7 +70,7 @@ void loop() {
 
 	modules::execTaskQueue();
 	checkReset();
-	
+
 	if (rareChecksTime == 0 || millis() - rareChecksTime > RARE_CHECKS_INTERVAL) {
 		wifi::checkConnection();
 		if (temperature::check().tooHot()) ESP.restart();

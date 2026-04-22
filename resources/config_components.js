@@ -188,7 +188,7 @@ function createRadioTable(tableId, headers, columns, radioPrefix) {
         let result = {};
         for (let i=0;i<columns.length;i++) {
             const input = forGetters[getRadioName(i)].filter((element)=>element.checked)[0];
-            result[columns[i].toLowerCase()] = input === undefined ? 0 : Number(input.value); 
+            result[columns[i].toLowerCase()] = input === undefined ? 0 : Number(input.value);
         }
         return result;
     };
@@ -202,14 +202,14 @@ function createRadioTable(tableId, headers, columns, radioPrefix) {
 }
 
 createRadioTable(
-    'input-table', 
+    'input-table',
     ['P1', 'P2', 'P3', 'P4', 'CL', 'CH'],
     ['Hue', 'Saturation', 'Value', 'Lightness', 'Red', 'Green', 'Blue', 'White'],
     'input'
 );
 
 createRadioTable(
-    'output-table', 
+    'output-table',
     ['Red', 'Green', 'Blue', 'White', 'None'],
     ['Output 0', 'Output 1', 'Output 2', 'Output 3'],
     'output'

@@ -5,7 +5,7 @@
 #include "json_utils.h"
 
 namespace knobs {
-    
+
     void updateConfiguration(const JsonVariantConst configuration);
     void check(bool force=false);
     void checkTimer();

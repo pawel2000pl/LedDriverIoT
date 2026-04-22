@@ -3,7 +3,7 @@
 
 namespace server {
 
-    RequestReader::RequestReader(HTTPRequest* req) 
+    RequestReader::RequestReader(HTTPRequest* req)
         : request(req), bufPos(0), bufEnded(false) {
         readBuffer();
     }
@@ -15,7 +15,7 @@ namespace server {
         readBuffer();
         return buffer[bufPos++];
     }
-    
+
 
     size_t RequestReader::readBytes(char* buffer, size_t length) {
         char* bufEnd = buffer + length;
@@ -24,7 +24,7 @@ namespace server {
             *i = (char)read();
         return i - buffer;
     }
-    
+
 
     void RequestReader::readBuffer() {
         bufPos = 0;
@@ -35,7 +35,7 @@ namespace server {
     }
 
 
-    ResponseWriter::ResponseWriter(HTTPResponse* res) 
+    ResponseWriter::ResponseWriter(HTTPResponse* res)
         : response(res), bufPos(0) {
     }
 

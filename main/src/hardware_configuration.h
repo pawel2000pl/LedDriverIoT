@@ -36,7 +36,7 @@ namespace hardware {
 		std::array<InputHardwareAction, 4> potentiometers;
 		std::array<InputHardwareAction, 4> thermistors;
 		std::array<char, 4> outputs;
-		
+
 		inplace_vector<char, 24> requires_potentiometers = {};
 		inplace_vector<char, 24> requires_hz = {};
 		inplace_vector<char, 24> requires_lo = {};

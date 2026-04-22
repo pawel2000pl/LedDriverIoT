@@ -57,7 +57,7 @@ const std::array<ArithmeticFloatFunction, filterFunctionsCount> filterFunctions 
 
 
 MixedFunction mixFilterFunctions(const std::vector<float>& filters) {
-	return MixedFunction((ArithmeticFloatFunction)([&](float x) { 
+	return MixedFunction((ArithmeticFloatFunction)([&](float x) {
 		fixed64_f sum = 0;
 		unsigned loopEnd = std::min(filterFunctionsCount, filters.size());
 		for (int i=0;i<loopEnd;i++)
@@ -70,7 +70,7 @@ MixedFunction mixFilterFunctions(const std::vector<float>& filters) {
 fixed64_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed64_f y, fixed64_f epsilon) {
 	fixed64_f of_zero = originalFunction(0);
 	fixed64_f of_one = originalFunction(1);
-	const bool minus = of_zero > of_one;  
+	const bool minus = of_zero > of_one;
 	if (of_zero == y) return (fixed64_f)0;
 	if (of_one == y) return (fixed64_f)1;
 	fixed64_f left = 0;
@@ -89,6 +89,6 @@ fixed64_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fix
 		else
 			right = mid;
 	}
-	return left; 
+	return left;
 }
 

@@ -15,7 +15,7 @@ namespace default_color {
     int defaultAnimation = -1;
     fixed32_c defaultAnimationLightness = 1;
 
-    
+
     void updateConfiguration(const JsonVariantConst configuration) {
         const auto channelsJson = configuration["channels"];
         enableDefaultColor = channelsJson["defaultColorEnabled"].as<bool>();
@@ -30,11 +30,11 @@ namespace default_color {
         defaultAnimationLightness = channelsJson["defaultAnimationLightness"].as<fixed32_c>();
     }
 
-    
+
     void setDefaultColor() {
         if (!enableDefaultColor) return;
         inputs::source_control = inputs::scWeb;
-        if (defaultAnimation >= 0 && animations::startAnimation(defaultAnimation)) 
+        if (defaultAnimation >= 0 && animations::startAnimation(defaultAnimation))
             return;
         timer_shutdown::resetTimer();
         inputs::setHSVW(defaultColor[0], defaultColor[1], defaultColor[2], defaultColor[3]);

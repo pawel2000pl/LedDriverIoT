@@ -32,15 +32,15 @@ int main() {
     int size;
     FILE *fptr;
 
-    fptr = fopen("resources/default_config.json", "r"); 
+    fptr = fopen("resources/default_config.json", "r");
     size = fread(buf, 1, JSON_CONFIG_BUF_SIZE-1, fptr);
     fclose(fptr);
     buf[size] = 0;
     printError(deserializeJson(configuration, String(buf)));
     configurationCopy = configuration;
- 
 
-    fptr = fopen("resources/config.schema.json", "r"); 
+
+    fptr = fopen("resources/config.schema.json", "r");
     size = fread(buf, 1, JSON_CONFIG_BUF_SIZE-1, fptr);
     fclose(fptr);
     buf[size] = 0;

@@ -9,7 +9,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta charset="UTF-8" />
     </head>
-    
+
     <body>
         <h1 class="name-header">Animations</h1>
         <div class="upper-menu main-menu p-like"></div>
@@ -51,11 +51,11 @@
                     <table>
                         <tr><td>Duration time [ms]</td></tr>
                         <tr><td><input type="number" name="period_ms" value="1000" step="25" min="0" max="86400000"/></td></tr>
-                    </table>                
+                    </table>
                     <table>
                         <tr><td>Duration time - randomness [+ms]</td></tr>
                         <tr><td><input type="number" name="period_randomness" value="1000" step="25" min="0" max="86400000"/></td></tr>
-                    </table>                
+                    </table>
                     <div class="white-channel-related">
                         <input type="checkbox" name="use_white"/>
                         <label onclick="const checkbox = event.target.parentNode.querySelector('input'); checkbox.checked = !checkbox.checked;">Set also the white channel</label>
@@ -80,7 +80,7 @@
                     <table>
                         <tr><td>White</td></tr><tr>
                         <tr><td><input class="switchable-input" type="range" name="color_randomness_white" min="0" max="1" value="0" step="0.01"/></td></tr>
-                    </table>                
+                    </table>
                 </div>
                 <button onclick="generateColorRandomSample(event.target)">Generate another samples</button>
                 <button onclick="switchRandomInputs(event)">Switch sliders / text</button>
@@ -144,7 +144,7 @@
         <script src="/component_list.js" defer="defer"></script>
         <script src="/animations.js" defer="defer"></script>
         <script src="/knob.js" defer="defer"></script>
-        
+
     </body>
 
 </html>

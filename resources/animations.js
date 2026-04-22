@@ -86,7 +86,7 @@ function loadStage(stageDiv, data) {
 function generateColorRandomSample(targetStage) {
     while (!targetStage.classList.contains('animation-stage'))
         targetStage = targetStage.parentNode;
-    
+
     const base_color = targetStage.querySelector('[name="base_color"]').color;
     const randomness = {
         hue: Number(targetStage.querySelector('[name="color_randomness_hue"]').value),
@@ -102,7 +102,7 @@ function generateColorRandomSample(targetStage) {
             base_color.saturation + randomness.saturation * (Math.random() - 0.5),
             base_color.value + randomness.value * (Math.random() - 0.5)
         ];
-        
+
         const cc = x => (x <= 0) ? 0 : (x >= 1) ? 1 : x;
         const rgb = hsvToRgb((color[0] + 1) % 1, cc(color[1]), cc(color[2]));
 
@@ -199,14 +199,14 @@ function attachStageOptionsEvents(target) {
     Array.from(target.getElementsByClassName('options-panel')).forEach(panel => {
         Array.from(panel.getElementsByClassName('copy-btn')).forEach(btn => {
             if (navigator.clipboard === undefined)
-                btn.style.display = 'none'; 
+                btn.style.display = 'none';
             btn.addEventListener('click', async ()=>{
                 await navigator.clipboard.writeText(JSON.stringify(target.saveData()));
             });
         });
         Array.from(panel.getElementsByClassName('paste-btn')).forEach(btn => {
             if (navigator.clipboard === undefined)
-                btn.style.display = 'none'; 
+                btn.style.display = 'none';
             btn.addEventListener('click', async ()=>{
                 const text = await navigator.clipboard.readText();
                 const json = JSON.parse(text);
@@ -268,7 +268,7 @@ function addStage(target) {
         const currentStagesCount = targetSequence.getElementsByClassName('animation-stage').length;
         Array.from(div.getElementsByClassName('stage-number-value')).forEach(element => element.textContent = number.toString());
         Array.from(targetSequence.getElementsByClassName('stages-count-span')).forEach(element => element.textContent = `Stages ${currentStagesCount+count_inc} / ${maxStageCount}`);
-        Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);    
+        Array.from(targetSequence.getElementsByClassName('stage-input')).forEach(element => element.max = currentStagesCount);
     };
     div.setStageNumber(currentStagesCount, 1);
     const nextStagesDiv = div.querySelector('.next-stage-div');
