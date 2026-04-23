@@ -24,6 +24,11 @@ namespace outputs {
     fixed32_c value = 0;
     fixed32_c white = 0;
 
+    fixed32_c hue_offset = 0;
+    fixed32_c saturation_scale = 1;
+    fixed32_c value_scale = 1;
+    fixed32_c white_scale = 1;
+
     bool invertOutputs = 0;
     int phaseMode = 0;
     fixed32_c gateLoadingTime = 0;
@@ -37,7 +42,6 @@ namespace outputs {
         MixedFunction outputBlue;
         MixedFunction outputWhite;
         MixedFunction globalOutput;
-
     }
 
     void updateConfiguration(const JsonVariantConst configuration) {
@@ -131,12 +135,12 @@ namespace outputs {
 
     void writeOutput() {
         fixed32_c r, g, b;
-        hsvToRgb(hue, saturation, value * fadeoutScalling, r, g, b);
+        hsvToRgb(hue+hue_offset, saturation*saturation_scale, value*value_scale*fadeoutScalling, r, g, b);
         ColorChannels filteredValues = {
             (fixed32_c)filters::outputRed(filters::globalOutput(r)) * scalling[0],
             (fixed32_c)filters::outputGreen(filters::globalOutput(g)) * scalling[1],
             (fixed32_c)filters::outputBlue(filters::globalOutput(b)) * scalling[2],
-            (fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3] * fadeoutScalling
+            (fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3] * white_scale * fadeoutScalling
         };
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
@@ -161,6 +165,38 @@ namespace outputs {
 
     ColorChannels getColor() {
         return {hue, saturation, value, white};
+    }
+
+
+    void setDistortion(const ColorChannels& channels) {
+        hue_offset = channels[0];
+        saturation_scale = channels[1];
+        value_scale = channels[2];
+        white_scale = channels[3];
+    }
+
+
+    ColorChannels getDistortion() {
+        return {hue_offset, saturation_scale, value_scale, white_scale};
+    }
+
+
+    ColorChannels makeDistortion(const ColorChannels& expected_color) {
+        hue_offset = expected_color[0] - (hue + hue_offset);
+        saturation_scale = expected_color[1] ? (saturation * saturation_scale) / expected_color[1] : fixed32_c(1);
+        value_scale = expected_color[2] ? (value * value_scale) / expected_color[2] : fixed32_c(1);
+        white_scale = expected_color[3] ? (white * white_scale) / expected_color[3] : fixed32_c(1);
+        setColor(expected_color);
+        return getDistortion();
+    }
+
+
+    void applyCurrentDistortion() {
+        hue = (hue + hue_offset).fraction();
+        saturation *= saturation_scale;
+        value *= value_scale;
+        white *= white_scale;
+        setDistortion({0,1,1,1});
     }
 
 

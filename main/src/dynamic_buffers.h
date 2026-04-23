@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Arduino.h>
 #include "lib/esp32_https_server/HTTPRequest.hpp"
 #include "lib/esp32_https_server/HTTPResponse.hpp"
 
@@ -28,7 +29,7 @@ namespace server {
     };
 
 
-    class ResponseWriter {
+    class ResponseWriter : public Print {
         public:
             ResponseWriter(HTTPResponse* res);
             ~ResponseWriter();

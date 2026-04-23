@@ -466,7 +466,7 @@ class fixedpoint {
         }
 
         FIXED_POINT_BOOL_TEMPLATE FORCE_INLINE
-        constexpr operator B() noexcept {
+        constexpr operator B() const noexcept {
             return (B)buf;
         }
 
@@ -498,6 +498,11 @@ class fixedpoint {
         FORCE_INLINE
         constexpr T getfrac() const noexcept {
             return buf & (((T)1 << frac_bits) - 1);
+        }
+
+        FORCE_INLINE // always returns the positive value / -1.25 -> 0.75
+        constexpr fixedpoint fraction() const noexcept {
+            return buf_cast(getfrac());
         }
 
         unsigned toCharBuf(char* buffer, unsigned char base=10, unsigned max_frac_digits=(unsigned)(-1)) const {

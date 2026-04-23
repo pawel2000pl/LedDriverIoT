@@ -44,25 +44,14 @@ namespace animations {
     };
 
 
+    bool animation_enabled = false;
     StagesArray loaded_stages;
     AnimationTransition current_transition;
-    fixed32_c global_lightness = 1;
-    fixed32_c global_lightness_front = 1;
-
-
-    void setGlobalLightness(fixed32_c value) {
-        global_lightness_front = value;
-        global_lightness = inputs::filter_value(global_lightness_front);
-    }
-
-
-    fixed32_c getGlobalLightness() {
-        return global_lightness_front;
-    }
+    fixed32_c hue_zero;
 
 
     void checkTimer() {
-        if (inputs::source_control == inputs::scAnimation) {
+        if (animation_enabled) {
             current_transition.setColor();
         }
     }
@@ -106,7 +95,23 @@ namespace animations {
             stage.use_white = stage_json["use_white"].as<bool>();
         }
         loaded_stages[0].generateTransition(&current_transition);
-        inputs::source_control = inputs::scAnimation;
+        animation_enabled = true;
+        hue_zero = loaded_stages[0].base_color[0];
+        ColorChannels current_color = outputs::getColor();
+        current_color[0] = hue_zero;
+        current_color[1] = 1;
+        if (!current_color[2]) current_color[2] = 0.1;
+        if (!current_color[3]) current_color[3] = 0.1;
+        outputs::makeDistortion(current_color);
+        inputs::source_control = inputs::scWeb;
+        timer_shutdown::resetTimer();
+    }
+
+
+    void stopAnimation() {
+        outputs::applyCurrentDistortion();
+        animation_enabled = false;
+        inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
     }
 
@@ -122,7 +127,8 @@ namespace animations {
             for (int i=0;i<4;i++)
                 out_color[i] = start_color[i] * rest + end_color[i] * frac;
         }
-        outputs::setColor(out_color);
+        out_color[0] -= hue_zero;
+        outputs::setDistortion(out_color);
         outputs::writeOutput();
         if (current_time >= next_ms)
             next_stage->generateTransition(this);
@@ -133,29 +139,26 @@ namespace animations {
         transition->start_ms = millis();
         transition->end_ms = transition->start_ms + fade_in_ms;
         if (fade_in_randomness)
-            transition->end_ms += (esp_random() % (fade_in_randomness+1));
+            transition->end_ms += esp_random() % (fade_in_randomness + 1);
         transition->next_ms = transition->end_ms + period_ms;
         if (period_randomness)
-            transition->next_ms += (esp_random() % (period_randomness+1));
-        transition->start_color = outputs::getColor();
+            transition->next_ms += esp_random() % (period_randomness + 1);
+        transition->start_color = outputs::getDistortion();
+        transition->start_color[0] += hue_zero;
         ColorChannels color;
         for (int i=0;i<4;i++) {
+            fixed32_c new_color = base_color[i];
             if (color_randomness[i] > 0) {
-                color[i] = base_color[i] + fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1);
-                if (i == 0) {
-                    while (color[i] > 1) color[i] -= 1;
-                    while (color[i] < 0) color[i] += 1;
-                } else {
-                    color[i] = constrain<fixed32_c>(color[i], 0, 1);
+                new_color += fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1);
+                if (i == 0) { // hue
+                    new_color = new_color.fraction();
+                } else { // all other channels
+                    new_color = constrain<fixed32_c>(new_color, 0, 1);
                 }
-            } else {
-                color[i] = base_color[i];
             }
-            if (i >= 2)
-                color[i] *= global_lightness;
+            color[i] = new_color;
         }
-        if (!use_white)
-            color[3] = transition->start_color[3];
+        if (!use_white) color[3] = 1;
         transition->end_color = color;
         // hue fixes - shorter path
         if (transition->end_color[0] - transition->start_color[0] > fixed32_c::fraction(1, 2))

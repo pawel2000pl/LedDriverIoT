@@ -36,7 +36,7 @@ namespace server {
 
 
     ResponseWriter::ResponseWriter(HTTPResponse* res)
-        : response(res), bufPos(0) {
+        : Print(), response(res), bufPos(0) {
     }
 
 

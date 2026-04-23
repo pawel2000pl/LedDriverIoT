@@ -4,11 +4,12 @@
 
 #include "common_types.h"
 #include "json_utils.h"
+#include "filter_functions.h"
 
 
 namespace inputs {
 
-    enum SourceControl {scNone, scKnobs, scWeb, scFadingOut, scAnimation};
+    enum SourceControl {scNone, scKnobs, scWeb, scFadingOut};
     extern SourceControl source_control;
 
     void updateConfiguration(const JsonVariantConst configuration);
@@ -31,6 +32,28 @@ namespace inputs {
     ColorChannels decodeFavoriteColor(const String& formattedColor, bool* useWhitePtr);
     ColorChannels favoriteColorPreview(const String& colorspace, const String& formattedColor);
     void applyFavoriteColor(const String& formattedColor);
-    fixed64_f filter_value(fixed64_f value);
+
+    namespace filters {
+        extern MixedFunction inputSaturation;
+        extern MixedFunction inputHueBasic;
+        extern MixedFunction inputValue;
+        extern MixedFunction inputLightness;
+        extern MixedFunction inputRed;
+        extern MixedFunction inputGreen;
+        extern MixedFunction inputBlue;
+        extern MixedFunction inputWhite;
+        extern MixedFunction globalInput;
+
+        fixed64_f inputHue(fixed64_f x);
+        fixed64_f invertedInputHue(fixed64_f y);
+        fixed64_f invertedInputSaturation(fixed64_f y);
+        fixed64_f invertedInputValue(fixed64_f y);
+        fixed64_f invertedInputLightness(fixed64_f y);
+        fixed64_f invertedInputRed(fixed64_f y);
+        fixed64_f invertedInputGreen(fixed64_f y);
+        fixed64_f invertedInputBlue(fixed64_f y);
+        fixed64_f invertedInputWhite(fixed64_f y);
+        fixed64_f invertedGlobalInput(fixed64_f y);
+    }
 
 }

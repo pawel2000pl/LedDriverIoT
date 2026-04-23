@@ -2,7 +2,6 @@
 #include "inputs.h"
 #include "outputs.h"
 #include "conversions.h"
-#include "filter_functions.h"
 
 namespace inputs {
 
@@ -21,7 +20,7 @@ namespace inputs {
 
         fixed64_f inputHue(fixed64_f x) {
             constexpr const unsigned count = 6;
-            constexpr const fixed64_f frac = fixed64_f(1) / count;
+            constexpr const fixed64_f frac = fixed64_f::fraction(1, count);
             unsigned i = std::floor(x * count);
             fixed64_f ifrac = i * frac;
             fixed64_f xf = (x - ifrac) * count;
@@ -68,11 +67,6 @@ namespace inputs {
     }
 
 
-    fixed64_f filter_value(fixed64_f value) {
-        return filters::globalInput(filters::inputValue(value));
-    }
-
-
     void updateConfiguration(const JsonVariantConst configuration) {
         const auto filters = configuration["filters"];
         const auto inputFilters = filters["inputFilters"];
@@ -114,7 +108,7 @@ namespace inputs {
 
 
     ColorChannels prepareHSVW(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c w) {
-        h = filters::globalInput(filters::inputHue(h));
+        h = filters::inputHue(h);
         s = filters::globalInput(filters::inputSaturation(s));
         v = filters::globalInput(filters::inputValue(v));
         w = filters::globalInput(filters::inputWhite(w));
@@ -128,7 +122,7 @@ namespace inputs {
 
 
     ColorChannels prepareHSLW(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c w) {
-        h = filters::globalInput(filters::inputHue(h));
+        h = filters::inputHue(h);
         s = filters::globalInput(filters::inputSaturation(s));
         l = filters::globalInput(filters::inputLightness(l));
         w = filters::globalInput(filters::inputWhite(w));
@@ -180,7 +174,7 @@ namespace inputs {
     ColorChannels getHSVW() {
         ColorChannels raw = outputs::getColor();
         fixed32_c h, s, v, w;
-        h = filters::invertedInputHue(filters::invertedGlobalInput(raw[0]));
+        h = filters::invertedInputHue(raw[0]);
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(raw[1]));
         v = filters::invertedInputValue(filters::invertedGlobalInput(raw[2]));
         w = filters::invertedInputWhite(filters::invertedGlobalInput(raw[3]));
@@ -192,7 +186,7 @@ namespace inputs {
         ColorChannels raw = outputs::getColor();
         fixed32_c h, s, l, w;
         hsvToHsl(raw[0], raw[1], raw[2], h, s, l);
-        h = filters::invertedInputHue(filters::invertedGlobalInput(h));
+        h = filters::invertedInputHue(h);
         s = filters::invertedInputSaturation(filters::invertedGlobalInput(s));
         l = filters::invertedInputLightness(filters::invertedGlobalInput(l));
         w = filters::invertedInputWhite(filters::invertedGlobalInput(raw[3]));

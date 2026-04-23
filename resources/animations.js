@@ -14,28 +14,13 @@ async function fetchAnimations() {
 }
 
 
-async function fetchAnimationLightness() {
-    let response = await fetch('/animation_lightness.json');
-    const data = await response.json();
-    return data;
-}
-
-
-async function setAnimationLightness() {
-    fetch('/animation_lightness.json', {
-        method: 'POST',
-        headers: {"Content-Type": "application/json"},
-        body: $id('animation-lightness').value
-    });
-}
-
-
 const animationsPromise = fetchAnimations();
-animationsPromise.then(async() => {
-    const lightness = await fetchAnimationLightness();
-    $id('animation-lightness').value = lightness;
-});
 animationsPromise.then(updateClientApp);
+
+
+function stopAnimation() {
+    fetch('/stop_animation');
+}
 
 
 function saveStage(stageDiv) {

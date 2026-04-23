@@ -7,8 +7,7 @@ namespace animations {
 
     void checkTimer();
     bool startAnimation(unsigned id);
+    void stopAnimation();
     void startAnimationFromJson(const JsonVariantConst animationSequence);
-    void setGlobalLightness(fixed32_c);
-    fixed32_c getGlobalLightness();
 
 }

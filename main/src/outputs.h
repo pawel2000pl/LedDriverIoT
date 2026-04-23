@@ -12,9 +12,13 @@ namespace outputs {
 
     void updateConfiguration(const JsonVariantConst configuration);
     void writeOutput();
+    void applyCurrentDistortion();
     void setFadeoutScalling(fixed32_c value);
     void setColor(const ColorChannels& channels);
+    void setDistortion(const ColorChannels& channels);
     ColorChannels getColor();
+    ColorChannels getDistortion();
     ColorChannels getTailoredScalling();
+    ColorChannels makeDistortion(const ColorChannels& expected_color);
 
 }

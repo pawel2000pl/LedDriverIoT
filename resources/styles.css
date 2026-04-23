@@ -331,6 +331,8 @@ raw-color-picker input[type="range"][class="white_input"] {
     margin-left: 5px;
 }
 
-#animation-lightness {
+#stop-animation-btn {
     width: 100%;
+    height: 3em;
+    font-size: larger;
 }
