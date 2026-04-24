@@ -47,7 +47,6 @@ namespace animations {
     bool animation_enabled = false;
     StagesArray loaded_stages;
     AnimationTransition current_transition;
-    fixed32_c hue_zero;
 
 
     void checkTimer() {
@@ -94,9 +93,10 @@ namespace animations {
             }
             stage.use_white = stage_json["use_white"].as<bool>();
         }
-        loaded_stages[0].generateTransition(&current_transition);
-        animation_enabled = true;
+        fixed32_c hue_zero;
         hue_zero = loaded_stages[0].base_color[0];
+        for (int i=0;i<max_stages;i++)
+            loaded_stages[i].base_color[0] = (loaded_stages[i].base_color[0] - hue_zero).fraction();
         ColorChannels current_color = outputs::getColor();
         current_color[0] = hue_zero;
         current_color[1] = 1;
@@ -105,11 +105,14 @@ namespace animations {
         outputs::makeDistortion(current_color);
         inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
+        loaded_stages[0].generateTransition(&current_transition);
+        animation_enabled = true;
     }
 
 
     void stopAnimation() {
         outputs::applyCurrentDistortion();
+        outputs::writeOutput();
         animation_enabled = false;
         inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();
@@ -127,7 +130,6 @@ namespace animations {
             for (int i=0;i<4;i++)
                 out_color[i] = start_color[i] * rest + end_color[i] * frac;
         }
-        out_color[0] -= hue_zero;
         outputs::setDistortion(out_color);
         outputs::writeOutput();
         if (current_time >= next_ms)
@@ -144,22 +146,18 @@ namespace animations {
         if (period_randomness)
             transition->next_ms += esp_random() % (period_randomness + 1);
         transition->start_color = outputs::getDistortion();
-        transition->start_color[0] += hue_zero;
         ColorChannels color;
         for (int i=0;i<4;i++) {
-            fixed32_c new_color = base_color[i];
+            color[i] = base_color[i];
             if (color_randomness[i] > 0) {
-                new_color += fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1);
-                if (i == 0) { // hue
-                    new_color = new_color.fraction();
-                } else { // all other channels
-                    new_color = constrain<fixed32_c>(new_color, 0, 1);
-                }
+                color[i] += fixed32_c::buf_cast(esp_random() % (color_randomness[i].getBuf()+1)) - (color_randomness[i] >> 1);
+                if (i) color[i] = constrain<fixed32_c>(color[i], 0, 1);
             }
-            color[i] = new_color;
         }
         if (!use_white) color[3] = 1;
         transition->end_color = color;
+        transition->start_color[0] = transition->start_color[0].fraction();
+        transition->end_color[0] = transition->end_color[0].fraction();
         // hue fixes - shorter path
         if (transition->end_color[0] - transition->start_color[0] > fixed32_c::fraction(1, 2))
             transition->start_color[0] += 1;

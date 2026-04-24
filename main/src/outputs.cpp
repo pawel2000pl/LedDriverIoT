@@ -182,10 +182,10 @@ namespace outputs {
 
 
     ColorChannels makeDistortion(const ColorChannels& expected_color) {
-        hue_offset = expected_color[0] - (hue + hue_offset);
-        saturation_scale = expected_color[1] ? (saturation * saturation_scale) / expected_color[1] : fixed32_c(1);
-        value_scale = expected_color[2] ? (value * value_scale) / expected_color[2] : fixed32_c(1);
-        white_scale = expected_color[3] ? (white * white_scale) / expected_color[3] : fixed32_c(1);
+        hue_offset = ((hue + hue_offset) - expected_color[0]).fraction();
+        saturation_scale = constrain<fixed32_c>(expected_color[1] ? (saturation * saturation_scale) / expected_color[1] : fixed32_c(1), 0, 15);
+        value_scale = constrain<fixed32_c>(expected_color[2] ? (value * value_scale) / expected_color[2] : fixed32_c(1), 0, 15);
+        white_scale = constrain<fixed32_c>(expected_color[3] ? (white * white_scale) / expected_color[3] : fixed32_c(1), 0, 15);
         setColor(expected_color);
         return getDistortion();
     }

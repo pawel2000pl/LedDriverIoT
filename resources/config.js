@@ -48,7 +48,6 @@ function dumpConfig() {
             "defaultColorEnabled": $id('enable-default-color').checked,
             "defaultColor": $id('default-color-picker').color,
             "defaultAnimation": Number($id('default-animation').value),
-            "defaultAnimationLightness": Number($id('default-animation-lightness').value),
             "autoShutdown": {
                 "enabled": $id('enable-shutdown-timeout').checked,
                 "timeout": time2sec($id('shutdown-timeout').value),
@@ -121,7 +120,6 @@ function fillConfig(config) {
     $id('enable-default-color').checked = config.channels.defaultColorEnabled;
     $id('default-color-picker').color = config.channels.defaultColor;
     $id('default-animation').value = config.channels.defaultAnimation;
-    $id('default-animation-lightness').value = config.channels.defaultAnimationLightness;
     $id('enable-shutdown-timeout').checked = config.channels.autoShutdown.enabled;
     $id('shutdown-timeout').value = sec2time(config.channels.autoShutdown.timeout);
     $id('fadeout-time').value = sec2time(config.channels.autoShutdown.fadeOutTime);
@@ -233,12 +231,13 @@ updateClientApp().then(()=>{
 
 (async () => {
     let arr = new Array();
+    const select = $id('default-animation');
     for (let i=0;i<63;i++) {
         const option = $new('option');
         option.value = i;
         option.assigned = false;
         option.textContent = '[[ Loading options... ]]';
-        $id('default-animation').appendChild(option);
+        select.appendChild(option);
         arr.push(option);
     }
     await configPromise;
@@ -253,5 +252,14 @@ updateClientApp().then(()=>{
     arr.forEach(element => {
         if (!element.assigned) element.remove();
     });
+    const onchange = (event) => {
+        const value = Number(event.target.value);
+        if (value < 0) return;
+        if (data[value].data.length == 0) return;
+        const color = data[value].data[0].base_color;
+        $id('default-color-picker').color = {hue: color[0], saturation: 1, value: 1, white: 1};
+    };
+    onchange({target: select});
+    select.onchange = onchange;
 })();
 
