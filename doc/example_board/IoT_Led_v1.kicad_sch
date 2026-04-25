@@ -5272,6 +5272,229 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Transistor_BJT:2N3904"
+			(pin_names
+				(offset 0)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "Q"
+				(at 5.08 1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Value" "2N3904"
+				(at 5.08 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_THT:TO-92_Inline"
+				(at 5.08 -1.905 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.onsemi.com/pub/Collateral/2N3903-D.PDF"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+					(hide yes)
+				)
+			)
+			(property "Description" "0.2A Ic, 40V Vce, Small Signal NPN Transistor, TO-92"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Device" "NPN"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Sim.Pins" "1=E 2=B 3=C"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "NPN Transistor"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "TO?92*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "2N3904_0_1"
+				(polyline
+					(pts
+						(xy -2.54 0) (xy 0.635 0)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.635 1.905) (xy 0.635 -1.905)
+					)
+					(stroke
+						(width 0.508)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 1.27 0)
+					(radius 2.8194)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "2N3904_1_1"
+				(polyline
+					(pts
+						(xy 0.635 0.635) (xy 2.54 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0.635 -0.635) (xy 2.54 -2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 1.27 -1.778) (xy 1.778 -1.27) (xy 2.286 -2.286) (xy 1.27 -1.778)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type outline)
+					)
+				)
+				(pin input line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "B"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 5.08 270)
+					(length 2.54)
+					(name "C"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 2.54 -5.08 90)
+					(length 2.54)
+					(name "E"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Transistor_FET:2N7000"
 			(pin_names
 				(hide yes)
@@ -5894,7 +6117,7 @@
 		(uuid 440de666-01b3-4495-8d7a-56e0bd362350)
 	)
 	(rectangle
-		(start 203.2 62.23)
+		(start 196.85 62.23)
 		(end 278.13 125.73)
 		(stroke
 			(width 0)
@@ -5941,6 +6164,16 @@
 		)
 		(uuid f6481fa5-3cc4-4117-93e3-9a3de311d2ef)
 	)
+	(text "L1/[uH] ~= C5/[pF]"
+		(exclude_from_sim no)
+		(at 266.192 99.568 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "19dc6ef0-2f73-4b4d-aba4-76d15a0e713d")
+	)
 	(text "2026.04.08"
 		(exclude_from_sim no)
 		(at 212.852 193.294 0)
@@ -5973,7 +6206,7 @@
 	)
 	(text "Pulse regulator"
 		(exclude_from_sim no)
-		(at 211.328 64.262 0)
+		(at 210.058 64.262 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6021,6 +6254,16 @@
 			(justify left)
 		)
 		(uuid "b504ec5a-ab76-4d2d-bf3a-cb0a5fed56e8")
+	)
+	(text "D6 or Q18, not both\nD6 is strongly recommended"
+		(exclude_from_sim no)
+		(at 226.822 122.682 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "bf0316e7-2d58-4291-9cf1-1a44d5a88152")
 	)
 	(text "For potentiometers 10k:\n* 1x1k\n* 2x2.2k\n* 3x3.3k\n* 3x4.7k"
 		(exclude_from_sim no)
@@ -6240,6 +6483,12 @@
 		(uuid "558b8a12-0d57-4057-9383-d52829d1b3b0")
 	)
 	(junction
+		(at 208.28 119.38)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "55d1d0a2-86b5-45d4-a5fd-aab1165867db")
+	)
+	(junction
 		(at 214.63 93.98)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -6420,6 +6669,12 @@
 		(uuid "91fa9e11-33cd-4a2a-86bb-a00db06250ed")
 	)
 	(junction
+		(at 208.28 93.98)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "93109d56-e618-40bf-84f4-10c962505e9b")
+	)
+	(junction
 		(at 39.37 66.04)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -6502,6 +6757,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ad280a61-260f-4f0a-aff6-e80fb4ca6306")
+	)
+	(junction
+		(at 218.44 119.38)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "ad6e756d-1b50-4ce4-b1e0-efa1a36a01fc")
 	)
 	(junction
 		(at 214.63 54.61)
@@ -6634,6 +6895,12 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "edc3b541-05b0-42a6-9838-6c62f375d027")
+	)
+	(junction
+		(at 210.82 119.38)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "eea42275-b333-4c3a-b0b1-b758b3c47b30")
 	)
 	(junction
 		(at 77.47 111.76)
@@ -7077,6 +7344,16 @@
 	)
 	(wire
 		(pts
+			(xy 218.44 113.03) (xy 218.44 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "25a621e4-d726-4fe9-9795-723c38eb3f89")
+	)
+	(wire
+		(pts
 			(xy 48.26 111.76) (xy 58.42 111.76)
 		)
 		(stroke
@@ -7224,16 +7501,6 @@
 			(type default)
 		)
 		(uuid "2fcfc012-778b-4a52-8d6b-86a5f541890c")
-	)
-	(wire
-		(pts
-			(xy 214.63 119.38) (xy 220.98 119.38)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "2fd56234-b1da-4bf5-a8b6-ab99981218d7")
 	)
 	(wire
 		(pts
@@ -7447,6 +7714,16 @@
 	)
 	(wire
 		(pts
+			(xy 204.47 116.84) (xy 204.47 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "42f769ed-0916-4109-a007-399d33ae275b")
+	)
+	(wire
+		(pts
 			(xy 39.37 177.8) (xy 39.37 157.48)
 		)
 		(stroke
@@ -7607,7 +7884,7 @@
 	)
 	(wire
 		(pts
-			(xy 237.49 105.41) (xy 220.98 105.41)
+			(xy 220.98 105.41) (xy 237.49 105.41)
 		)
 		(stroke
 			(width 0)
@@ -7897,7 +8174,7 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 102.87) (xy 214.63 119.38)
+			(xy 208.28 102.87) (xy 208.28 119.38)
 		)
 		(stroke
 			(width 0)
@@ -8207,6 +8484,16 @@
 	)
 	(wire
 		(pts
+			(xy 204.47 111.76) (xy 204.47 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7964731a-6fea-43eb-b36a-8444363383ef")
+	)
+	(wire
+		(pts
 			(xy 264.16 85.09) (xy 257.81 85.09)
 		)
 		(stroke
@@ -8507,6 +8794,26 @@
 	)
 	(wire
 		(pts
+			(xy 210.82 119.38) (xy 218.44 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8ece3b55-deb4-485a-9b1c-6f404a083a1e")
+	)
+	(wire
+		(pts
+			(xy 208.28 119.38) (xy 210.82 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "91403454-9390-480b-8fe7-9b66983a18e3")
+	)
+	(wire
+		(pts
 			(xy 68.58 44.45) (xy 68.58 45.72)
 		)
 		(stroke
@@ -8704,6 +9011,16 @@
 			(type default)
 		)
 		(uuid "a4d2023d-1fa4-4a5b-9fbe-9ab22230296d")
+	)
+	(wire
+		(pts
+			(xy 210.82 105.41) (xy 220.98 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a587faf9-5b43-412f-9926-7d6c81710738")
 	)
 	(wire
 		(pts
@@ -9067,6 +9384,26 @@
 	)
 	(wire
 		(pts
+			(xy 210.82 107.95) (xy 210.82 105.41)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c5cd855d-e604-432f-a4fa-369148952731")
+	)
+	(wire
+		(pts
+			(xy 204.47 119.38) (xy 208.28 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c5fb2274-0209-4085-8fc2-862eb144bc2e")
+	)
+	(wire
+		(pts
 			(xy 68.58 91.44) (xy 68.58 92.71)
 		)
 		(stroke
@@ -9367,6 +9704,16 @@
 	)
 	(wire
 		(pts
+			(xy 210.82 118.11) (xy 210.82 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "dbd8c0e1-d93a-4196-9d68-80124b83f8a9")
+	)
+	(wire
+		(pts
 			(xy 110.49 46.99) (xy 97.79 46.99)
 		)
 		(stroke
@@ -9487,6 +9834,16 @@
 	)
 	(wire
 		(pts
+			(xy 208.28 93.98) (xy 214.63 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e897754f-0698-4b8e-9f8e-e5e599e944b7")
+	)
+	(wire
+		(pts
 			(xy 210.82 54.61) (xy 214.63 54.61)
 		)
 		(stroke
@@ -9587,6 +9944,16 @@
 	)
 	(wire
 		(pts
+			(xy 204.47 93.98) (xy 208.28 93.98)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f037770d-7741-453d-bdda-3b1694ee647e")
+	)
+	(wire
+		(pts
 			(xy 30.48 104.14) (xy 30.48 157.48)
 		)
 		(stroke
@@ -9667,6 +10034,16 @@
 	)
 	(wire
 		(pts
+			(xy 218.44 119.38) (xy 220.98 119.38)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f7840133-1bfc-4862-8add-b0c50f18fee8")
+	)
+	(wire
+		(pts
 			(xy 175.26 78.74) (xy 179.07 78.74)
 		)
 		(stroke
@@ -9687,7 +10064,7 @@
 	)
 	(wire
 		(pts
-			(xy 214.63 95.25) (xy 214.63 93.98)
+			(xy 208.28 95.25) (xy 208.28 93.98)
 		)
 		(stroke
 			(width 0)
@@ -11285,7 +11662,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100u-500u"
+		(property "Value" "47u-470u"
 			(at 222.25 100.3299 0)
 			(effects
 				(font
@@ -12159,6 +12536,99 @@
 		)
 	)
 	(symbol
+		(lib_id "Transistor_BJT:2N3904")
+		(at 213.36 113.03 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "50a85c65-b313-421a-9c46-34a771ce5811")
+		(property "Reference" "Q18"
+			(at 217.932 115.57 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "2N5550"
+			(at 217.932 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_THT:TO-92_Inline"
+			(at 208.28 111.125 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.onsemi.com/pub/Collateral/2N3903-D.PDF"
+			(at 213.36 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+				(hide yes)
+			)
+		)
+		(property "Description" "0.2A Ic, 40V Vce, Small Signal NPN Transistor, TO-92"
+			(at 213.36 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Device" "NPN"
+			(at 213.36 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Sim.Pins" "1=E 2=B 3=C"
+			(at 213.36 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "721a83dc-b3d4-4780-84b9-e57e41ea4ed0")
+		)
+		(pin "1"
+			(uuid "014186d1-ff14-4819-bea9-42c6921ccdec")
+		)
+		(pin "3"
+			(uuid "837f7801-a9a7-449e-8479-35edb797c14f")
+		)
+		(instances
+			(project "IoT_Led_v1"
+				(path "/ad10e519-7f27-4d6c-b198-14f131784bda"
+					(reference "Q18")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "PCM_SL_Resistors:Resistor")
 		(at 77.47 69.85 90)
 		(unit 1)
@@ -12534,6 +13004,76 @@
 			(project "IoT_Led_v1"
 				(path "/ad10e519-7f27-4d6c-b198-14f131784bda"
 					(reference "C7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PCM_SL_Devices:Capacitor_NP")
+		(at 204.47 114.3 270)
+		(mirror x)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6d132a48-b618-466d-930c-8d388e5e8ff1")
+		(property "Reference" "C11"
+			(at 200.66 113.0299 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "1u"
+			(at 200.66 115.5699 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Capacitor_THT:C_Disc_D3.0mm_W2.0mm_P2.50mm"
+			(at 200.66 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 204.47 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Unpolarized Capacitor"
+			(at 204.47 114.3 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "192f4ee4-8e18-43ca-be79-71f92e3979b6")
+		)
+		(pin "2"
+			(uuid "14bcafc2-e5d1-4699-8c49-c295ee6f51d0")
+		)
+		(instances
+			(project "IoT_Led_v1"
+				(path "/ad10e519-7f27-4d6c-b198-14f131784bda"
+					(reference "C11")
 					(unit 1)
 				)
 			)
@@ -13929,7 +14469,7 @@
 				)
 			)
 		)
-		(property "Value" "1N4002"
+		(property "Value" "1n5819"
 			(at 223.774 113.03 0)
 			(effects
 				(font
@@ -14386,7 +14926,7 @@
 	)
 	(symbol
 		(lib_id "PCM_SL_Devices:Capacitor_PO")
-		(at 214.63 99.06 90)
+		(at 208.28 99.06 90)
 		(mirror x)
 		(unit 1)
 		(exclude_from_sim no)
@@ -14395,7 +14935,7 @@
 		(dnp no)
 		(uuid "c4944c2b-bbad-4259-9fba-9c44ba1e1aef")
 		(property "Reference" "C4"
-			(at 210.82 97.7899 90)
+			(at 204.47 97.7899 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14404,7 +14944,7 @@
 			)
 		)
 		(property "Value" "470u"
-			(at 210.82 100.3299 90)
+			(at 204.47 100.3299 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14413,7 +14953,7 @@
 			)
 		)
 		(property "Footprint" "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm"
-			(at 218.44 99.822 0)
+			(at 212.09 99.822 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14422,7 +14962,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 214.63 99.568 0)
+			(at 208.28 99.568 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14431,7 +14971,7 @@
 			)
 		)
 		(property "Description" "Polarized Capacitor"
-			(at 214.63 99.06 0)
+			(at 208.28 99.06 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14625,7 +15165,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "470p"
+		(property "Value" "47p-470p"
 			(at 266.7 111.7599 90)
 			(effects
 				(font
