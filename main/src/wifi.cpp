@@ -2,6 +2,7 @@
 #include <WiFiAP.h>
 #include <DNSServer.h>
 #include <ESPmDNS.h>
+#include <array>
 
 #include "wifi.h"
 #include "logs.h"
@@ -9,7 +10,7 @@
 #define MAX_WIFI_CHANNEL 13
 #define RSSI_AMP 0.2f
 #define RSSI_TRESHOLD (-80)
-std::vector<unsigned> AP_CHANNELS = {1, 6, 11};
+std::array<unsigned, 3> AP_CHANNELS = {1, 6, 11};
 
 
 namespace wifi {
