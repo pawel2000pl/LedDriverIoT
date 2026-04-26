@@ -59,6 +59,7 @@ namespace wifi {
 
         const auto staPriorityJson = configuration["wifi"]["sta_priority"];
         unsigned size = staPriorityJson.size();
+        if (size == 0) apPeriodicScan = false; // no logic reason for that
         staPriority.clear();
         staPriority.reserve(size);
         for (unsigned i=0;i<size;i++) {
