@@ -6,8 +6,8 @@
 namespace animations {
 
     void checkTimer();
-    bool startAnimation(unsigned id);
+    bool startAnimation(unsigned id, bool checkMinimum=true);
+    void startAnimationFromJson(const JsonVariantConst animationSequence, bool checkMinimum=true);
     void stopAnimation();
-    void startAnimationFromJson(const JsonVariantConst animationSequence);
 
 }

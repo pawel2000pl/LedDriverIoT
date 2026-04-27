@@ -33,7 +33,7 @@ namespace default_color {
         if (!enableDefaultColor) return;
         inputs::source_control = inputs::scWeb;
         inputs::setHSVW(defaultColor[0], defaultColor[1], defaultColor[2], defaultColor[3]);
-        if (defaultAnimation >= 0 && animations::startAnimation(defaultAnimation))
+        if (defaultAnimation >= 0 && animations::startAnimation(defaultAnimation, false))
             return;
         timer_shutdown::resetTimer();
     }

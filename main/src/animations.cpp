@@ -56,16 +56,16 @@ namespace animations {
     }
 
 
-    bool startAnimation(unsigned id) {
+    bool startAnimation(unsigned id, bool checkMinimum) {
         JsonDocument animations = configuration::getAnimations();
         unsigned size = animations.size();
         if (id >= size) return false;
-        startAnimationFromJson(animations[id]);
+        startAnimationFromJson(animations[id], checkMinimum);
         return true;
     }
 
 
-    void startAnimationFromJson(const JsonVariantConst animationSequence) {
+    void startAnimationFromJson(const JsonVariantConst animationSequence, bool checkMinimum) {
         const JsonVariantConst stages = animationSequence["data"];
         unsigned stages_count = stages.size();
         if (stages_count > max_stages) stages_count = max_stages;
@@ -100,8 +100,8 @@ namespace animations {
         ColorChannels current_color = outputs::getColor();
         current_color[0] = hue_zero;
         current_color[1] = 1;
-        if (!current_color[2]) current_color[2] = 0.1;
-        if (!current_color[3]) current_color[3] = 0.1;
+        if (checkMinimum && !current_color[2]) current_color[2] = 0.1;
+        if (checkMinimum && !current_color[3]) current_color[3] = 0.1;
         outputs::makeDistortion(current_color);
         inputs::source_control = inputs::scWeb;
         timer_shutdown::resetTimer();

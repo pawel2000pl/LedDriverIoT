@@ -259,7 +259,6 @@ updateClientApp().then(()=>{
         const color = data[value].data[0].base_color;
         $id('default-color-picker').color = {hue: color[0], saturation: 1, value: 1, white: 1};
     };
-    onchange({target: select});
     select.onchange = onchange;
 })();
 
