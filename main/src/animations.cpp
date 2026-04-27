@@ -96,7 +96,7 @@ namespace animations {
         fixed32_c hue_zero;
         hue_zero = loaded_stages[0].base_color[0];
         for (int i=0;i<max_stages;i++)
-            loaded_stages[i].base_color[0] = (loaded_stages[i].base_color[0] - hue_zero).fraction();
+            loaded_stages[i].base_color[0] = (loaded_stages[i].base_color[0] - hue_zero).fmod1();
         ColorChannels current_color = outputs::getColor();
         current_color[0] = hue_zero;
         current_color[1] = 1;
@@ -156,8 +156,8 @@ namespace animations {
         }
         if (!use_white) color[3] = 1;
         transition->end_color = color;
-        transition->start_color[0] = transition->start_color[0].fraction();
-        transition->end_color[0] = transition->end_color[0].fraction();
+        transition->start_color[0] = transition->start_color[0].fmod1();
+        transition->end_color[0] = transition->end_color[0].fmod1();
         // hue fixes - shorter path
         if (transition->end_color[0] - transition->start_color[0] > fixed32_c::fraction(1, 2))
             transition->start_color[0] += 1;

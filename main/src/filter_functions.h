@@ -30,7 +30,7 @@ class MixedFunction {
         fixed64_f fmin;
         fixed64_f fmax;
         fixed64_f minff;
-        fixed64_f absfdiff;
+        fixed64_f invabsfdiff;
 };
 
 

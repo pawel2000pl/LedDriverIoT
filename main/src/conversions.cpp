@@ -35,7 +35,7 @@ fixed32_c hue2rgb(fixed32_c p, fixed32_c q, fixed32_c t) {
 }
 
 void hslToRgb(fixed32_c h, fixed32_c s, fixed32_c l, fixed32_c& r, fixed32_c& g, fixed32_c& b) {
-    h = h.fraction();
+    h = h.fmod1();
     if (s == 0) {
         r = g = b = l;
     } else {
@@ -65,7 +65,7 @@ void rgbToHsv(fixed32_c r, fixed32_c g, fixed32_c b, fixed32_c& h, fixed32_c& s,
 }
 
 void hsvToRgb(fixed32_c h, fixed32_c s, fixed32_c v, fixed32_c& r, fixed32_c& g, fixed32_c& b) {
-    h = h.fraction();
+    h = h.fmod1();
     fixed32_c h6 = h * 6;
     int i = std::floor(h6);
     fixed32_c vs = v * s;

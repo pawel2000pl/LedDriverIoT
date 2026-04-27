@@ -501,7 +501,7 @@ class fixedpoint {
         }
 
         FORCE_INLINE // always returns the positive value / -1.25 -> 0.75
-        constexpr fixedpoint fraction() const noexcept {
+        constexpr fixedpoint fmod1() const noexcept {
             return buf_cast(getfrac());
         }
 

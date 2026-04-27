@@ -1,4 +1,5 @@
 #include <array>
+#include "constrain.h"
 #include "filter_functions.h"
 #include "lib/fixedpoint/polyapprox.h"
 
@@ -8,7 +9,7 @@ MixedFunction::MixedFunction(ArithmeticFunction fun) {
 	fmin = approximation(0);
 	fmax = approximation(1);
 	minff = std::min(fmin, fmax);
-	absfdiff = std::abs(fmax-fmin);
+	invabsfdiff = 1 / std::abs(fmax-fmin);
 }
 
 
@@ -17,13 +18,12 @@ MixedFunction::MixedFunction(ArithmeticFloatFunction fun) {
 	fmin = approximation(0);
 	fmax = approximation(1);
 	minff = std::min(fmin, fmax);
-	absfdiff = std::abs(fmax-fmin);
+	invabsfdiff = 1 / std::abs(fmax-fmin);
 }
 
 
 fixed64_f MixedFunction::operator()(fixed64_f x) const {
-	fixed64_f y = (approximation(x)-minff) / absfdiff;
-	return (y < 0) ? fixed64_f(0) : (y > 1) ? fixed64_f(1) : y;
+	return constrain<fixed64_f>((approximation(constrain<fixed64_f>(x, 0, 1)) - minff) * invabsfdiff, 0, 1);
 }
 
 
@@ -38,7 +38,7 @@ ArithmeticFloatFunction normalizeFunction(ArithmeticFloatFunction fun, fixed64_f
 
 
 ArithmeticFloatFunction symFunction(ArithmeticFloatFunction fun) {
-	return [=](fixed64_f x) { return 1-fun(1-x); };
+	return [=](float x) { return 1.f-fun(1.f-x); };
 }
 
 
@@ -46,13 +46,13 @@ constexpr const unsigned filterFunctionsCount = 9;
 const std::array<ArithmeticFloatFunction, filterFunctionsCount> filterFunctions = {
 	[](float x) {return x; },
 	[](float x) {return x*x; },
-	[](float x) {return sqrt(x); },
-	normalizeFunction([](float x) { return exp(M_PI*(x-1)); }),
-	normalizeFunction([](float x) { return asin(x*2-1); }),
-	normalizeFunction([](float x) { return cos((x - 1) * M_PI); }),
+	[](float x) {return std::sqrt(x); },
+	normalizeFunction([](float x) { return std::exp(M_PI*(x-1)); }),
+	normalizeFunction([](float x) { return std::asin(x*2-1); }),
+	normalizeFunction([](float x) { return std::cos((x - 1) * M_PI); }),
 	symFunction([](float x) {return x*x; }),
-	symFunction([](float x) {return sqrt(x); }),
-	normalizeFunction(symFunction([](float x) { return exp(M_PI*(x-1)); }))
+	symFunction([](float x) {return std::sqrt(x); }),
+	normalizeFunction(symFunction([](float x) { return std::exp(M_PI*(x-1)); }))
 };
 
 
@@ -66,6 +66,7 @@ MixedFunction mixFilterFunctions(const std::vector<float>& filters) {
 		return sum;
 	}));
 }
+
 
 fixed64_f calulcateInversedValue(const ArithmeticFunction& originalFunction, fixed64_f y, fixed64_f epsilon) {
 	fixed64_f of_zero = originalFunction(0);

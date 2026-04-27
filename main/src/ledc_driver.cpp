@@ -34,9 +34,9 @@ namespace ledc {
 
 
 	fixed64 addGateLoadingTime(fixed64 value, fixed64 loadingTime) {
-			if (value == 0)
-					return 0;
-			fixed64 offset = loadingTime * current_pwm_frequency / 1000000;
+			if (value == 0) return 0;
+			constexpr static const fixed64 k = fixed64::fraction(1, 1000000);
+			fixed64 offset = loadingTime * current_pwm_frequency * k;
 			return value / (1 - offset) + offset;
 	}
 
@@ -52,7 +52,7 @@ namespace ledc {
 
 	void setChannel(int gpio, unsigned channel, fixed64 value, fixed64 phase, bool invert) {
 		uint32_t duty = (uint32_t)constrain<int>(std::round(value * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
-		int hpoint = constrain<int>(std::round(phase * (LEDC_PERIOD - 1)), 0, LEDC_PERIOD-1);
+		int hpoint = constrain<int>(std::round(phase * (LEDC_PERIOD-1)), 0, LEDC_PERIOD-1);
 		if (cache[channel].initialized && cache[channel].duty == duty && cache[channel].hpoint == hpoint && cache[channel].invert == invert)
 			return;
 		cache[channel].hpoint = hpoint;

@@ -113,7 +113,7 @@ namespace outputs {
                 fixed32_c sum = 0;
                 for (int i=0;i<4;i++)
                     if (values[i] != 0) {
-                        sum %= 1;
+                        sum = sum.fmod1();
                         phases[i] = sum;
                         sum += values[i] * k;
                     }
@@ -137,10 +137,10 @@ namespace outputs {
         fixed32_c r, g, b;
         hsvToRgb(hue+hue_offset, saturation*saturation_scale, value*value_scale*fadeoutScalling, r, g, b);
         ColorChannels filteredValues = {
-            (fixed32_c)filters::outputRed(filters::globalOutput(r)) * scalling[0],
-            (fixed32_c)filters::outputGreen(filters::globalOutput(g)) * scalling[1],
-            (fixed32_c)filters::outputBlue(filters::globalOutput(b)) * scalling[2],
-            (fixed32_c)filters::outputWhite(filters::globalOutput(white)) * scalling[3] * white_scale * fadeoutScalling
+            filters::outputRed(filters::globalOutput(r)) * scalling[0],
+            filters::outputGreen(filters::globalOutput(g)) * scalling[1],
+            filters::outputBlue(filters::globalOutput(b)) * scalling[2],
+            filters::outputWhite(filters::globalOutput(white)) * scalling[3] * white_scale * fadeoutScalling
         };
         ColorChannels periods = switchToTransistors(getPeriods(filteredValues));
         ColorChannels phases = switchToTransistors(getPhases(filteredValues));
@@ -182,7 +182,7 @@ namespace outputs {
 
 
     ColorChannels makeDistortion(const ColorChannels& expected_color) {
-        hue_offset = ((hue + hue_offset) - expected_color[0]).fraction();
+        hue_offset = ((hue + hue_offset) - expected_color[0]).fmod1();
         saturation_scale = constrain<fixed32_c>(expected_color[1] ? (saturation * saturation_scale) / expected_color[1] : fixed32_c(1), 0, 15);
         value_scale = constrain<fixed32_c>(expected_color[2] ? (value * value_scale) / expected_color[2] : fixed32_c(1), 0, 15);
         white_scale = constrain<fixed32_c>(expected_color[3] ? (white * white_scale) / expected_color[3] : fixed32_c(1), 0, 15);
@@ -192,7 +192,7 @@ namespace outputs {
 
 
     void applyCurrentDistortion() {
-        hue = (hue + hue_offset).fraction();
+        hue = (hue + hue_offset).fmod1();
         saturation *= saturation_scale;
         value *= value_scale;
         white *= white_scale;
