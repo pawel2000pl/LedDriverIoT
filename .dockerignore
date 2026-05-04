@@ -20,3 +20,5 @@ version.txt
 sdkconfig.old
 .cache
 .mypy_cache
+doc/example_board/out
+
